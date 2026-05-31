@@ -46,7 +46,7 @@ async function getAudioTracks(sessionId) {
             "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_name:stream_tags=language,title",
             "-of", "json", streamUrl
         ], { timeout: 10000 });
-        
+
         const data = JSON.parse(stdout);
         const streams = data.streams || [];
         return streams.map((stream, idx) => {
@@ -79,7 +79,7 @@ async function ensureHls(session, audioTrack = 0) {
             stopHls(session.id);
         }
     }
-    
+
     if (starting.has(session.id)) {
         const startRecord = starting.get(session.id);
         if (startRecord.audioTrack === audioTrack) {
@@ -98,7 +98,7 @@ async function ensureHls(session, audioTrack = 0) {
         if (fs.existsSync(sessionDir)) {
             const files = fs.readdirSync(sessionDir);
             for (const file of files) {
-                try { fs.unlinkSync(path.join(sessionDir, file)); } catch (e) {}
+                try { fs.unlinkSync(path.join(sessionDir, file)); } catch (e) { }
             }
         }
 
@@ -109,7 +109,9 @@ async function ensureHls(session, audioTrack = 0) {
         const codecs = await probeStream(streamUrl, audioTrack);
         console.log(`[hls] Codecs for ${session.id} (track ${audioTrack}): Video=${codecs.videoCodec}, Audio=${codecs.audioCodec}`);
 
-        const vCodec = "copy"; // Never transcode video (4K HEVC transcoding destroys CPU)
+        // Option 1: always transcode video to get seek-accurate HLS keyframes.
+        const segmentSeconds = 2;
+        const vCodec = "libx264";
         const aCodec = (codecs.audioCodec === "aac" || codecs.audioCodec === "mp3") ? "copy" : "aac";
 
         const ffmpegArgs = [
@@ -117,7 +119,13 @@ async function ensureHls(session, audioTrack = 0) {
             "-i", streamUrl,
             "-map", "0:v:0",
             "-map", `0:a:${audioTrack}`,
-            "-c:v", vCodec
+            "-c:v", vCodec,
+            "-preset", "veryfast",
+            "-crf", "23",
+            "-g", "48",
+            "-keyint_min", "48",
+            "-sc_threshold", "0",
+            "-force_key_frames", `expr:gte(t,n_forced*${segmentSeconds})`
         ];
 
         ffmpegArgs.push("-c:a", aCodec);
@@ -130,7 +138,7 @@ async function ensureHls(session, audioTrack = 0) {
             "-vsync", "1",
             "-threads", "0",
             "-f", "hls",
-            "-hls_time", "5",
+            "-hls_time", String(segmentSeconds),
             "-hls_playlist_type", "event",
             "-hls_segment_type", "fmp4",
             "-hls_flags", "independent_segments",
@@ -178,14 +186,14 @@ function getSegmentPath(sessionId, segmentName) {
 function stopHls(sessionId) {
     const record = active.get(sessionId);
     if (record) {
-        try { record.proc.kill("SIGKILL"); } catch (e) {}
+        try { record.proc.kill("SIGKILL"); } catch (e) { }
         active.delete(sessionId);
     }
     starting.delete(sessionId);
 
     const dir = getSessionDir(sessionId);
     if (fs.existsSync(dir)) {
-        try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+        try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { }
     }
 }
 
@@ -193,10 +201,10 @@ function stopAllHls() {
     for (const [sessionId, record] of active.entries()) {
         try { record.proc.kill("SIGKILL"); } catch { /* already dead */ }
         active.delete(sessionId);
-        
+
         const dir = getSessionDir(sessionId);
         if (fs.existsSync(dir)) {
-            try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+            try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { }
         }
     }
     starting.clear();
