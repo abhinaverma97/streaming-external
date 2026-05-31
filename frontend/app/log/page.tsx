@@ -168,13 +168,13 @@ export default function LogPage() {
                     </div>
                 ) : (
                     <motion.div
-                        variants={containerVariants}
+                        variants={containerVariants as any}
                         initial="hidden"
                         animate="show"
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-5 gap-y-10"
                     >
                         {sortedRatings.map((item) => (
-                            <motion.div variants={itemVariants} key={item.movieDetails.id} className="group flex flex-col cursor-default">
+                            <motion.div variants={itemVariants as any} key={item.movieDetails.id} className="group flex flex-col cursor-default">
                                 <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300">
                                     {item.movieDetails.backdrop_path || item.movieDetails.poster_path ? (
                                         <Image
