@@ -1,0 +1,1684 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    Play,
+    Plus,
+    Check,
+    Star,
+    Clock,
+    Search,
+    TrendingUp,
+    Sliders,
+    X,
+    Loader2,
+    Film,
+    AlertCircle,
+    Upload,
+    ChevronDown,
+    Home as HomeIcon,
+    List,
+    Trash2
+} from "lucide-react";
+import Hls from "hls.js";
+
+import VariableProximity from "./components/VariableProximity";
+import ScrambledText from "./components/ScrambledText";
+import GlassSurface from "./components/GlassSurface";
+import FadeContent from "./components/FadeContent";
+import Dither from "./components/Dither";
+import ScrollRow from "./components/ScrollRow";
+
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+interface Movie {
+    id: number;
+    imdb_id?: string;
+    title?: string;
+    name?: string;
+    overview: string;
+    poster_path: string;
+    backdrop_path: string;
+    vote_average: number;
+    release_date?: string;
+    first_air_date?: string;
+    media_type?: string;
+    genres?: { id: number; name: string }[];
+}
+
+export default function Home() {
+    // Movie categories
+    const [trending, setTrending] = useState<Movie[]>([]);
+    const [trendingType, setTrendingType] = useState<"movie" | "tv">("movie");
+
+
+    // User lists from Backend
+    const [watchlist, setWatchlist] = useState<any[]>([]);
+    const [continueWatching, setContinueWatching] = useState<any[]>([]);
+    const [history, setHistory] = useState<any[]>([]);
+    const [ratings, setRatings] = useState<Record<string, any>>({});
+
+    // Selected Movie for Hero box
+    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+
+    // TV Show selection states
+    const [searchType, setSearchType] = useState<"movie" | "tv" | "multi">("multi");
+    const [selectedShowDetails, setSelectedShowDetails] = useState<any | null>(null);
+    const [selectedSeason, setSelectedSeason] = useState<number>(1);
+    const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
+    const [episodesList, setEpisodesList] = useState<number[]>([]);
+
+    // Torrent quality and selections states
+    const [selectedMovieTorrents, setSelectedMovieTorrents] = useState<any[]>([]);
+    const [availableTorrents, setAvailableTorrents] = useState<any[]>([]);
+    const [activeTorrentHash, setActiveTorrentHash] = useState<string | null>(null);
+    const [isQualityExpanded, setIsQualityExpanded] = useState(true);
+
+    // Storage stats states
+    const [storageStats, setStorageStats] = useState<{ totalBytes: number; movies: any[] } | null>(null);
+
+    // HLS Audio tracks states
+    const [audioTracks, setAudioTracks] = useState<any[]>([]);
+    const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
+    const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+
+    // Search state
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<Movie[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+    // Active streaming state
+    const [activeStream, setActiveStream] = useState<{
+        imdbId: string;
+        title: string;
+        details: any;
+        hlsUrl?: string;
+    } | null>(null);
+    const [videoQuality, setVideoQuality] = useState("");
+    const [hlsReadyUrl, setHlsReadyUrl] = useState<string | null>(null);
+    const [probingCodecs, setProbingCodecs] = useState(false);
+    const [hlsErrorMsg, setHlsErrorMsg] = useState<string | null>(null);
+
+    // Subtitle status state inside player
+    const [subtitleStatus, setSubtitleStatus] = useState<{
+        status: string;
+        step: string;
+        error: string | null;
+    } | null>(null);
+    const [subtitleBlobUrl, setSubtitleBlobUrl] = useState<string | null>(null);
+    const [subtitleDebug, setSubtitleDebug] = useState<string>("");
+
+    // Active stream status indicators (peers, speed, etc)
+    const [torrentStatus, setTorrentStatus] = useState<any>(null);
+
+    const [torrentSubs, setTorrentSubs] = useState<any[]>([]);
+    const [activeTorrentSub, setActiveTorrentSub] = useState<number | null>(null);
+
+    // Video Ref & status polls
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const hlsRef = useRef<Hls | null>(null);
+    const progressIntervalRef = useRef<any>(null);
+    const statusIntervalRef = useRef<any>(null);
+    const subtitlePollRef = useRef<any>(null);
+
+    useEffect(() => {
+
+        fetchUserLists();
+        fetchStorageStats();
+
+        // Suppress harmless AbortError from Hls.js destroying the video fetch
+        const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+            if (event.reason && event.reason.name === 'AbortError') {
+                event.preventDefault();
+            }
+        };
+        window.addEventListener("unhandledrejection", handleUnhandledRejection);
+        return () => window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    }, []);
+
+    useEffect(() => {
+        const fetchTrending = async () => {
+            try {
+                const endpoint = trendingType === "movie" ? "movies" : "tv";
+                const res = await fetch(`${API_BASE}/api/${endpoint}/trending`);
+                const data = await res.json();
+                const trendingItems = data.results || [];
+                setTrending(trendingItems);
+
+                if (trendingItems.length > 0) {
+                    loadMovieDetails(trendingItems[0].id, trendingType);
+                }
+            } catch (e) {
+                console.error("Error loading trending", e);
+            }
+        };
+        fetchTrending();
+    }, [trendingType]);
+
+
+
+    const fetchUserLists = async () => {
+        try {
+            const [watchRes, contRes, histRes, ratingsRes] = await Promise.all([
+                fetch(`${API_BASE}/api/watchlist`),
+                fetch(`${API_BASE}/api/continue-watching`),
+                fetch(`${API_BASE}/api/history`),
+                fetch(`${API_BASE}/api/ratings`)
+            ]);
+            setWatchlist(await watchRes.json());
+            setContinueWatching(await contRes.json());
+            setHistory(await histRes.json());
+            setRatings(await ratingsRes.json());
+        } catch (e) {
+            console.error("Error loading user lists", e);
+        }
+    };
+
+    const handleRate = async (movie: Movie, rating: number) => {
+        if (!movie || !movie.id) return;
+        setRatings(prev => ({
+            ...prev,
+            [movie.id]: { rating, movieDetails: movie, ratedAt: Date.now() }
+        }));
+        try {
+            await fetch(`${API_BASE}/api/ratings/${movie.id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ rating, movieDetails: movie })
+            });
+        } catch (e) {
+            console.error("Error saving rating", e);
+        }
+    };
+
+    const fetchStorageStats = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/storage`);
+            if (res.ok) {
+                setStorageStats(await res.json());
+            }
+        } catch (e) {
+            console.error("Error fetching storage stats", e);
+        }
+    };
+
+    const handleDeleteAllStorage = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/storage/all`, { method: "DELETE" });
+            if (res.ok) {
+                fetchStorageStats();
+                fetchUserLists();
+            }
+        } catch (e) {
+            console.error("Error clearing storage", e);
+        }
+    };
+
+    const formatStorageSize = (bytes: number) => {
+        if (bytes === 0) return "0 B";
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
+    };
+
+    const formatSpeed = (bytes: number) => {
+        if (!bytes || bytes === 0) return "0 B/s";
+        const units = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s"];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
+    };
+
+    const loadMovieDetails = async (tmdbId: number, mediaType: string = "movie") => {
+        try {
+            if (mediaType === "tv") {
+                const res = await fetch(`${API_BASE}/api/tv/${tmdbId}`);
+                const data = await res.json();
+                if (data.tmdb) {
+                    const normalized: Movie = {
+                        ...data.tmdb,
+                        title: data.tmdb.name,
+                        release_date: data.tmdb.first_air_date || "",
+                        media_type: "tv"
+                    };
+                    setSelectedMovie(normalized);
+                    setSelectedShowDetails(data.tmdb);
+                    setSelectedMovieTorrents([]);
+
+                    const validSeasons = (data.tmdb.seasons || []).filter((s: any) => s.season_number > 0);
+                    if (validSeasons.length > 0) {
+                        const initialSeason = validSeasons[0].season_number;
+                        setSelectedSeason(initialSeason);
+                        const epCount = validSeasons[0].episode_count || 1;
+                        setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
+                        setSelectedEpisode(1);
+                    } else {
+                        setEpisodesList([]);
+                    }
+                }
+            } else {
+                const res = await fetch(`${API_BASE}/api/movie/${tmdbId}`);
+                const data = await res.json();
+                if (data.tmdb) {
+                    setSelectedMovie({ ...data.tmdb, media_type: "movie" });
+                    setSelectedShowDetails(null);
+                    setSelectedMovieTorrents(data.yts?.torrents || []);
+                }
+            }
+        } catch (e) {
+            console.error("Error loading movie details", e);
+        }
+    };
+
+    // ── Watchlist Management ──────────────────────────────────────────────────
+
+    const toggleWatchlist = async (movie: Movie) => {
+        if (!movie.imdb_id) return;
+        const isQueued = watchlist.some((item) => item.imdbId === movie.imdb_id);
+        try {
+            if (isQueued) {
+                await fetch(`${API_BASE}/api/watchlist/${movie.imdb_id}`, { method: "DELETE" });
+            } else {
+                await fetch(`${API_BASE}/api/watchlist`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        imdbId: movie.imdb_id,
+                        movieDetails: {
+                            id: movie.id,
+                            title: movie.title,
+                            poster_path: movie.poster_path,
+                            backdrop_path: movie.backdrop_path,
+                            vote_average: movie.vote_average,
+                            release_date: movie.release_date
+                        }
+                    })
+                });
+            }
+            fetchUserLists();
+        } catch (e) {
+            console.error("Watchlist error", e);
+        }
+    };
+
+    // ── Search Logic ──────────────────────────────────────────────────────────
+
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            setIsSearching(false);
+            return;
+        }
+        setIsSearching(true);
+        try {
+            const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`);
+            const data = await res.json();
+            const tagged = (data.results || []).map((movie: any) => ({
+                ...movie,
+                media_type: movie.media_type || searchType
+            }));
+            setSearchResults(tagged);
+        } catch (e) {
+            console.error("Search error", e);
+        }
+    };
+
+    // ── Playback / Streaming ──────────────────────────────────────────────────
+
+    const handleCardClick = (movie: Movie) => {
+        setSelectedMovie(movie);
+        loadMovieDetails(movie.id, movie.media_type || "movie");
+    };
+
+    const triggerAudioTracksFetch = (sessionId: string) => {
+        setTimeout(async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/stream/${sessionId}/audio-tracks`);
+                if (res.ok) {
+                    const tracks = await res.json();
+                    setAudioTracks(tracks);
+                }
+            } catch (e) {
+                console.error("Error fetching audio tracks", e);
+            }
+        }, 3500);
+    };
+
+    const changeAudioTrack = async (trackId: number) => {
+        if (!activeSessionId || !videoRef.current) return;
+        const video = videoRef.current;
+        const currentTime = video.currentTime;
+        const isPaused = video.paused;
+
+        setProbingCodecs(true);
+        setHlsReadyUrl(null);
+        setCurrentAudioTrack(trackId);
+
+        const newUrl = `${API_BASE}/api/stream/${activeSessionId}/hls/index.m3u8?audioTrack=${trackId}`;
+        const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        for (let i = 0; i < 30; i++) {
+            try {
+                const res = await fetch(newUrl, { cache: "no-store" });
+                if (res.ok) {
+                    const contentType = res.headers.get("content-type") || "";
+                    if (contentType.includes("application/vnd.apple.mpegurl")) {
+                        setHlsReadyUrl(newUrl);
+                        setProbingCodecs(false);
+
+                        if (hlsRef.current) {
+                            hlsRef.current.destroy();
+                        }
+
+                        const handleLoadedMetadata = () => {
+                            video.currentTime = currentTime;
+                            video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+                            if (!isPaused) {
+                                video.play().catch(() => { });
+                            }
+                        };
+                        video.addEventListener("loadedmetadata", handleLoadedMetadata);
+
+                        if (Hls.isSupported()) {
+                            const hls = new Hls({
+                                maxBufferLength: 30,
+                                maxBufferSize: 60 * 1000 * 1000
+                            });
+                            hlsRef.current = hls;
+                            hls.loadSource(newUrl);
+                            hls.attachMedia(video);
+                        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                            video.src = newUrl;
+                        }
+                        return;
+                    }
+                }
+            } catch (e) { }
+            await sleep(1000);
+        }
+
+        setHlsErrorMsg("HLS playlist generation timed out for new audio track.");
+        setProbingCodecs(false);
+    };
+
+    const playMovie = async (
+        movie: Movie,
+        startTime: number = 0,
+        selectedTorrent?: { hash: string; quality: string },
+        forceSeason?: number,
+        forceEpisode?: number
+    ) => {
+        const isTv = movie.media_type === "tv" || (!movie.imdb_id && selectedShowDetails);
+
+        let targetSeason = forceSeason !== undefined ? forceSeason : selectedSeason;
+        let targetEpisode = forceEpisode !== undefined ? forceEpisode : selectedEpisode;
+
+        if (isTv && movie.imdb_id && movie.imdb_id.startsWith("tv-") && forceSeason === undefined && forceEpisode === undefined) {
+            const parts = movie.imdb_id.split("-");
+            if (parts.length >= 4) {
+                targetSeason = parseInt(parts[2], 10);
+                targetEpisode = parseInt(parts[3], 10);
+            }
+        }
+
+        if (isTv) {
+            setSelectedSeason(targetSeason);
+            setSelectedEpisode(targetEpisode);
+            if (!selectedShowDetails || selectedShowDetails.id !== movie.id) {
+                fetch(`${API_BASE}/api/tv/${movie.id}`).then(r => r.json()).then(data => {
+                    const tmdbData = data.tmdb || data;
+                    setSelectedShowDetails(tmdbData);
+                    const seasonObj = tmdbData.seasons ? tmdbData.seasons.find((s: any) => s.season_number === targetSeason) : null;
+                    const epCount = seasonObj ? seasonObj.episode_count : 1;
+                    setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
+                });
+            } else {
+                const seasons = selectedShowDetails.seasons || selectedShowDetails.tmdb?.seasons;
+                const seasonObj = seasons ? seasons.find((s: any) => s.season_number === targetSeason) : null;
+                const epCount = seasonObj ? seasonObj.episode_count : 1;
+                setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
+            }
+        }
+
+        const resolvedTitle = isTv ? `${movie.title} S${String(targetSeason).padStart(2, "0")}E${String(targetEpisode).padStart(2, "0")}` : (movie.title || "Untitled");
+
+        setActiveStream({
+            imdbId: movie.imdb_id || `tv-${movie.id}-${targetSeason}-${targetEpisode}`,
+            title: resolvedTitle,
+            details: movie
+        });
+
+        setProbingCodecs(true);
+        setHlsReadyUrl(null);
+        setHlsErrorMsg(null);
+        setTorrentStatus(null);
+        setTorrentSubs([]);
+        setActiveTorrentSub(null);
+
+        // Backend naturally stops active sessions when a new start request is made
+
+        if (!isTv && movie.imdb_id) {
+            triggerSubtitleDownload(movie.imdb_id);
+        } else {
+            setSubtitleStatus(null);
+        }
+
+        try {
+            let hash = "";
+            let title = "";
+            let torrentsList: any[] = [];
+
+            if (isTv) {
+                const epRes = await fetch(`${API_BASE}/api/tv/${movie.id}/season/${targetSeason}/episode/${targetEpisode}`);
+                const epData = await epRes.json();
+                torrentsList = epData.yts?.torrents || [];
+                setAvailableTorrents(torrentsList);
+
+                if (torrentsList.length === 0) {
+                    throw new Error("No torrents found for this episode.");
+                }
+
+                let selected = torrentsList[0];
+                if (selectedTorrent) {
+                    selected = torrentsList.find((t: any) => t.hash === selectedTorrent.hash) || selected;
+                } else if (videoQuality) {
+                    selected = torrentsList.find((t: any) => t.quality.toLowerCase().includes(videoQuality.toLowerCase())) || selected;
+                }
+
+                hash = selected.hash;
+                title = selected.quality;
+            } else {
+                let torrents = selectedMovieTorrents;
+                // Fetch new torrents if we're clicking a card that isn't the currently selected hero movie
+                if (selectedMovie?.id !== movie.id || torrents.length === 0) {
+                    const res = await fetch(`${API_BASE}/api/movie/${movie.id}`);
+                    const data = await res.json();
+                    torrents = data.yts?.torrents || [];
+                    if (selectedMovie?.id === movie.id) {
+                        setSelectedMovieTorrents(torrents);
+                    }
+                }
+                torrentsList = torrents;
+                setAvailableTorrents(torrentsList);
+
+                if (torrentsList.length === 0) {
+                    throw new Error("No torrents found for this movie.");
+                }
+
+                let selected = torrentsList[0];
+                if (selectedTorrent) {
+                    selected = torrentsList.find((t: any) => t.hash === selectedTorrent.hash) || selected;
+                } else if (videoQuality) {
+                    selected = torrentsList.find((t: any) => t.quality.toLowerCase().includes(videoQuality.toLowerCase())) || selected;
+                }
+
+                hash = selected.hash;
+                title = selected.quality;
+            }
+
+            setActiveTorrentHash(hash);
+
+            const body: any = {
+                hash,
+                title
+            };
+
+            const startRes = await fetch(`${API_BASE}/api/stream/start`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            const startData = await startRes.json();
+
+            if (startRes.ok && startData.hlsUrl) {
+                setActiveSessionId(startData.sessionId);
+                pollHlsReady(API_BASE + startData.hlsUrl, startData.sessionId, startTime);
+                triggerAudioTracksFetch(startData.sessionId);
+                
+                // Fetch local subs from torrent
+                fetch(`${API_BASE}/api/stream/${startData.sessionId}/subs`)
+                    .then(res => res.json())
+                    .then(subs => setTorrentSubs(subs || []))
+                    .catch(err => console.error("Failed to fetch subs", err));
+            } else {
+                throw new Error(startData.error || "Failed to start HLS session");
+            }
+        } catch (err: any) {
+            setHlsErrorMsg(err.message || "Error starting stream");
+            setProbingCodecs(false);
+        }
+    };
+
+    const changeTorrentQuality = async (torrent: any) => {
+        if (!activeStream) return;
+        const video = videoRef.current;
+        const currentTime = video ? video.currentTime : 0;
+
+        // Stop HLS and clean player state
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        if (statusIntervalRef.current) clearInterval(statusIntervalRef.current);
+
+        if (hlsRef.current) {
+            hlsRef.current.destroy();
+            hlsRef.current = null;
+        }
+
+        // Start with the new torrent hash at the saved timestamp
+        playMovie(activeStream.details, currentTime, { hash: torrent.hash, quality: torrent.quality });
+    };
+
+    const changeEpisode = async (season: number, episode: number) => {
+        if (!activeStream) return;
+
+        // Stop current stream
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        if (statusIntervalRef.current) clearInterval(statusIntervalRef.current);
+
+        if (hlsRef.current) {
+            hlsRef.current.destroy();
+            hlsRef.current = null;
+        }
+
+        // Update state first
+        setSelectedSeason(season);
+        setSelectedEpisode(episode);
+
+        // Call playMovie with startTime = 0 and force the season/episode
+        playMovie(activeStream.details, 0, undefined, season, episode);
+    };
+
+    const handleSeasonChangeInPlayer = (seasonNum: number) => {
+        setSelectedSeason(seasonNum);
+        const seasonObj = selectedShowDetails?.seasons?.find((s: any) => s.season_number === seasonNum);
+        const epCount = seasonObj ? seasonObj.episode_count : 1;
+        const newEpList = Array.from({ length: epCount }, (_, i) => i + 1);
+        setEpisodesList(newEpList);
+        setSelectedEpisode(1);
+        changeEpisode(seasonNum, 1);
+    };
+
+    const pollHlsReady = async (hlsUrl: string, sessionId: string, startTime: number) => {
+        const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        startTorrentStatusPolling(sessionId);
+
+        for (let i = 0; i < 30; i++) {
+            try {
+                const res = await fetch(hlsUrl, { cache: "no-store" });
+                if (res.ok) {
+                    const contentType = res.headers.get("content-type") || "";
+                    if (contentType.includes("application/vnd.apple.mpegurl")) {
+                        setHlsReadyUrl(hlsUrl);
+                        setProbingCodecs(false);
+                        setTimeout(() => {
+                            initializeVideoPlayer(hlsUrl, startTime);
+                        }, 100);
+                        return;
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+            await sleep(1000);
+        }
+
+        setHlsErrorMsg("HLS playlist generation timed out. Ensure ffmpeg is installed.");
+        setProbingCodecs(false);
+    };
+
+    const initializeVideoPlayer = (url: string, startTime: number) => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        if (hlsRef.current) {
+            hlsRef.current.destroy();
+        }
+
+        if (Hls.isSupported()) {
+            const hls = new Hls({
+                maxBufferLength: 30,
+                maxBufferSize: 60 * 1000 * 1000
+            });
+            hlsRef.current = hls;
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                if (startTime > 0) {
+                    video.currentTime = startTime;
+                }
+                video.play().catch(() => { });
+            });
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            setHlsErrorMsg(`Playback error: ${data.details}`);
+                            hls.destroy();
+                            break;
+                    }
+                }
+            });
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+            video.src = url;
+            video.addEventListener("loadedmetadata", () => {
+                if (startTime > 0) {
+                    video.currentTime = startTime;
+                }
+                video.play().catch(() => { });
+            });
+        }
+
+        // Subtitles are handled via React JSX <track> element based on subtitleStatus
+
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = setInterval(reportProgress, 5000);
+    };
+
+    const reportProgress = async () => {
+        const video = videoRef.current;
+        if (!video || !activeStream) return;
+        const timestamp = video.currentTime;
+        const duration = video.duration;
+        if (!duration || isNaN(duration) || timestamp < 5) return;
+
+        try {
+            await fetch(`${API_BASE}/api/progress`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    imdbId: activeStream.imdbId,
+                    timestamp,
+                    duration,
+                    movieDetails: {
+                        id: activeStream.details.id,
+                        title: activeStream.title,
+                        poster_path: activeStream.details.poster_path,
+                        backdrop_path: activeStream.details.backdrop_path,
+                        vote_average: activeStream.details.vote_average,
+                        release_date: activeStream.details.release_date,
+                        imdb_id: activeStream.details.imdb_id || activeStream.imdbId,
+                        media_type: activeStream.details.media_type || (activeStream.imdbId.startsWith("tv-") ? "tv" : "movie")
+                    }
+                })
+            });
+            fetchUserLists();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const startTorrentStatusPolling = (sessionId: string) => {
+        if (statusIntervalRef.current) clearInterval(statusIntervalRef.current);
+        const fetchStatus = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/stream/${sessionId}/status`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setTorrentStatus(data);
+                }
+            } catch (e) {
+                // ignore
+            }
+        };
+        statusIntervalRef.current = setInterval(fetchStatus, 1500);
+        fetchStatus();
+    };
+
+    const triggerSubtitleDownload = async (imdbId: string) => {
+        if (subtitlePollRef.current) clearInterval(subtitlePollRef.current);
+        setSubtitleStatus({ status: "fetching", step: "Requesting subtitles...", error: null });
+        setSubtitleDebug("Fetching from API...");
+
+        try {
+            await fetch(`${API_BASE}/api/movie/${imdbId}/subtitle-start`, { method: "POST" });
+
+            subtitlePollRef.current = setInterval(async () => {
+                try {
+                    const res = await fetch(`${API_BASE}/api/movie/${imdbId}/subtitle-status`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setSubtitleStatus(data);
+                        if (data.status === "ready" || data.status === "failed") {
+                            clearInterval(subtitlePollRef.current);
+                            if (data.status === "ready") {
+                                fetch(`${API_BASE}/api/movie/${imdbId}/english-sub`)
+                                    .then(async r => {
+                                        const text = await r.text();
+                                        setSubtitleDebug(`[STATUS] ${r.status}\n[TYPE] ${r.headers.get("content-type")}\n[PREVIEW]\n${text.substring(0, 300)}`);
+                                        const blob = new Blob([text], { type: "text/vtt" });
+                                        setSubtitleBlobUrl(URL.createObjectURL(blob));
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        setSubtitleDebug(`[ERROR] ${err.message}`);
+                                    });
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }, 1000);
+        } catch (err: any) {
+            setSubtitleStatus({ status: "failed", step: "Failed to load", error: err.message });
+        }
+    };
+
+    const handleLocalSubtitleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            let text = event.target?.result as string;
+            if (!text) return;
+
+            if (file.name.endsWith('.srt')) {
+                text = text.replace(/\r\n/g, '\n').replace(/^\uFEFF/, '');
+                text = "WEBVTT\n\n" + text.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+            }
+
+            const blob = new Blob([text], { type: "text/vtt" });
+            const url = URL.createObjectURL(blob);
+
+            setSubtitleBlobUrl(prev => {
+                if (prev) URL.revokeObjectURL(prev);
+                return url;
+            });
+            setSubtitleStatus({
+                status: "ready",
+                step: `Loaded local file: ${file.name}`,
+                error: null
+            });
+            setSubtitleDebug("");
+        };
+        reader.readAsText(file);
+        e.target.value = ''; // Reset input
+    };
+
+    const closePlayer = async () => {
+        await reportProgress();
+
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+        if (statusIntervalRef.current) clearInterval(statusIntervalRef.current);
+        if (subtitlePollRef.current) clearInterval(subtitlePollRef.current);
+
+        if (hlsRef.current) {
+            hlsRef.current.destroy();
+            hlsRef.current = null;
+        }
+
+        fetch(`${API_BASE}/api/stream/stop`, { method: "POST" }).catch(() => {});
+
+        setActiveStream(null);
+        setHlsReadyUrl(null);
+        setProbingCodecs(false);
+        setTorrentStatus(null);
+        setSubtitleStatus(null);
+        setSubtitleBlobUrl(prev => {
+            if (prev) URL.revokeObjectURL(prev);
+            return null;
+        });
+        setSubtitleDebug("");
+
+        // Clear HLS audio tracks and session states
+        setAudioTracks([]);
+        setCurrentAudioTrack(0);
+        setActiveSessionId(null);
+        setAvailableTorrents([]);
+        setActiveTorrentHash(null);
+
+        // Refresh storage stats
+        fetchStorageStats();
+    };
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    const getPosterUrl = (path: string) =>
+        path ? `https://image.tmdb.org/t/p/w500${path}` : "https://via.placeholder.com/500x750?text=No+Poster";
+
+    const getBackdropUrl = (path: string) =>
+        path ? `https://image.tmdb.org/t/p/w1280${path}` : "";
+
+    const getCardBackdropUrl = (path: string) =>
+        path ? `https://image.tmdb.org/t/p/w500${path}` : "https://via.placeholder.com/500x281?text=No+Preview";
+
+    const getMovieThemeColor = (movie: Movie | null): [number, number, number] => {
+        if (!movie) return [0.15, 0.15, 0.18]; // Default dark slate/grey
+
+        // Hash title to compute a consistent color for the movie
+        let hash = 0;
+        const titleText = movie.title || movie.name || "";
+        for (let i = 0; i < titleText.length; i++) {
+            hash = titleText.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        const hue = Math.abs(hash) % 360;
+        const s = 0.35; // 35% saturation
+        const v = 0.18; // 18% brightness/value
+
+        const c = v * s;
+        const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+        const m = v - c;
+
+        let r = 0, g = 0, b = 0;
+        if (hue < 60) { r = c; g = x; }
+        else if (hue < 120) { r = x; g = c; }
+        else if (hue < 180) { g = c; b = x; }
+        else if (hue < 240) { g = x; b = c; }
+        else if (hue < 300) { r = x; b = c; }
+        else { r = c; b = x; }
+
+        return [r + m, g + m, b + m];
+    };
+
+    return (
+        <div className="relative h-screen flex flex-col overflow-hidden bg-black select-none text-slate-100">
+
+            {/* ── STICKY TOP AREA (Header + Hero Card) ── never scrolls */}
+            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-6 md:px-12 flex flex-col z-20">
+
+                {/* Header — unified single-line sleek navbar (Desktop Only) */}
+                <header className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300">
+                    {/* Cache stats */}
+                    <div className="flex items-center gap-3 flex-1">
+                        <span>{storageStats ? formatStorageSize(storageStats.totalBytes) : "0 B"}</span>
+                        <button
+                            onClick={handleDeleteAllStorage}
+                            className="hover:text-rose-400 transition-colors duration-200 cursor-pointer"
+                        >
+                            Wipe
+                        </button>
+                    </div>
+
+
+                    <nav className="flex items-center justify-center gap-5 flex-shrink-0">
+                        <Link href="/" className="hover:text-white transition-colors duration-200 cursor-pointer">Home</Link>
+                        <Link href="/log" className="hover:text-white transition-colors duration-200 cursor-pointer">Log</Link>
+                    </nav>
+
+
+                    {/* Search */}
+                    <form onSubmit={handleSearch} className="flex items-center justify-end gap-4 flex-1">
+                        <div className="relative w-48 md:w-64">
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pr-6 py-1 bg-transparent focus:outline-none text-inherit placeholder-slate-600 transition-all duration-300"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearchQuery("");
+                                        setSearchResults([]);
+                                        setIsSearching(false);
+                                    }}
+                                    className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 transition-colors"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            )}
+                        </div>
+
+
+                    </form>
+                </header>
+
+
+
+
+                {/* Expanded Hero Card Panel (Using more space vertically since trending carousel was removed) */}
+                <section className="relative h-[62vh] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/40 backdrop-blur-xl">
+                    {selectedMovie && (
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={selectedMovie.id}
+                                className="absolute inset-0 z-0"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.5 }}
+                            >
+                                <Image
+                                    src={getBackdropUrl(selectedMovie.backdrop_path)}
+                                    alt={selectedMovie.title || selectedMovie.name || "Movie Backdrop"}
+                                    fill
+                                    priority
+                                    className="object-cover object-center pointer-events-none"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none" />
+                            </motion.div>
+                        </AnimatePresence>
+                    )}
+
+                    {/* Hero Content Overlay */}
+                    <div className="absolute inset-0 z-10 flex flex-col justify-end p-8 md:p-14 gap-5">
+                        {selectedMovie && (
+                            <FadeContent key={selectedMovie.id} className="max-w-2xl flex flex-col gap-4">
+
+                                {/* ReactBits Proximity font weight cursor animation */}
+                                <div className="mb-2">
+                                    <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} />
+                                </div>
+
+                                {/* Meta details */}
+                                <div className="flex items-center gap-3.5 text-xs md:text-sm text-slate-300 font-medium">
+                                    <span className="flex items-center gap-1 text-slate-100">
+                                        <Star className="w-3.5 h-3.5 fill-white text-white" />
+                                        {selectedMovie.vote_average?.toFixed(1) || "n/a"}
+                                    </span>
+                                    <span>|</span>
+                                    <span>{selectedMovie.release_date?.substring(0, 4) || "n/a"}</span>
+                                    <span>|</span>
+                                    <span className="truncate max-w-[200px] text-slate-400">
+                                        {selectedMovie.genres?.map(g => g.name).join(", ") || "Movie"}
+                                    </span>
+                                </div>
+
+                                {/* Synopsis */}
+                                <p className="text-slate-300 text-xs md:text-sm line-clamp-3 leading-relaxed max-w-xl">
+                                    {selectedMovie.overview}
+                                </p>
+
+
+
+                                {/* Minimalist Action Buttons (Grey/White/Black) */}
+                                <div className="flex items-center gap-3.5 mt-2">
+                                    <button
+                                        onClick={() => playMovie(selectedMovie)}
+                                        className="px-6 py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-xs md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
+                                    >
+                                        <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" /> {selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}
+                                    </button>
+                                    <button
+                                        onClick={() => toggleWatchlist(selectedMovie)}
+                                        className="px-6 py-2.5 rounded-full bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 backdrop-blur-sm text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
+                                    >
+                                        {selectedMovie.imdb_id && watchlist.some(item => item.imdbId === selectedMovie.imdb_id) ? (
+                                            <>
+                                                <Check className="w-3.5 h-3.5 text-slate-200" /> Watchlist
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Plus className="w-3.5 h-3.5" /> Watchlist
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <div className="ml-2">
+                                        <StarRating 
+                                            value={ratings[selectedMovie.id]?.rating || 0} 
+                                            onChange={(val) => handleRate(selectedMovie, val)} 
+                                        />
+                                    </div>
+                                </div>
+                            </FadeContent>
+                        )}
+                    </div>
+                </section>
+            </div>
+
+            {/* ── VERTICAL SCROLLABLE BOTTOM AREA ── scrollable, hero stays fixed above */}
+            <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative mt-3 snap-y snap-mandatory">
+                <div className="max-w-[96vw] mx-auto px-6 md:px-12">
+
+                    {/* Search Results in Scrollable Container if active */}
+                    {isSearching && searchResults.length > 0 && (
+                        <div className="mb-10 snap-start snap-always scroll-mt-0 pt-4">
+                            <h2 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
+                                Search Results
+                            </h2>
+                            <ScrollRow>
+                                {searchResults.map((movie, index) => (
+                                    <div
+                                        key={movie.id}
+                                        onClick={() => handleCardClick(movie)}
+                                        className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
+                                    >
+                                        <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950">
+                                            <Image
+                                                src={getCardBackdropUrl(movie.backdrop_path)}
+                                                alt={movie.title || movie.name || "Preview"}
+                                                fill
+                                                priority={index < 4}
+                                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                                                className="object-cover group-hover:scale-105 transition-all duration-300"
+                                            />
+                                        </div>
+                                        <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
+                                            {movie.title || movie.name}
+                                        </div>
+                                    </div>
+                                ))}
+                            </ScrollRow>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col gap-0 pb-28">
+
+                        {/* Trending Movies/Series */}
+                        <FadeContent className="snap-start snap-always scroll-mt-0 pt-8 pb-10">
+                            <div className="flex items-center gap-6 mb-5">
+                                <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
+                                    Trending
+                                </h3>
+                                <div className="flex items-center gap-3 text-xs font-medium tracking-wider uppercase text-slate-500">
+                                    <button
+                                        onClick={() => setTrendingType('movie')}
+                                        className={`hover:text-slate-300 transition-colors ${trendingType === 'movie' ? 'text-white cursor-default' : 'cursor-pointer'}`}
+                                    >
+                                        Movies
+                                    </button>
+                                    <span className="text-slate-700">|</span>
+                                    <button
+                                        onClick={() => setTrendingType('tv')}
+                                        className={`hover:text-slate-300 transition-colors ${trendingType === 'tv' ? 'text-white cursor-default' : 'cursor-pointer'}`}
+                                    >
+                                        Series
+                                    </button>
+                                </div>
+                            </div>
+
+                            {trending.length > 0 ? (
+                                <ScrollRow>
+                                    {trending.map((movie, index) => (
+                                        <div
+                                            key={movie.id}
+                                            onClick={() => handleCardClick(movie)}
+                                            className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
+                                        >
+                                            <div className={`relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border transition-all duration-300 shadow-md bg-slate-950 ${selectedMovie?.id === movie.id
+                                                ? "border-white shadow-[0_0_16px_rgba(255,255,255,0.18)]"
+                                                : "border-slate-800/40 group-hover:border-white/40"
+                                                }`}>
+                                                <Image
+                                                    src={getCardBackdropUrl(movie.backdrop_path)}
+                                                    alt={movie.title || movie.name || "Preview"}
+                                                    fill
+                                                    priority={index < 4}
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                                                    className="object-cover group-hover:scale-105 transition-all duration-300"
+                                                />
+                                            </div>
+                                            <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
+                                                {movie.title || movie.name}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </ScrollRow>
+                            ) : (
+                                <div className="flex items-center justify-center py-10 w-full">
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="w-6 h-6 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
+                                        <div className="text-[9px] font-medium tracking-[0.2em] uppercase text-slate-500">
+                                            Loading {trendingType === 'movie' ? 'Movies' : 'Series'}...
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </FadeContent>
+
+                        {/* Continue Watching Row */}
+                        {continueWatching.length > 0 && (
+                            <FadeContent className="snap-start snap-always scroll-mt-0 pt-8 pb-10">
+                                <h3 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
+                                    Continue Watching
+                                </h3>
+                                <ScrollRow>
+                                    {continueWatching.map((item: any) => {
+                                        const percent = Math.min(100, Math.round((item.timestamp / item.duration) * 100));
+                                        return (
+                                            <div
+                                                key={item.imdbId}
+                                                className="flex-none group cursor-pointer snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
+                                                onClick={() => playMovie({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.imdbId.startsWith("tv-") ? "tv" : "movie" }, item.timestamp)}
+                                            >
+                                                <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-slate-800/50 group-hover:border-white/40 transition-all duration-300 bg-slate-950 shadow-md">
+                                                    {item.movieDetails?.backdrop_path ? (
+                                                        <Image
+                                                            src={getBackdropUrl(item.movieDetails.backdrop_path)}
+                                                            alt={item.movieDetails.title}
+                                                            fill
+                                                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                                                            className="object-cover brightness-90 group-hover:brightness-100 transition-all duration-300"
+                                                        />
+                                                    ) : (
+                                                        <div className="absolute inset-0 flex items-center justify-center text-slate-600 bg-slate-950">
+                                                            <Film className="w-6 h-6" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black">
+                                                            <Play className="w-3.5 h-3.5 fill-black pl-0.5" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-slate-850">
+                                                        <div className="h-full bg-white" style={{ width: `${percent}%` }} />
+                                                    </div>
+                                                </div>
+                                                <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
+                                                    {item.movieDetails?.title || "Unknown Title"}
+                                                </div>
+                                                <div className="text-[9px] text-slate-500 font-medium">
+                                                    {percent}% completed
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </ScrollRow>
+                            </FadeContent>
+                        )}
+
+                        {/* Watchlist Row */}
+                        {watchlist.length > 0 && (
+                            <FadeContent className="snap-start snap-always scroll-mt-0 pt-8 pb-10">
+                                <h3 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
+                                    Watchlist
+                                </h3>
+                                <ScrollRow>
+                                    {watchlist.map((item: any) => (
+                                        <div
+                                            key={item.imdbId}
+                                            onClick={() => handleCardClick({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.imdbId.startsWith("tv-") ? "tv" : "movie" })}
+                                            className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
+                                        >
+                                            <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950">
+                                                <Image
+                                                    src={getCardBackdropUrl(item.movieDetails.backdrop_path)}
+                                                    alt={item.movieDetails.title || item.movieDetails.name || "Preview"}
+                                                    fill
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                                                    className="object-cover group-hover:scale-105 transition-all duration-300"
+                                                />
+                                            </div>
+                                            <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
+                                                {item.movieDetails.title || item.movieDetails.name}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </ScrollRow>
+                            </FadeContent>
+                        )}
+
+
+
+
+
+
+
+                    </div>
+                </div>
+            </div>
+
+            {/* ── VIDEO PLAYER MODAL OVERLAY ── */}
+            <AnimatePresence>
+                {activeStream && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 md:p-6 backdrop-blur-3xl"
+                    >
+                        {/* Player Header */}
+                        <div className="w-full max-w-7xl flex items-center justify-between mb-4">
+                            <div>
+                                <h2 className="text-base md:text-lg font-light tracking-wide text-white/95 flex items-center gap-2">
+                                    <ScrambledText text={activeStream.title} />
+                                </h2>
+                            </div>
+                            <div>
+                                <button
+                                    onClick={closePlayer}
+                                    className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 duration-200 cursor-pointer"
+                                >
+                                    <X className="w-4.5 h-4.5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Split Screen Player + Glassmorphic Sidebar Layout */}
+                        <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
+
+                            {/* Left Column: Video Box Container */}
+                            <div className="flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black/40 shadow-2xl flex flex-col justify-center items-center backdrop-blur-xl">
+
+                                {/* Loader overlay */}
+                                {(probingCodecs || !hlsReadyUrl) && (
+                                    <div className="absolute inset-0 z-20 bg-black flex flex-col items-center justify-center p-6 text-center gap-4">
+                                        {hlsErrorMsg ? (
+                                            <div className="flex flex-col items-center gap-3 text-rose-500">
+                                                <AlertCircle className="w-10 h-10 stroke-[1.5]" />
+                                                <div className="font-light tracking-wide text-sm text-rose-450">Streaming Session Failed</div>
+                                                <div className="text-xs text-white/50 max-w-md font-light">{hlsErrorMsg}</div>
+                                                <button
+                                                    onClick={closePlayer}
+                                                    className="px-5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white/95 rounded-full mt-2 text-xs font-medium active:scale-95 transition-all cursor-pointer"
+                                                >
+                                                    Go Back
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Loader2 className="w-8 h-8 text-white/60 animate-spin stroke-[1.5]" />
+                                                <div>
+                                                    <div className="text-white/90 font-light tracking-wider text-sm">Preparing Media Torrent...</div>
+                                                    <div className="text-white/40 text-[10px] tracking-wide font-light mt-1 max-w-xs leading-relaxed">
+                                                        Connecting peers, probing streams, and spinning up transcoding server.
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                <video
+                                    ref={videoRef}
+                                    controls={!!hlsReadyUrl}
+                                    playsInline
+                                    crossOrigin="anonymous"
+                                    className="w-full h-full object-contain relative z-10"
+                                >
+                                    {subtitleBlobUrl && (
+                                        <track
+                                            key={subtitleBlobUrl}
+                                            kind="subtitles"
+                                            src={subtitleBlobUrl}
+                                            srcLang="en"
+                                            label="YTS Subs (Web)"
+                                            default={activeTorrentSub === null}
+                                            onLoad={(e) => {
+                                                const t = e.currentTarget as HTMLTrackElement;
+                                                if (t.track) t.track.mode = "showing";
+                                            }}
+                                        />
+                                    )}
+
+                                    {torrentSubs.map((sub: any) => (
+                                        <track
+                                            key={`sub-${sub.index}`}
+                                            kind="subtitles"
+                                            src={`${API_BASE}/api/stream/${activeSessionId}/subs/${sub.index}`}
+                                            srcLang="en"
+                                            label={sub.name}
+                                            default={activeTorrentSub === sub.index}
+                                            onLoad={(e) => {
+                                                if (activeTorrentSub === sub.index) {
+                                                    const t = e.currentTarget as HTMLTrackElement;
+                                                    if (t.track) t.track.mode = "showing";
+                                                }
+                                            }}
+                                        />
+                                    ))}
+                                </video>
+                            </div>
+
+                            {/* Right Column: Glassmorphic Sidebar */}
+                            <GlassSurface className="w-full lg:w-80 xl:w-96 p-5 flex flex-col gap-6 !border-white/[0.03] !bg-transparent !backdrop-blur-none h-auto max-h-[70vh] lg:max-h-full overflow-y-auto no-scrollbar rounded-2xl !shadow-none">
+
+                                {/* 0. Rating System */}
+                                <div className="flex flex-col gap-3 pb-4 border-b border-white/[0.05]">
+                                    <VariableProximity
+                                        text="Rate Title"
+                                        fromWeight={400}
+                                        toWeight={800}
+                                        radius={80}
+                                        className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1"
+                                    />
+                                    <StarRating 
+                                        value={ratings[activeStream.details?.id]?.rating || 0} 
+                                        onChange={(val) => activeStream.details && handleRate(activeStream.details, val)} 
+                                    />
+                                </div>
+
+                                {/* 1. TV Season/Episode Selector (Text-only, Stacked) */}
+                                {selectedShowDetails && (
+                                    <div className="flex flex-col gap-3 pb-4 border-b border-white/[0.05]">
+                                        <VariableProximity
+                                            text="TV Episode Control"
+                                            fromWeight={400}
+                                            toWeight={800}
+                                            radius={80}
+                                            className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1"
+                                        />
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[8px] font-medium uppercase tracking-[0.15em] text-white/30 mb-0.5">Season</span>
+                                                <CustomSelect
+                                                    value={selectedSeason}
+                                                    onChange={(val: number) => handleSeasonChangeInPlayer(val)}
+                                                    options={selectedShowDetails.seasons?.filter((s: any) => s.season_number > 0).map((s: any) => ({ value: s.season_number, label: s.name || `Season ${s.season_number}` })) || []}
+                                                />
+                                            </div>
+
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[8px] font-medium uppercase tracking-[0.15em] text-white/30 mb-0.5">Episode</span>
+                                                <CustomSelect
+                                                    value={selectedEpisode}
+                                                    onChange={(val: number) => changeEpisode(selectedSeason, val)}
+                                                    options={episodesList.map(epNum => ({ value: epNum, label: `Episode ${epNum}` }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 2. Download Status Progress Bar */}
+                                {torrentStatus && (
+                                    <div className="flex flex-col gap-2 pb-4 border-b border-white/[0.05]">
+                                        <div className="flex justify-between items-center text-[9px] uppercase tracking-[0.25em] text-white/40 mb-0.5">
+                                            <VariableProximity
+                                                text="Download Status"
+                                                fromWeight={400}
+                                                toWeight={800}
+                                                radius={80}
+                                                className=""
+                                            />
+                                            <span className="font-medium text-white/80 tracking-wide font-mono normal-case">{Math.round((torrentStatus.progress || 0) * 100)}%</span>
+                                        </div>
+                                        <div className="w-full bg-white/10 h-[2px] rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-white transition-all duration-300"
+                                                style={{ width: `${Math.round((torrentStatus.progress || 0) * 100)}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between items-center text-white/30 text-[8px] font-mono tracking-tight">
+                                            <span>{formatSpeed(torrentStatus.downloadSpeed)}</span>
+                                            <span>{torrentStatus.numPeers || 0} Peers</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 3. Available Torrents (Top 5 Qualities) */}
+                                <div className="flex flex-col gap-3 pb-4 border-b border-white/[0.05]">
+                                    <button
+                                        onClick={() => setIsQualityExpanded(!isQualityExpanded)}
+                                        className="flex items-center justify-between w-full text-left focus:outline-none cursor-pointer"
+                                    >
+                                        <VariableProximity
+                                            text="quality"
+                                            fromWeight={400}
+                                            toWeight={800}
+                                            radius={80}
+                                            className="text-[9px] uppercase tracking-[0.25em] text-white/40"
+                                        />
+                                        <span className="text-[8px] text-white/30 font-light hover:text-white/60 transition-colors uppercase tracking-wider">
+                                            {isQualityExpanded ? "Collapse" : `Expand (${availableTorrents.length})`}
+                                        </span>
+                                    </button>
+
+                                    {isQualityExpanded && (
+                                        <div className="flex flex-col gap-2 max-h-[210px] overflow-y-auto no-scrollbar">
+                                            {availableTorrents.length === 0 ? (
+                                                <div className="text-xs text-white/30 italic py-2 font-light">No alternative torrents found.</div>
+                                            ) : (
+                                                availableTorrents.slice(0, 10).map((t, idx) => {
+                                                    const isActive = t.hash === activeTorrentHash;
+                                                    return (
+                                                        <button
+                                                            key={t.hash || idx}
+                                                            onClick={() => !isActive && changeTorrentQuality(t)}
+                                                            className={`w-full text-left rounded-2xl p-3 transition-all duration-300 flex flex-col gap-2 bg-transparent ${isActive
+                                                                ? "cursor-default text-white"
+                                                                : "hover:bg-white/[0.08] text-white/60 hover:text-white/90 cursor-pointer"
+                                                                }`}
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2 w-full">
+                                                                <span className={`text-[11px] font-normal leading-normal line-clamp-2 ${isActive ? "text-white" : "text-white/70"}`} title={t.quality}>
+                                                                    {t.quality}
+                                                                </span>
+                                                                {isActive && (
+                                                                    <span className="flex-shrink-0 text-[8px] border border-white/20 text-white/90 px-2 py-0.5 rounded font-medium uppercase tracking-wider bg-white/5">
+                                                                        Active
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-[9px] text-white/40 font-mono font-light w-full">
+                                                                <span>Size: {t.size}</span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-white/40 font-normal">▲ {t.seeds}</span>
+                                                                    <span className="text-white/40 font-normal">▼ {t.peers}</span>
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 4. Subtitles (Combined) */}
+                                <div className="flex flex-col gap-2 pb-4 border-b border-white/[0.05]">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <VariableProximity
+                                            text="Subtitles"
+                                            fromWeight={400}
+                                            toWeight={800}
+                                            radius={80}
+                                            className="text-[9px] uppercase tracking-[0.25em] text-white/40"
+                                        />
+                                        <label className="cursor-pointer text-[8px] bg-white/[0.05] hover:bg-white/10 text-white/60 hover:text-white/90 border border-white/10 px-2 py-1 rounded transition-colors uppercase tracking-wider flex items-center gap-1 active:scale-95 shadow-sm">
+                                            <Upload className="w-2.5 h-2.5" /> Upload SRT
+                                            <input type="file" accept=".srt,.vtt" onChange={handleLocalSubtitleUpload} className="hidden" />
+                                        </label>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5 max-h-[180px] overflow-y-auto no-scrollbar">
+                                        {/* Web Subtitle Status */}
+                                        {subtitleStatus ? (
+                                            <div className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 flex flex-col gap-1 text-[11px] text-white/70">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-medium capitalize text-white/90">Web Sub: {subtitleStatus.status}</span>
+                                                    <span className="text-[9px] text-white/40 font-mono text-right line-clamp-1 max-w-[120px]">{subtitleStatus.step}</span>
+                                                </div>
+                                                {subtitleStatus.error && (
+                                                    <span className="text-[9px] text-rose-450/90 font-mono mt-0.5">
+                                                        {subtitleStatus.error}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : null}
+
+                                        {/* Local Torrent Subs */}
+                                        {torrentSubs.length > 0 ? (
+                                            torrentSubs.map((sub: any) => {
+                                                const isActive = activeTorrentSub === sub.index;
+                                                return (
+                                                    <button
+                                                        key={sub.index}
+                                                        onClick={() => setActiveTorrentSub(isActive ? null : sub.index)}
+                                                        className={`w-full text-left rounded-lg p-2.5 transition-all duration-300 flex items-center justify-between gap-2 border border-white/[0.02] ${isActive
+                                                            ? "bg-white/[0.08] text-white"
+                                                            : "bg-white/[0.01] hover:bg-white/[0.05] text-white/60 hover:text-white/90 cursor-pointer"
+                                                            }`}
+                                                    >
+                                                        <span className={`text-[10px] font-medium leading-tight truncate ${isActive ? "text-white" : "text-white/70"}`} title={sub.name}>
+                                                            {sub.name}
+                                                        </span>
+                                                        {isActive && (
+                                                            <span className="flex-shrink-0 text-[8px] border border-white/20 text-white/90 px-1.5 py-0.5 rounded uppercase tracking-wider bg-white/10">
+                                                                Active
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })
+                                        ) : null}
+
+                                        {!subtitleStatus && torrentSubs.length === 0 && (
+                                            <div className="bg-white/[0.01] border border-white/[0.04] rounded-lg p-2 text-[10px] text-white/30 italic text-center">
+                                                No subtitles available
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 5. Audio Track Selection */}
+                                <div className="flex flex-col gap-3 pb-4">
+                                    <VariableProximity
+                                        text="Audio Track"
+                                        fromWeight={400}
+                                        toWeight={800}
+                                        radius={80}
+                                        className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1"
+                                    />
+                                    {audioTracks.length > 1 ? (
+                                        <CustomSelect
+                                            value={currentAudioTrack}
+                                            onChange={(val: number) => changeAudioTrack(val)}
+                                            options={audioTracks.map(track => ({ value: track.id, label: `${track.title} [${track.language}]` }))}
+                                        />
+                                    ) : (
+                                        <div className="bg-white/[0.01] border border-white/[0.04] rounded-xl px-3 py-2 text-xs text-white/30 font-light">
+                                            Default Audio Track
+                                        </div>
+                                    )}
+                                </div>
+
+
+
+                            </GlassSurface>
+
+                        </div>
+
+
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            {/* Mobile Bottom Navigation (Glassmorphic) */}
+            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-[400px]">
+                <nav className="flex items-center justify-between px-6 py-4 rounded-full bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+                    {/* Storage */}
+                    <div className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] tracking-[0.2em] text-slate-300 font-medium whitespace-nowrap">
+                            {storageStats ? formatStorageSize(storageStats.totalBytes) : "0 B"}
+                        </span>
+                    </div>
+
+                    {/* Wipe */}
+                    <button onClick={handleDeleteAllStorage} className="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-400 transition-colors">
+                        <Trash2 className="w-5 h-5" />
+                    </button>
+
+                    {/* Home */}
+                    <Link href="/" className="flex flex-col items-center gap-1 text-slate-200">
+                        <HomeIcon className="w-5 h-5" />
+                    </Link>
+
+                    {/* Log */}
+                    <Link href="/log" className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+                        <List className="w-5 h-5" />
+                    </Link>
+
+                    {/* Search Toggle */}
+                    <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+                        <Search className="w-5 h-5" />
+                    </button>
+                </nav>
+                
+                {/* Mobile Search Input Overlay */}
+                <AnimatePresence>
+                    {isMobileSearchOpen && (
+                        <motion.form 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            onSubmit={(e) => { handleSearch(e); setIsMobileSearchOpen(false); }}
+                            className="absolute bottom-full mb-4 left-0 w-full"
+                        >
+                            <input
+                                type="text"
+                                placeholder="Search movies..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full px-6 py-4 rounded-3xl bg-[#090b14]/90 backdrop-blur-2xl border border-white/10 text-sm focus:outline-none focus:border-white/20 text-white placeholder-slate-500 shadow-2xl"
+                                autoFocus
+                            />
+                        </motion.form>
+                    )}
+                </AnimatePresence>
+            </div>
+
+        </div>
+    );
+}
+
+function CustomSelect({ value, onChange, options, className = "" }: any) {
+    const [isOpen, setIsOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const selectedOption = options.find((o: any) => o.value === value) || options[0];
+
+    return (
+        <div ref={ref} className={`relative flex flex-col w-full ${className}`}>
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-between bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/10 rounded-xl px-3 py-2 text-xs text-white/80 cursor-pointer transition-all duration-200"
+            >
+                <span className="truncate">{selectedOption?.label || "Select..."}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-white/40 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </div>
+            {isOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-[#0b0c10] border border-white/10 rounded-xl overflow-hidden z-[100] shadow-2xl max-h-48 overflow-y-auto no-scrollbar">
+                    {options.map((opt: any) => (
+                        <div
+                            key={opt.value}
+                            onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                            className={`px-3 py-2 text-xs cursor-pointer transition-colors ${value === opt.value ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white/90'}`}
+                        >
+                            {opt.label}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+    const [hover, setHover] = useState(0);
+
+    return (
+        <div className="flex items-center gap-1 w-fit transition-all duration-300">
+            {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                    key={star}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onChange(star); }}
+                    onMouseEnter={() => setHover(star)}
+                    onMouseLeave={() => setHover(0)}
+                    className="p-0.5 transition-transform hover:scale-110 focus:outline-none"
+                >
+                    <Star
+                        className={`w-3.5 h-3.5 transition-all duration-300 ${
+                            star <= (hover || value) ? "fill-slate-300 text-slate-300 drop-shadow-[0_0_6px_rgba(203,213,225,0.4)]" : "text-white/20"
+                        }`}
+                    />
+                </button>
+            ))}
+        </div>
+    );
+}
