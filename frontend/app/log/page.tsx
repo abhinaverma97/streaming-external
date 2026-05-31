@@ -96,7 +96,7 @@ export default function LogPage() {
             {/* Background Glow */}
             <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
 
-            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-6 md:px-12 flex flex-col z-20 pt-3">
+            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 {/* Navbar */}
                 <header className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300">
                     <div className="flex items-center gap-3 flex-1">
@@ -137,7 +137,7 @@ export default function LogPage() {
                 </header>
 
                 {/* Controls - Center aligned, purely textual matching home page section headers */}
-                <div className="flex items-center justify-center gap-6 mt-16 mb-12 text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
+                <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mt-8 md:mt-16 mb-8 md:mb-12 text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
                     <SortButton active={sortBy === "time"} onClick={() => setSortBy("time")} label="Recent" />
                     <SortButton active={sortBy === "rating"} onClick={() => setSortBy("rating")} label="Rating" />
                     <SortButton active={sortBy === "release"} onClick={() => setSortBy("release")} label="Release" />
@@ -171,7 +171,7 @@ export default function LogPage() {
                         variants={containerVariants as any}
                         initial="hidden"
                         animate="show"
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-5 gap-y-10"
+                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10"
                     >
                         {sortedRatings.map((item) => (
                             <motion.div variants={itemVariants as any} key={item.movieDetails.id} className="group flex flex-col cursor-default">

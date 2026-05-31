@@ -1075,7 +1075,7 @@ export default function Home() {
                         </div>
                     )}
 
-                    <div className="flex flex-col gap-0 pb-28">
+                    <div className="flex flex-col gap-0 pb-32 md:pb-12">
 
                         {/* Trending Movies/Series */}
                         <FadeContent className="snap-start snap-always scroll-mt-0 pt-8 pb-10">
@@ -1238,7 +1238,7 @@ export default function Home() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 md:p-6 backdrop-blur-3xl"
+                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 pt-6 md:p-6 backdrop-blur-3xl"
                     >
                         {/* Player Header */}
                         <div className="w-full max-w-7xl flex items-center justify-between mb-4">
@@ -1258,7 +1258,7 @@ export default function Home() {
                         </div>
 
                         {/* Split Screen Player + Glassmorphic Sidebar Layout */}
-                        <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
+                        <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
 
                             {/* Left Column: Video Box Container */}
                             <div className="flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black/40 shadow-2xl flex flex-col justify-center items-center backdrop-blur-xl">
