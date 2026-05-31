@@ -319,7 +319,8 @@ export default function Home() {
                             poster_path: movie.poster_path,
                             backdrop_path: movie.backdrop_path,
                             vote_average: movie.vote_average,
-                            release_date: movie.release_date
+                            release_date: movie.release_date,
+                            media_type: movie.media_type
                         }
                     })
                 });
