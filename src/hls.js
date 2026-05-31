@@ -128,10 +128,12 @@ async function ensureHls(session, audioTrack = 0) {
         ffmpegArgs.push(
             "-async", "1",
             "-vsync", "1",
+            "-threads", "0",
             "-f", "hls",
-            "-hls_time", "2",
+            "-hls_time", "5",
             "-hls_playlist_type", "event",
             "-hls_segment_type", "fmp4",
+            "-hls_flags", "independent_segments",
             "-hls_segment_filename", segmentPattern,
             playlistPath
         );
