@@ -1223,7 +1223,7 @@ export default function Home() {
                                             <div
                                                 key={item.imdbId}
                                                 className="flex-none group cursor-pointer snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
-                                                onClick={() => playMovie({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.imdbId.startsWith("tv-") ? "tv" : "movie" }, item.timestamp)}
+                                                onClick={() => playMovie({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.movieDetails.media_type || (item.imdbId.startsWith("tv-") ? "tv" : "movie") }, item.timestamp)}
                                             >
                                                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-slate-800/50 group-hover:border-white/40 transition-all duration-300 bg-slate-950 shadow-md">
                                                     {item.movieDetails?.backdrop_path ? (
@@ -1271,7 +1271,7 @@ export default function Home() {
                                     {watchlist.map((item: any) => (
                                         <div
                                             key={item.imdbId}
-                                            onClick={() => handleCardClick({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.imdbId.startsWith("tv-") ? "tv" : "movie" })}
+                                            onClick={() => handleCardClick({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.movieDetails.media_type || (item.imdbId.startsWith("tv-") ? "tv" : "movie") })}
                                             className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
                                         >
                                             <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950">
