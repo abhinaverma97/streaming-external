@@ -23,6 +23,6 @@ services:
     container_name: movie-site-frontend
     restart: unless-stopped
     ports:
-      - "80:3000"
+      - "3001:3000"
     depends_on:
       - backend
