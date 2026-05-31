@@ -1020,7 +1020,7 @@ export default function Home() {
 
                                 {/* ReactBits Proximity font weight cursor animation */}
                                 <div className="mb-1 md:mb-2 max-w-[90vw]">
-                                    <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight" />
+                                    <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight" />
                                 </div>
 
                                 {/* Meta details */}
@@ -1297,7 +1297,7 @@ export default function Home() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center px-4 py-20 md:p-6 backdrop-blur-3xl overflow-y-auto"
+                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 backdrop-blur-3xl overflow-y-auto w-full h-full"
                     >
                         {/* Player Header */}
                         <div className="w-full max-w-7xl flex items-center justify-between mb-4">
@@ -1320,7 +1320,7 @@ export default function Home() {
                         <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
 
                             {/* Left Column: Video Box Container */}
-                            <div className="flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black/40 shadow-2xl flex flex-col justify-center items-center backdrop-blur-xl">
+                            <div className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black/40 shadow-2xl flex flex-col justify-center items-center backdrop-blur-xl">
 
                                 {/* Loader overlay */}
                                 {(probingCodecs || !hlsReadyUrl) && (
