@@ -28,6 +28,8 @@ import {
 import Hls from "hls.js";
 import ReactPlayer from "react-player";
 
+const Player = ReactPlayer as any;
+
 import VariableProximity from "./components/VariableProximity";
 import ScrambledText from "./components/ScrambledText";
 import GlassSurface from "./components/GlassSurface";
@@ -994,16 +996,15 @@ export default function Home() {
                                 {heroTrailerUrl && (
                                     <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-1000 pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
                                         <div className="w-[150%] h-[150%] md:w-[120%] md:h-[120%] relative">
-                                            <ReactPlayer 
-                                                {...({
-                                                    url: heroTrailerUrl,
-                                                    playing: showHeroTrailer && !activeStream,
-                                                    muted: heroTrailerMuted,
-                                                    width: "100%",
-                                                    height: "100%",
-                                                    style: { pointerEvents: 'none' },
-                                                    config: { youtube: { playerVars: { controls: 0, showinfo: 0, modestbranding: 1, rel: 0, autoplay: 1, disablekb: 1 } } }
-                                                } as any)}
+                                            <Player 
+                                                url={heroTrailerUrl}
+                                                playing={!activeStream}
+                                                muted={heroTrailerMuted}
+                                                width="100%"
+                                                height="100%"
+                                                controls={false}
+                                                style={{ pointerEvents: 'none' }}
+                                                config={{ youtube: { playerVars: { disablekb: 1, modestbranding: 1 } } }}
                                             />
                                         </div>
                                     </div>
