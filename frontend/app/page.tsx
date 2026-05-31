@@ -474,7 +474,9 @@ export default function Home() {
             }
         }
 
-        const resolvedTitle = isTv ? `${movie.title} S${String(targetSeason).padStart(2, "0")}E${String(targetEpisode).padStart(2, "0")}` : (movie.title || "Untitled");
+        const baseTitle = movie.title || movie.name || "Untitled";
+        const cleanTitle = baseTitle.replace(/ S\d{2}E\d{2}/g, "");
+        const resolvedTitle = isTv ? `${cleanTitle} S${String(targetSeason).padStart(2, "0")}E${String(targetEpisode).padStart(2, "0")}` : cleanTitle;
 
         setActiveStream({
             imdbId: movie.imdb_id || `tv-${movie.id}-${targetSeason}-${targetEpisode}`,
@@ -635,7 +637,7 @@ export default function Home() {
         const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
         startTorrentStatusPolling(sessionId);
 
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 90; i++) {
             try {
                 const res = await fetch(hlsUrl, { cache: "no-store" });
                 if (res.ok) {
