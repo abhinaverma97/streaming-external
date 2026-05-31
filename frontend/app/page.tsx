@@ -999,6 +999,7 @@ export default function Home() {
                                     <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-1000 pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
                                         <div className="w-[170%] h-[170%] md:w-[140%] md:h-[140%] relative scale-105 md:scale-110">
                                             <iframe 
+                                                key={heroTrailerUrl}
                                                 ref={heroIframeRef}
                                                 width="100%"
                                                 height="100%"
@@ -1038,7 +1039,7 @@ export default function Home() {
                                     <span className="truncate max-w-[200px] text-slate-400">
                                         {selectedMovie.genres?.map(g => g.name).join(", ") || "Movie"}
                                     </span>
-                                    {heroTrailerUrl && showHeroTrailer && (
+                                    {heroTrailerUrl && (
                                         <>
                                             <span>|</span>
                                             <button 
