@@ -29,6 +29,8 @@ import Hls from "hls.js";
 import ReactPlayer from "react-player";
 
 const Player = ReactPlayer as any;
+const PLAYER_STYLE = { pointerEvents: 'none' as const };
+const PLAYER_CONFIG = { youtube: { playerVars: { disablekb: 1, modestbranding: 1 } } };
 
 import VariableProximity from "./components/VariableProximity";
 import ScrambledText from "./components/ScrambledText";
@@ -1003,8 +1005,8 @@ export default function Home() {
                                                 width="100%"
                                                 height="100%"
                                                 controls={false}
-                                                style={{ pointerEvents: 'none' }}
-                                                config={{ youtube: { playerVars: { disablekb: 1, modestbranding: 1 } } }}
+                                                style={PLAYER_STYLE}
+                                                config={PLAYER_CONFIG}
                                             />
                                         </div>
                                     </div>
