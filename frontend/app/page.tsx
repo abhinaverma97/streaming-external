@@ -893,7 +893,7 @@ export default function Home() {
         <div className="relative h-screen flex flex-col overflow-hidden bg-black select-none text-slate-100">
 
             {/* ── STICKY TOP AREA (Header + Hero Card) ── never scrolls */}
-            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-6 md:px-12 flex flex-col z-20">
+            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-0">
 
                 {/* Header — unified single-line sleek navbar (Desktop Only) */}
                 <header className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300">
@@ -948,7 +948,7 @@ export default function Home() {
 
 
                 {/* Expanded Hero Card Panel (Using more space vertically since trending carousel was removed) */}
-                <section className="relative h-[62vh] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/40 backdrop-blur-xl">
+                <section className="relative h-[62vh] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/40 backdrop-blur-xl mt-4 md:mt-0">
                     {selectedMovie && (
                         <AnimatePresence mode="wait">
                             <motion.div
@@ -973,13 +973,13 @@ export default function Home() {
                     )}
 
                     {/* Hero Content Overlay */}
-                    <div className="absolute inset-0 z-10 flex flex-col justify-end p-8 md:p-14 gap-5">
+                    <div className="absolute inset-0 z-10 flex flex-col justify-end p-5 md:p-14 gap-3 md:gap-5">
                         {selectedMovie && (
                             <FadeContent key={selectedMovie.id} className="max-w-2xl flex flex-col gap-4">
 
                                 {/* ReactBits Proximity font weight cursor animation */}
-                                <div className="mb-2">
-                                    <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} />
+                                <div className="mb-1 md:mb-2 max-w-[90vw]">
+                                    <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight" />
                                 </div>
 
                                 {/* Meta details */}
@@ -1567,8 +1567,9 @@ export default function Home() {
                 )}
             </AnimatePresence>
             {/* Mobile Bottom Navigation (Glassmorphic) */}
-            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-[400px]">
-                <nav className="flex items-center justify-between px-6 py-4 rounded-full bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+            {!activeStream && (
+                <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-[400px]">
+                    <nav className="flex items-center justify-between px-6 py-4 rounded-full bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
                     {/* Storage */}
                     <div className="flex flex-col items-center gap-1">
                         <span className="text-[10px] tracking-[0.2em] text-slate-300 font-medium whitespace-nowrap">
