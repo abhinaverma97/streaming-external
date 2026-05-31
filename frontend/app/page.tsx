@@ -1291,7 +1291,7 @@ export default function Home() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center p-4 pt-6 md:p-6 backdrop-blur-3xl"
+                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center px-4 py-20 md:p-6 backdrop-blur-3xl overflow-y-auto"
                     >
                         {/* Player Header */}
                         <div className="w-full max-w-7xl flex items-center justify-between mb-4">
