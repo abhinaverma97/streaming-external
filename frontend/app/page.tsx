@@ -1028,11 +1028,11 @@ export default function Home() {
                     {/* Hero Content Overlay */}
                     <div className="absolute inset-0 z-10 flex flex-col justify-end p-5 md:p-14 gap-3 md:gap-5">
                         {selectedMovie && (
-                            <FadeContent key={selectedMovie.id} className="max-w-2xl flex flex-col gap-4">
+                            <FadeContent key={selectedMovie.id} className="max-w-2xl flex flex-col gap-2 md:gap-4">
 
                                 {/* ReactBits Proximity font weight cursor animation */}
                                 <div className="mb-1 md:mb-2 max-w-[90vw]">
-                                    <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight" />
+                                    <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} className="text-xl sm:text-2xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight" />
                                 </div>
 
                                 {/* Meta details */}
@@ -1068,23 +1068,23 @@ export default function Home() {
                                 </div>
 
                                 {/* Synopsis */}
-                                <p className="text-slate-300 text-xs md:text-sm line-clamp-3 leading-relaxed max-w-xl">
+                                <p className="text-slate-300 text-[11px] md:text-sm line-clamp-2 md:line-clamp-3 leading-relaxed max-w-xl">
                                     {selectedMovie.overview}
                                 </p>
 
 
 
                                 {/* Minimalist Action Buttons (Grey/White/Black) */}
-                                <div className="flex items-center gap-3.5 mt-2">
+                                <div className="flex items-center gap-2 md:gap-3.5 mt-1 md:mt-2">
                                     <button
                                         onClick={() => playMovie(selectedMovie)}
-                                        className="px-6 py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-xs md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
+                                        className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
                                     >
                                         <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" /> {selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}
                                     </button>
                                     <button
                                         onClick={() => toggleWatchlist(selectedMovie)}
-                                        className="px-6 py-2.5 rounded-full bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 backdrop-blur-sm text-white font-semibold text-xs md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
+                                        className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 backdrop-blur-sm text-white font-semibold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
                                     >
                                         {selectedMovie.imdb_id && watchlist.some(item => item.imdbId === selectedMovie.imdb_id) ? (
                                             <>
