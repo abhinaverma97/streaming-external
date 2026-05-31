@@ -994,7 +994,7 @@ export default function Home() {
                                 />
                                 {heroTrailerUrl && (
                                     <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-1000 pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
-                                        <div className="w-[150%] h-[150%] md:w-[120%] md:h-[120%] relative">
+                                        <div className="w-[170%] h-[170%] md:w-[140%] md:h-[140%] relative scale-105 md:scale-110">
                                             <iframe 
                                                 ref={heroIframeRef}
                                                 width="100%"
