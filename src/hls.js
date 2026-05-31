@@ -114,6 +114,7 @@ async function ensureHls(session, audioTrack = 0) {
 
         const ffmpegArgs = [
             "-err_detect", "ignore_err",
+            "-fflags", "+genpts",
             "-i", streamUrl,
             "-map", "0:v:0",
             "-map", `0:a:${audioTrack}`,
@@ -126,8 +127,7 @@ async function ensureHls(session, audioTrack = 0) {
         }
 
         ffmpegArgs.push(
-            "-async", "1",
-            "-vsync", "1",
+            "-copyts",
             "-threads", "0",
             "-f", "hls",
             "-hls_time", "5",
