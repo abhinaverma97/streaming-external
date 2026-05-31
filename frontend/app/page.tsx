@@ -165,7 +165,7 @@ export default function Home() {
                 const endpoint = trendingType === "movie" ? "movies" : "tv";
                 const res = await fetch(`${API_BASE}/api/${endpoint}/trending`);
                 const data = await res.json();
-                const trendingItems = data.results || [];
+                const trendingItems = (data.results || []).map((m: any) => ({ ...m, media_type: m.media_type || trendingType }));
                 setTrending(trendingItems);
 
                 if (trendingItems.length > 0) {
@@ -253,6 +253,7 @@ export default function Home() {
 
     const loadMovieDetails = async (tmdbId: number, mediaType: string = "movie") => {
         try {
+            setHeroTrailerUrl(null);
             if (mediaType === "tv") {
                 const res = await fetch(`${API_BASE}/api/tv/${tmdbId}`);
                 const data = await res.json();
@@ -475,8 +476,15 @@ export default function Home() {
             }
         }
 
-        const baseTitle = movie.title || movie.name || "Untitled";
-        const cleanTitle = baseTitle.replace(/ S\d{2}E\d{2}/g, "");
+        let baseTitle = movie.title || movie.name || "Untitled";
+        let cleanTitle = baseTitle.replace(/ S\d{2}E\d{2}/g, "").trim();
+        
+        // Retroactive fix for database corruption where title was saved as literal "undefined S01E01"
+        if (cleanTitle === "undefined" || cleanTitle === "Untitled") {
+            cleanTitle = selectedShowDetails?.name || selectedShowDetails?.title || movie.name || movie.title || "Untitled";
+            cleanTitle = cleanTitle.replace(/ S\d{2}E\d{2}/g, "").trim();
+        }
+
         const resolvedTitle = isTv ? `${cleanTitle} S${String(targetSeason).padStart(2, "0")}E${String(targetEpisode).padStart(2, "0")}` : cleanTitle;
 
         setActiveStream({
@@ -737,7 +745,7 @@ export default function Home() {
                     duration,
                     movieDetails: {
                         id: activeStream.details.id,
-                        title: activeStream.title,
+                        title: activeStream.details.title || activeStream.details.name || "Untitled",
                         poster_path: activeStream.details.poster_path,
                         backdrop_path: activeStream.details.backdrop_path,
                         vote_average: activeStream.details.vote_average,
@@ -995,7 +1003,7 @@ export default function Home() {
                                     priority
                                     className={`object-cover object-center pointer-events-none transition-opacity duration-1000 ${showHeroTrailer ? 'opacity-0' : 'opacity-100'}`}
                                 />
-                                {heroTrailerUrl && (
+                                {heroTrailerUrl && !activeStream && (
                                     <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-1000 pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
                                         <div className="w-[170%] h-[170%] md:w-[140%] md:h-[140%] relative scale-105 md:scale-110">
                                             <iframe 
