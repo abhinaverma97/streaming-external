@@ -43,11 +43,11 @@ async function searchMulti(query, page) {
 }
 
 async function movieDetails(tmdbId) {
-    return tmdbGet(`/movie/${tmdbId}`, { append_to_response: "credits,external_ids" });
+    return tmdbGet(`/movie/${tmdbId}`, { append_to_response: "credits,external_ids,videos" });
 }
 
 async function tvDetails(tmdbId) {
-    return tmdbGet(`/tv/${tmdbId}`, { append_to_response: "credits,external_ids" });
+    return tmdbGet(`/tv/${tmdbId}`, { append_to_response: "credits,external_ids,videos" });
 }
 
 async function getTrendingMovies(page = 1) {

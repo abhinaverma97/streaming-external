@@ -21,9 +21,12 @@ import {
     ChevronDown,
     Home as HomeIcon,
     List,
-    Trash2
+    Trash2,
+    Volume2,
+    VolumeX
 } from "lucide-react";
 import Hls from "hls.js";
+import ReactPlayer from "react-player";
 
 import VariableProximity from "./components/VariableProximity";
 import ScrambledText from "./components/ScrambledText";
@@ -118,6 +121,20 @@ export default function Home() {
 
     const [torrentSubs, setTorrentSubs] = useState<any[]>([]);
     const [activeTorrentSub, setActiveTorrentSub] = useState<number | null>(null);
+
+    // Hero Trailer State
+    const [heroTrailerUrl, setHeroTrailerUrl] = useState<string | null>(null);
+    const [showHeroTrailer, setShowHeroTrailer] = useState(false);
+    const [heroTrailerMuted, setHeroTrailerMuted] = useState(true);
+
+    useEffect(() => {
+        setShowHeroTrailer(false);
+        let timer: any;
+        if (heroTrailerUrl && !activeStream) {
+            timer = setTimeout(() => setShowHeroTrailer(true), 3000);
+        }
+        return () => clearTimeout(timer);
+    }, [heroTrailerUrl, activeStream]);
 
     // Video Ref & status polls
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -249,6 +266,9 @@ export default function Home() {
                     setSelectedShowDetails(data.tmdb);
                     setSelectedMovieTorrents([]);
 
+                    const trailer = data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube");
+                    setHeroTrailerUrl(trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null);
+
                     const validSeasons = (data.tmdb.seasons || []).filter((s: any) => s.season_number > 0);
                     if (validSeasons.length > 0) {
                         const initialSeason = validSeasons[0].season_number;
@@ -267,6 +287,9 @@ export default function Home() {
                     setSelectedMovie({ ...data.tmdb, media_type: "movie" });
                     setSelectedShowDetails(null);
                     setSelectedMovieTorrents(data.yts?.torrents || []);
+
+                    const trailer = data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube");
+                    setHeroTrailerUrl(trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null);
                 }
             }
         } catch (e) {
@@ -964,10 +987,27 @@ export default function Home() {
                                     alt={selectedMovie.title || selectedMovie.name || "Movie Backdrop"}
                                     fill
                                     priority
-                                    className="object-cover object-center pointer-events-none"
+                                    className={`object-cover object-center pointer-events-none transition-opacity duration-1000 ${showHeroTrailer ? 'opacity-0' : 'opacity-100'}`}
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none" />
-                                <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none" />
+                                {heroTrailerUrl && (
+                                    <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-1000 pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
+                                        <div className="w-[150%] h-[150%] md:w-[120%] md:h-[120%] relative">
+                                            <ReactPlayer 
+                                                {...({
+                                                    url: heroTrailerUrl,
+                                                    playing: showHeroTrailer && !activeStream,
+                                                    muted: heroTrailerMuted,
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    style: { pointerEvents: 'none' },
+                                                    config: { youtube: { playerVars: { controls: 0, showinfo: 0, modestbranding: 1, rel: 0, autoplay: 1, disablekb: 1 } } }
+                                                } as any)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none z-10" />
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none z-10" />
                             </motion.div>
                         </AnimatePresence>
                     )}
@@ -994,6 +1034,17 @@ export default function Home() {
                                     <span className="truncate max-w-[200px] text-slate-400">
                                         {selectedMovie.genres?.map(g => g.name).join(", ") || "Movie"}
                                     </span>
+                                    {heroTrailerUrl && showHeroTrailer && (
+                                        <>
+                                            <span>|</span>
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); setHeroTrailerMuted(!heroTrailerMuted); }}
+                                                className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors pointer-events-auto"
+                                            >
+                                                {heroTrailerMuted ? <VolumeX className="w-3.5 h-3.5 text-white" /> : <Volume2 className="w-3.5 h-3.5 text-white" />}
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Synopsis */}
