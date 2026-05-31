@@ -26,11 +26,7 @@ import {
     VolumeX
 } from "lucide-react";
 import Hls from "hls.js";
-import ReactPlayer from "react-player";
 
-const Player = ReactPlayer as any;
-const PLAYER_STYLE = { pointerEvents: 'none' as const };
-const PLAYER_CONFIG = { youtube: { playerVars: { disablekb: 1, modestbranding: 1 } } };
 
 import VariableProximity from "./components/VariableProximity";
 import ScrambledText from "./components/ScrambledText";
@@ -142,6 +138,7 @@ export default function Home() {
 
     // Video Ref & status polls
     const videoRef = useRef<HTMLVideoElement>(null);
+    const heroIframeRef = useRef<HTMLIFrameElement>(null);
     const hlsRef = useRef<Hls | null>(null);
     const progressIntervalRef = useRef<any>(null);
     const statusIntervalRef = useRef<any>(null);
@@ -998,15 +995,14 @@ export default function Home() {
                                 {heroTrailerUrl && (
                                     <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-1000 pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
                                         <div className="w-[150%] h-[150%] md:w-[120%] md:h-[120%] relative">
-                                            <Player 
-                                                url={heroTrailerUrl}
-                                                playing={!activeStream}
-                                                muted={heroTrailerMuted}
+                                            <iframe 
+                                                ref={heroIframeRef}
                                                 width="100%"
                                                 height="100%"
-                                                controls={false}
-                                                style={PLAYER_STYLE}
-                                                config={PLAYER_CONFIG}
+                                                src={`https://www.youtube.com/embed/${heroTrailerUrl.split("v=")[1]}?autoplay=1&mute=1&controls=0&disablekb=1&modestbranding=1&enablejsapi=1&loop=1&playlist=${heroTrailerUrl.split("v=")[1]}`}
+                                                allow="autoplay; encrypted-media"
+                                                frameBorder="0"
+                                                className="w-full h-full pointer-events-none"
                                             />
                                         </div>
                                     </div>
@@ -1043,7 +1039,14 @@ export default function Home() {
                                         <>
                                             <span>|</span>
                                             <button 
-                                                onClick={(e) => { e.stopPropagation(); setHeroTrailerMuted(!heroTrailerMuted); }}
+                                                onClick={(e) => { 
+                                                    e.stopPropagation(); 
+                                                    const iframe = heroIframeRef.current;
+                                                    if (iframe && iframe.contentWindow) {
+                                                        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: heroTrailerMuted ? 'unMute' : 'mute', args: [] }), '*');
+                                                    }
+                                                    setHeroTrailerMuted(!heroTrailerMuted); 
+                                                }}
                                                 className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors pointer-events-auto"
                                             >
                                                 {heroTrailerMuted ? <VolumeX className="w-3.5 h-3.5 text-white" /> : <Volume2 className="w-3.5 h-3.5 text-white" />}
