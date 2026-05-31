@@ -323,6 +323,12 @@ export default function Home() {
                 media_type: movie.media_type || searchType
             }));
             setSearchResults(tagged);
+            setTimeout(() => {
+                const section = document.getElementById("search-results-section");
+                if (section) {
+                    section.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }, 100);
         } catch (e) {
             console.error("Search error", e);
         }
@@ -1039,7 +1045,7 @@ export default function Home() {
 
                     {/* Search Results in Scrollable Container if active */}
                     {isSearching && searchResults.length > 0 && (
-                        <div className="mb-10 snap-start snap-always scroll-mt-0 pt-4">
+                        <div id="search-results-section" className="mb-10 snap-start snap-always scroll-mt-0 pt-4">
                             <h2 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
                                 Search Results
                             </h2>
