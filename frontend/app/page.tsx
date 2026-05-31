@@ -644,6 +644,9 @@ export default function Home() {
                 if (res.ok) {
                     const contentType = res.headers.get("content-type") || "";
                     if (contentType.includes("application/vnd.apple.mpegurl")) {
+                        // Allow backend extra time to flush initial video chunks to disk 
+                        // to prevent mobile Safari 'corrupt file' race conditions
+                        await sleep(4000); 
                         setHlsReadyUrl(hlsUrl);
                         setProbingCodecs(false);
                         setTimeout(() => {
