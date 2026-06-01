@@ -341,6 +341,13 @@ export default function Home() {
             return;
         }
         setIsSearching(true);
+        setTimeout(() => {
+            const section = document.getElementById("search-results-section");
+            if (section) {
+                section.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }, 50);
+
         try {
             const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`);
             const data = await res.json();
@@ -349,14 +356,10 @@ export default function Home() {
                 media_type: movie.media_type || searchType
             }));
             setSearchResults(tagged);
-            setTimeout(() => {
-                const section = document.getElementById("search-results-section");
-                if (section) {
-                    section.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
-            }, 100);
         } catch (e) {
             console.error("Search error", e);
+        } finally {
+            setIsSearching(false);
         }
     };
 

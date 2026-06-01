@@ -4,7 +4,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "start": "node src/server.js"
+        "start": "node src/server.js",
+        "test:sources": "node src/scraper/testSources.js"
     },
     "dependencies": {
         "cors": "^2.8.5",
@@ -14,6 +15,7 @@
         "opensubtitles-api": "^5.1.2",
         "unzipper": "^0.12.3",
         "webtorrent": "^2.5.19",
-        "yifysubtitles": "^2.1.5"
+        "yifysubtitles": "^2.1.5",
+        "cheerio": "^1.0.0-rc.12"
     }
 }
