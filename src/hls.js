@@ -46,7 +46,7 @@ async function getAudioTracks(sessionId) {
             "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_name:stream_tags=language,title",
             "-of", "json", streamUrl
         ], { timeout: 10000 });
-        
+
         const data = JSON.parse(stdout);
         const streams = data.streams || [];
         return streams.map((stream, idx) => {
@@ -79,7 +79,7 @@ async function ensureHls(session, audioTrack = 0) {
             stopHls(session.id);
         }
     }
-    
+
     if (starting.has(session.id)) {
         const startRecord = starting.get(session.id);
         if (startRecord.audioTrack === audioTrack) {
@@ -98,7 +98,7 @@ async function ensureHls(session, audioTrack = 0) {
         if (fs.existsSync(sessionDir)) {
             const files = fs.readdirSync(sessionDir);
             for (const file of files) {
-                try { fs.unlinkSync(path.join(sessionDir, file)); } catch (e) {}
+                try { fs.unlinkSync(path.join(sessionDir, file)); } catch (e) { }
             }
         }
 
@@ -150,9 +150,14 @@ async function ensureHls(session, audioTrack = 0) {
             }
         });
 
-        proc.on("exit", () => {
+        proc.on("exit", (code) => {
             if (active.get(session.id)?.proc === proc) {
-                active.delete(session.id);
+                if (code === 0) {
+                    const record = active.get(session.id);
+                    record.completed = true;
+                } else {
+                    active.delete(session.id);
+                }
             }
         });
 
@@ -178,14 +183,14 @@ function getSegmentPath(sessionId, segmentName) {
 function stopHls(sessionId) {
     const record = active.get(sessionId);
     if (record) {
-        try { record.proc.kill("SIGKILL"); } catch (e) {}
+        try { record.proc.kill("SIGKILL"); } catch (e) { }
         active.delete(sessionId);
     }
     starting.delete(sessionId);
 
     const dir = getSessionDir(sessionId);
     if (fs.existsSync(dir)) {
-        try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+        try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { }
     }
 }
 
@@ -193,10 +198,10 @@ function stopAllHls() {
     for (const [sessionId, record] of active.entries()) {
         try { record.proc.kill("SIGKILL"); } catch { /* already dead */ }
         active.delete(sessionId);
-        
+
         const dir = getSessionDir(sessionId);
         if (fs.existsSync(dir)) {
-            try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+            try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { }
         }
     }
     starting.clear();
