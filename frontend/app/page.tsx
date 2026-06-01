@@ -121,8 +121,8 @@ export default function Home() {
     const [probingCodecs, setProbingCodecs] = useState(false);
     const [hlsErrorMsg, setHlsErrorMsg] = useState<string | null>(null);
 
-    const [subtitleTrackUrl, setSubtitleTrackUrl] = useState<string | null>(null);
-    const [subtitleTrackLabel, setSubtitleTrackLabel] = useState("");
+    const [subtitleCues, setSubtitleCues] = useState<{start: number; end: number; text: string}[]>([]);
+    const [subtitleName, setSubtitleName] = useState("");
 
     // Active stream status indicators (peers, speed, etc)
     const [torrentStatus, setTorrentStatus] = useState<any>(null);
@@ -149,7 +149,6 @@ export default function Home() {
     const hlsRef = useRef<Hls | null>(null);
     const progressIntervalRef = useRef<any>(null);
     const statusIntervalRef = useRef<any>(null);
-    const subtitleTrackUrlRef = useRef<string | null>(null);
     const subsPollIntervalRef = useRef<any>(null);
     const playerListenersCleanupRef = useRef<(() => void) | null>(null);
     const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -533,13 +532,9 @@ export default function Home() {
         setHlsReadyUrl(null);
         setHlsErrorMsg(null);
         setTorrentStatus(null);
-        if (subtitleTrackUrlRef.current?.startsWith('blob:')) {
-            URL.revokeObjectURL(subtitleTrackUrlRef.current);
-        }
-        subtitleTrackUrlRef.current = null;
         setTorrentSubs([]);
-        setSubtitleTrackUrl(null);
-        setSubtitleTrackLabel("");
+        setSubtitleCues([]);
+        setSubtitleName("");
 
         try {
             let hash = "";
@@ -975,31 +970,54 @@ export default function Home() {
 
 
 
+    const parseSubtitleText = (text: string): {start: number; end: number; text: string}[] => {
+        text = text.replace(/\r\n/g, '\n').replace(/^\uFEFF/, '');
+        text = text.replace(/<\/?[^>]+(>|$)/g, '');
+        const lines = text.split('\n');
+        const cues: {start: number; end: number; text: string}[] = [];
+        const timeRegex = /(\d{2}:\d{2}:\d{2})[.,](\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2})[.,](\d{3})/;
+
+        const toSec = (h: number, m: number, s: number, ms: number) => h * 3600 + m * 60 + s + ms / 1000;
+
+        let i = 0;
+        while (i < lines.length) {
+            const line = lines[i].trim();
+            const m = timeRegex.exec(line);
+            if (m) {
+                const [_, h1, ms1, h2, ms2] = m;
+                const start = toSec(...h1.split(':').map(Number), Number(ms1));
+                const end = toSec(...h2.split(':').map(Number), Number(ms2));
+                const textLines: string[] = [];
+                i++;
+                while (i < lines.length && lines[i].trim() !== '' && !timeRegex.test(lines[i])) {
+                    const t = lines[i].trim();
+                    if (t && !/^\d+$/.test(t)) textLines.push(t);
+                    i++;
+                }
+                if (textLines.length > 0) {
+                    cues.push({ start, end, text: textLines.join('<br />') });
+                }
+            } else {
+                i++;
+            }
+        }
+        return cues;
+    };
+
     const handleLocalSubtitleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            let text = event.target?.result as string;
+            const text = event.target?.result as string;
             if (!text) return;
-
-            if (file.name.endsWith('.srt')) {
-                text = text.replace(/\r\n/g, '\n').replace(/^\uFEFF/, '');
-                text = "WEBVTT\n\n" + text.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
-            }
-
-            if (subtitleTrackUrlRef.current?.startsWith('blob:')) {
-                URL.revokeObjectURL(subtitleTrackUrlRef.current);
-            }
-            const blob = new Blob([text], { type: "text/vtt" });
-            const url = URL.createObjectURL(blob);
-            subtitleTrackUrlRef.current = url;
-            setSubtitleTrackUrl(url);
-            setSubtitleTrackLabel(file.name);
+            const cues = parseSubtitleText(text);
+            setSubtitleCues(cues);
+            setSubtitleName(file.name);
         };
         reader.readAsText(file);
-        e.target.value = ''; // Reset input
+        e.target.value = '';
     };
 
     const downloadSub = (sub: any) => {
@@ -1043,12 +1061,8 @@ export default function Home() {
         setFrozenFrame(null);
         seekingRef.current = false;
         if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-        if (subtitleTrackUrlRef.current?.startsWith('blob:')) {
-            URL.revokeObjectURL(subtitleTrackUrlRef.current);
-        }
-        subtitleTrackUrlRef.current = null;
-        setSubtitleTrackUrl(null);
-        setSubtitleTrackLabel("");
+        setSubtitleCues([]);
+        setSubtitleName("");
 
         // Clear HLS audio tracks and session states
         setAudioTracks([]);
@@ -1594,17 +1608,22 @@ export default function Home() {
                                         showUi();
                                     }}
                                     className="w-full h-full object-contain relative z-10 cursor-pointer"
-                                >
-                                    {subtitleTrackUrl && (
-                                        <track
-                                            kind="subtitles"
-                                            src={subtitleTrackUrl}
-                                            srcLang="en"
-                                            label={subtitleTrackLabel}
-                                            default
-                                        />
-                                    )}
-                                </video>
+                                />
+                                {subtitleCues.length > 0 && (() => {
+                                    const cue = subtitleCues.find(c => playerCurrentTime >= c.start && playerCurrentTime < c.end);
+                                    return cue ? (
+                                        <div className="absolute bottom-20 left-0 right-0 z-20 flex justify-center pointer-events-none px-6" key={cue.start}>
+                                            <div
+                                                className="text-white/90 text-xl md:text-2xl text-center leading-relaxed max-w-[85%]"
+                                                style={{
+                                                    textShadow: '0 0 1px #000, 0 0 1px #000, 0 0 1px #000, 0 1px 2px #000',
+                                                    WebkitTextStroke: '0.5px rgba(0,0,0,0.8)'
+                                                }}
+                                                dangerouslySetInnerHTML={{ __html: cue.text }}
+                                            />
+                                        </div>
+                                    ) : null;
+                                })()}
                                 {hlsReadyUrl && (() => {
                                     const vDur = videoRef.current?.duration;
                                     const seekDur = sourceDuration || (vDur && isFinite(vDur) ? vDur : null);
@@ -1811,7 +1830,22 @@ export default function Home() {
                                         </label>
                                     </div>
 
-                                    <div className="flex flex-col gap-1.5 max-h-[180px] overflow-y-auto no-scrollbar">
+                                    {/* Active uploaded subtitle */}
+                                    {subtitleCues.length > 0 && (
+                                        <div className="w-full rounded-lg p-2.5 flex items-center justify-between gap-2 bg-white/[0.06] border border-white/10">
+                                            <span className="text-[10px] font-medium leading-tight truncate text-white/90" title={subtitleName}>
+                                                {subtitleName}
+                                            </span>
+                                            <button
+                                                onClick={() => { setSubtitleCues([]); setSubtitleName(""); }}
+                                                className="flex-shrink-0 text-[8px] bg-white/[0.05] hover:bg-white/15 text-white/50 hover:text-white/90 border border-white/10 px-1.5 py-0.5 rounded transition-colors uppercase tracking-wider cursor-pointer"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="flex flex-col gap-1.5 max-h-[140px] overflow-y-auto no-scrollbar">
                                         {torrentSubs.length > 0 ? (
                                             torrentSubs.map((sub: any) => (
                                                 <div
