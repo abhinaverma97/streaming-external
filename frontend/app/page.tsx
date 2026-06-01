@@ -18,12 +18,15 @@ import {
     Film,
     AlertCircle,
     Upload,
+    Download,
     ChevronDown,
     Home as HomeIcon,
     List,
     Trash2,
     Volume2,
-    VolumeX
+    VolumeX,
+    Maximize,
+    Minimize
 } from "lucide-react";
 import Hls from "hls.js";
 
@@ -88,6 +91,17 @@ export default function Home() {
     const [audioTracks, setAudioTracks] = useState<any[]>([]);
     const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+    const [sourceDuration, setSourceDuration] = useState<number | null>(null);
+    const [playerCurrentTime, setPlayerCurrentTime] = useState(0);
+    const [playerPaused, setPlayerPaused] = useState(true);
+    const [uiVisible, setUiVisible] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [seekOffset, setSeekOffset] = useState(0);
+    const [isSeeking, setIsSeeking] = useState(false);
+    const [frozenFrame, setFrozenFrame] = useState<string | null>(null);
+    const hideTimerRef = useRef<any>(null);
+    const seekingRef = useRef(false);
+    const seekDurRef = useRef(0);
 
     // Search state
     const [searchQuery, setSearchQuery] = useState("");
@@ -107,20 +121,13 @@ export default function Home() {
     const [probingCodecs, setProbingCodecs] = useState(false);
     const [hlsErrorMsg, setHlsErrorMsg] = useState<string | null>(null);
 
-    // Subtitle status state inside player
-    const [subtitleStatus, setSubtitleStatus] = useState<{
-        status: string;
-        step: string;
-        error: string | null;
-    } | null>(null);
-    const [subtitleBlobUrl, setSubtitleBlobUrl] = useState<string | null>(null);
-    const [subtitleDebug, setSubtitleDebug] = useState<string>("");
+    const [subtitleTrackUrl, setSubtitleTrackUrl] = useState<string | null>(null);
+    const [subtitleTrackLabel, setSubtitleTrackLabel] = useState("");
 
     // Active stream status indicators (peers, speed, etc)
     const [torrentStatus, setTorrentStatus] = useState<any>(null);
 
     const [torrentSubs, setTorrentSubs] = useState<any[]>([]);
-    const [activeTorrentSub, setActiveTorrentSub] = useState<number | null>(null);
 
     // Hero Trailer State
     const [heroTrailerUrl, setHeroTrailerUrl] = useState<string | null>(null);
@@ -142,12 +149,31 @@ export default function Home() {
     const hlsRef = useRef<Hls | null>(null);
     const progressIntervalRef = useRef<any>(null);
     const statusIntervalRef = useRef<any>(null);
-    const subtitlePollRef = useRef<any>(null);
+    const subtitleTrackUrlRef = useRef<string | null>(null);
+    const subsPollIntervalRef = useRef<any>(null);
+    const playerListenersCleanupRef = useRef<(() => void) | null>(null);
+    const playerContainerRef = useRef<HTMLDivElement>(null);
+
+    const showUi = () => {
+        setUiVisible(true);
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = setTimeout(() => setUiVisible(false), 3000);
+    };
+
+    const formatTime = (t: number) => {
+        const h = Math.floor(t / 3600);
+        const m = Math.floor((t % 3600) / 60);
+        const s = Math.floor(t % 60);
+        return h > 0 ? `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}` : `${m}:${s.toString().padStart(2, "0")}`;
+    };
 
     useEffect(() => {
 
         fetchUserLists();
         fetchStorageStats();
+
+        const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener("fullscreenchange", onFsChange);
 
         // Suppress harmless AbortError from Hls.js destroying the video fetch
         const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
@@ -156,7 +182,10 @@ export default function Home() {
             }
         };
         window.addEventListener("unhandledrejection", handleUnhandledRejection);
-        return () => window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+        return () => {
+            window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+            document.removeEventListener("fullscreenchange", onFsChange);
+        };
     }, []);
 
     useEffect(() => {
@@ -301,18 +330,24 @@ export default function Home() {
 
     // ── Watchlist Management ──────────────────────────────────────────────────
 
+    const getWatchlistId = (movie: Movie) => {
+        return movie.imdb_id || (movie.media_type === "tv" ? `tv-${movie.id}` : null);
+    };
+
     const toggleWatchlist = async (movie: Movie) => {
-        if (!movie.imdb_id) return;
-        const isQueued = watchlist.some((item) => item.imdbId === movie.imdb_id);
+        const watchlistId = getWatchlistId(movie);
+        if (!watchlistId) return;
+        const isQueued = watchlist.some((item) => item.imdbId === watchlistId);
         try {
             if (isQueued) {
-                await fetch(`${API_BASE}/api/watchlist/${movie.imdb_id}`, { method: "DELETE" });
+                await fetch(`${API_BASE}/api/watchlist/${watchlistId}`, { method: "DELETE" });
             } else {
                 await fetch(`${API_BASE}/api/watchlist`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        imdbId: movie.imdb_id,
+                        imdbId: watchlistId,
+                        mediaType: movie.media_type,
                         movieDetails: {
                             id: movie.id,
                             title: movie.title,
@@ -498,16 +533,13 @@ export default function Home() {
         setHlsReadyUrl(null);
         setHlsErrorMsg(null);
         setTorrentStatus(null);
-        setTorrentSubs([]);
-        setActiveTorrentSub(null);
-
-        // Backend naturally stops active sessions when a new start request is made
-
-        if (!isTv && movie.imdb_id) {
-            triggerSubtitleDownload(movie.imdb_id);
-        } else {
-            setSubtitleStatus(null);
+        if (subtitleTrackUrlRef.current?.startsWith('blob:')) {
+            URL.revokeObjectURL(subtitleTrackUrlRef.current);
         }
+        subtitleTrackUrlRef.current = null;
+        setTorrentSubs([]);
+        setSubtitleTrackUrl(null);
+        setSubtitleTrackLabel("");
 
         try {
             let hash = "";
@@ -562,6 +594,15 @@ export default function Home() {
                 title = selected.quality;
             }
 
+            if (hash === activeTorrentHash && activeSessionId) {
+                if (startTime > 0 && videoRef.current) {
+                    const relativeSeek = startTime - seekOffset;
+                    videoRef.current.currentTime = relativeSeek >= 0 ? relativeSeek : startTime;
+                }
+                return;
+            }
+
+            setSeekOffset(0);
             setActiveTorrentHash(hash);
 
             const body: any = {
@@ -578,14 +619,22 @@ export default function Home() {
 
             if (startRes.ok && startData.hlsUrl) {
                 setActiveSessionId(startData.sessionId);
+                if (startData.sourceDuration) {
+                    setSourceDuration(startData.sourceDuration);
+                }
                 pollHlsReady(API_BASE + startData.hlsUrl, startData.sessionId, startTime);
                 triggerAudioTracksFetch(startData.sessionId);
                 
-                // Fetch local subs from torrent
-                fetch(`${API_BASE}/api/stream/${startData.sessionId}/subs`)
-                    .then(res => res.json())
-                    .then(subs => setTorrentSubs(subs || []))
-                    .catch(err => console.error("Failed to fetch subs", err));
+                // Fetch local subs from torrent and poll download status
+                const fetchSubs = () => {
+                    fetch(`${API_BASE}/api/stream/${startData.sessionId}/subs`)
+                        .then(res => res.json())
+                        .then(subs => setTorrentSubs(subs || []))
+                        .catch(() => {});
+                };
+                fetchSubs();
+                if (subsPollIntervalRef.current) clearInterval(subsPollIntervalRef.current);
+                subsPollIntervalRef.current = setInterval(fetchSubs, 2000);
             } else {
                 throw new Error(startData.error || "Failed to start HLS session");
             }
@@ -598,9 +647,8 @@ export default function Home() {
     const changeTorrentQuality = async (torrent: any) => {
         if (!activeStream) return;
         const video = videoRef.current;
-        const currentTime = video ? video.currentTime : 0;
+        const absTime = video ? (seekOffset + video.currentTime) : 0;
 
-        // Stop HLS and clean player state
         if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
         if (statusIntervalRef.current) clearInterval(statusIntervalRef.current);
 
@@ -609,8 +657,7 @@ export default function Home() {
             hlsRef.current = null;
         }
 
-        // Start with the new torrent hash at the saved timestamp
-        playMovie(activeStream.details, currentTime, { hash: torrent.hash, quality: torrent.quality });
+        playMovie(activeStream.details, absTime, { hash: torrent.hash, quality: torrent.quality });
     };
 
     const changeEpisode = async (season: number, episode: number) => {
@@ -647,19 +694,51 @@ export default function Home() {
         const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
         startTorrentStatusPolling(sessionId);
 
+        // If resuming past the start, restart ffmpeg at the target position
+        // so Hls.js doesn't have to wait for segments from byte 0
+        let effectiveUrl = hlsUrl;
+        let adjustedStart = startTime;
+        if (startTime > 0) {
+            try {
+                const seekUrl = `${hlsUrl}?audioTrack=${currentAudioTrack}&startTime=${startTime}`;
+                await fetch(`${API_BASE}/api/stream/${sessionId}/seek`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ time: startTime, audioTrack: currentAudioTrack })
+                });
+                for (let i = 0; i < 120; i++) {
+                    try {
+                        const res = await fetch(seekUrl, { cache: "no-store" });
+                        if (res.ok) {
+                            const ct = res.headers.get("content-type") || "";
+                            if (ct.includes("application/vnd.apple.mpegurl")) {
+                                await sleep(2000);
+                                setSeekOffset(startTime);
+                                effectiveUrl = seekUrl;
+                                adjustedStart = 0;
+                                break;
+                            }
+                        }
+                    } catch (e) {}
+                    await sleep(1000);
+                }
+            } catch (e) {
+                // fall through — try loading from start, adjustedStart stays as startTime
+            }
+        }
+
+        // Poll for the playlist (seeked or from start)
         for (let i = 0; i < 90; i++) {
             try {
-                const res = await fetch(hlsUrl, { cache: "no-store" });
+                const res = await fetch(effectiveUrl, { cache: "no-store" });
                 if (res.ok) {
                     const contentType = res.headers.get("content-type") || "";
                     if (contentType.includes("application/vnd.apple.mpegurl")) {
-                        // Allow backend extra time to flush initial video chunks to disk 
-                        // to prevent mobile Safari 'corrupt file' race conditions
                         await sleep(4000); 
-                        setHlsReadyUrl(hlsUrl);
+                        setHlsReadyUrl(effectiveUrl);
                         setProbingCodecs(false);
                         setTimeout(() => {
-                            initializeVideoPlayer(hlsUrl, startTime);
+                            initializeVideoPlayer(effectiveUrl, adjustedStart);
                         }, 100);
                         return;
                     }
@@ -681,6 +760,25 @@ export default function Home() {
         if (hlsRef.current) {
             hlsRef.current.destroy();
         }
+
+        if (playerListenersCleanupRef.current) {
+            playerListenersCleanupRef.current();
+            playerListenersCleanupRef.current = null;
+        }
+
+        const onTimeUpdate = () => setPlayerCurrentTime(video.currentTime);
+        const onPlay = () => setPlayerPaused(false);
+        const onPause = () => setPlayerPaused(true);
+
+        video.addEventListener("timeupdate", onTimeUpdate);
+        video.addEventListener("play", onPlay);
+        video.addEventListener("pause", onPause);
+
+        playerListenersCleanupRef.current = () => {
+            video.removeEventListener("timeupdate", onTimeUpdate);
+            video.removeEventListener("play", onPlay);
+            video.removeEventListener("pause", onPause);
+        };
 
         if (Hls.isSupported()) {
             const hls = new Hls({
@@ -723,8 +821,6 @@ export default function Home() {
             });
         }
 
-        // Subtitles are handled via React JSX <track> element based on subtitleStatus
-
         if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = setInterval(reportProgress, 5000);
     };
@@ -732,16 +828,19 @@ export default function Home() {
     const reportProgress = async () => {
         const video = videoRef.current;
         if (!video || !activeStream) return;
-        const timestamp = video.currentTime;
-        const duration = video.duration;
+        const timestamp = seekOffset + video.currentTime;
+        const duration = sourceDuration || video.duration;
         if (!duration || isNaN(duration) || timestamp < 5) return;
 
         try {
+            const resolvedMediaType = activeStream.details.media_type || activeStream.details.mediaType || (activeStream.imdbId.startsWith("tv-") ? "tv" : "movie");
             await fetch(`${API_BASE}/api/progress`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     imdbId: activeStream.imdbId,
+                    mediaType: resolvedMediaType,
+                    sessionId: activeSessionId,
                     timestamp,
                     duration,
                     movieDetails: {
@@ -752,7 +851,7 @@ export default function Home() {
                         vote_average: activeStream.details.vote_average,
                         release_date: activeStream.details.release_date,
                         imdb_id: activeStream.details.imdb_id || activeStream.imdbId,
-                        media_type: activeStream.details.media_type || (activeStream.imdbId.startsWith("tv-") ? "tv" : "movie")
+                        media_type: resolvedMediaType
                     }
                 })
             });
@@ -760,6 +859,98 @@ export default function Home() {
         } catch (e) {
             console.error(e);
         }
+    };
+
+    const seekTo = async (frac: number) => {
+        if (!activeSessionId || !seekDurRef.current || seekingRef.current) return;
+        const targetTime = frac * seekDurRef.current;
+        if (targetTime < 0) return;
+
+        const video = videoRef.current;
+
+        // Fast path: if target is within buffered range, seek natively
+        if (video && video.buffered.length > 0) {
+            const relativeTarget = targetTime - seekOffset;
+            for (let i = 0; i < video.buffered.length; i++) {
+                if (relativeTarget >= video.buffered.start(i) && relativeTarget <= video.buffered.end(i)) {
+                    video.currentTime = relativeTarget;
+                    return;
+                }
+            }
+        }
+
+        seekingRef.current = true;
+        setIsSeeking(true);
+        setHlsReadyUrl(null);
+        setProbingCodecs(true);
+
+        // Freeze last frame before destroying Hls.js
+        if (video) {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 360;
+                canvas.getContext("2d")?.drawImage(video, 0, 0);
+                setFrozenFrame(canvas.toDataURL());
+            } catch (e) {}
+        }
+
+        if (hlsRef.current) {
+            hlsRef.current.destroy();
+            hlsRef.current = null;
+        }
+
+        const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+        const hlsUrl = `${API_BASE}/api/stream/${activeSessionId}/hls/index.m3u8?audioTrack=${currentAudioTrack}&startTime=${targetTime}`;
+
+        try {
+            await fetch(`${API_BASE}/api/stream/${activeSessionId}/seek`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ time: targetTime, audioTrack: currentAudioTrack })
+            });
+
+            for (let i = 0; i < 120; i++) {
+                try {
+                    const res = await fetch(hlsUrl, { cache: "no-store" });
+                    if (res.ok) {
+                        const ct = res.headers.get("content-type") || "";
+                        if (ct.includes("application/vnd.apple.mpegurl")) {
+                            await sleep(2000);
+                            setSeekOffset(targetTime);
+                            setFrozenFrame(null);
+                            setHlsReadyUrl(hlsUrl);
+                            setProbingCodecs(false);
+                            setIsSeeking(false);
+
+                            if (videoRef.current) {
+                                if (Hls.isSupported()) {
+                                    const hls = new Hls({ maxBufferLength: 30, maxBufferSize: 60 * 1000 * 1000 });
+                                    hlsRef.current = hls;
+                                    hls.loadSource(hlsUrl);
+                                    hls.attachMedia(videoRef.current);
+                                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                                        videoRef.current!.currentTime = 0;
+                                        videoRef.current?.play().catch(() => {});
+                                    });
+                                } else {
+                                    videoRef.current.src = hlsUrl;
+                                    videoRef.current.play().catch(() => {});
+                                }
+                            }
+                            seekingRef.current = false;
+                            return;
+                        }
+                    }
+                } catch (e) {}
+                await sleep(1000);
+            }
+        } catch (e) {}
+
+        setHlsErrorMsg("Seek timed out");
+        setProbingCodecs(false);
+        setIsSeeking(false);
+        seekingRef.current = false;
     };
 
     const startTorrentStatusPolling = (sessionId: string) => {
@@ -770,6 +961,9 @@ export default function Home() {
                 if (res.ok) {
                     const data = await res.json();
                     setTorrentStatus(data);
+                    if (data.sourceDuration) {
+                        setSourceDuration(data.sourceDuration);
+                    }
                 }
             } catch (e) {
                 // ignore
@@ -779,45 +973,7 @@ export default function Home() {
         fetchStatus();
     };
 
-    const triggerSubtitleDownload = async (imdbId: string) => {
-        if (subtitlePollRef.current) clearInterval(subtitlePollRef.current);
-        setSubtitleStatus({ status: "fetching", step: "Requesting subtitles...", error: null });
-        setSubtitleDebug("Fetching from API...");
 
-        try {
-            await fetch(`${API_BASE}/api/movie/${imdbId}/subtitle-start`, { method: "POST" });
-
-            subtitlePollRef.current = setInterval(async () => {
-                try {
-                    const res = await fetch(`${API_BASE}/api/movie/${imdbId}/subtitle-status`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        setSubtitleStatus(data);
-                        if (data.status === "ready" || data.status === "failed") {
-                            clearInterval(subtitlePollRef.current);
-                            if (data.status === "ready") {
-                                fetch(`${API_BASE}/api/movie/${imdbId}/english-sub`)
-                                    .then(async r => {
-                                        const text = await r.text();
-                                        setSubtitleDebug(`[STATUS] ${r.status}\n[TYPE] ${r.headers.get("content-type")}\n[PREVIEW]\n${text.substring(0, 300)}`);
-                                        const blob = new Blob([text], { type: "text/vtt" });
-                                        setSubtitleBlobUrl(URL.createObjectURL(blob));
-                                    })
-                                    .catch(err => {
-                                        console.error(err);
-                                        setSubtitleDebug(`[ERROR] ${err.message}`);
-                                    });
-                            }
-                        }
-                    }
-                } catch (e) {
-                    // ignore
-                }
-            }, 1000);
-        } catch (err: any) {
-            setSubtitleStatus({ status: "failed", step: "Failed to load", error: err.message });
-        }
-    };
 
     const handleLocalSubtitleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -833,22 +989,31 @@ export default function Home() {
                 text = "WEBVTT\n\n" + text.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
             }
 
+            if (subtitleTrackUrlRef.current?.startsWith('blob:')) {
+                URL.revokeObjectURL(subtitleTrackUrlRef.current);
+            }
             const blob = new Blob([text], { type: "text/vtt" });
             const url = URL.createObjectURL(blob);
-
-            setSubtitleBlobUrl(prev => {
-                if (prev) URL.revokeObjectURL(prev);
-                return url;
-            });
-            setSubtitleStatus({
-                status: "ready",
-                step: `Loaded local file: ${file.name}`,
-                error: null
-            });
-            setSubtitleDebug("");
+            subtitleTrackUrlRef.current = url;
+            setSubtitleTrackUrl(url);
+            setSubtitleTrackLabel(file.name);
         };
         reader.readAsText(file);
         e.target.value = ''; // Reset input
+    };
+
+    const downloadSub = (sub: any) => {
+        fetch(`${API_BASE}/api/stream/${activeSessionId}/subs/${sub.index}`)
+            .then(res => res.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = sub.name;
+                a.click();
+                URL.revokeObjectURL(url);
+            })
+            .catch(() => {});
     };
 
     const closePlayer = async () => {
@@ -856,7 +1021,7 @@ export default function Home() {
 
         if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
         if (statusIntervalRef.current) clearInterval(statusIntervalRef.current);
-        if (subtitlePollRef.current) clearInterval(subtitlePollRef.current);
+        if (subsPollIntervalRef.current) clearInterval(subsPollIntervalRef.current);
 
         if (hlsRef.current) {
             hlsRef.current.destroy();
@@ -869,12 +1034,21 @@ export default function Home() {
         setHlsReadyUrl(null);
         setProbingCodecs(false);
         setTorrentStatus(null);
-        setSubtitleStatus(null);
-        setSubtitleBlobUrl(prev => {
-            if (prev) URL.revokeObjectURL(prev);
-            return null;
-        });
-        setSubtitleDebug("");
+        setSourceDuration(null);
+        setPlayerCurrentTime(0);
+        setPlayerPaused(true);
+        setUiVisible(false);
+        setSeekOffset(0);
+        setIsSeeking(false);
+        setFrozenFrame(null);
+        seekingRef.current = false;
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+        if (subtitleTrackUrlRef.current?.startsWith('blob:')) {
+            URL.revokeObjectURL(subtitleTrackUrlRef.current);
+        }
+        subtitleTrackUrlRef.current = null;
+        setSubtitleTrackUrl(null);
+        setSubtitleTrackLabel("");
 
         // Clear HLS audio tracks and session states
         setAudioTracks([]);
@@ -1087,7 +1261,10 @@ export default function Home() {
                                         onClick={() => toggleWatchlist(selectedMovie)}
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 backdrop-blur-sm text-white font-semibold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
                                     >
-                                        {selectedMovie.imdb_id && watchlist.some(item => item.imdbId === selectedMovie.imdb_id) ? (
+                                        {(() => {
+                                            const wlId = getWatchlistId(selectedMovie);
+                                            return wlId && watchlist.some(item => item.imdbId === wlId);
+                                        })() ? (
                                             <>
                                                 <Check className="w-3.5 h-3.5 text-slate-200" /> Watchlist
                                             </>
@@ -1224,7 +1401,26 @@ export default function Home() {
                                             <div
                                                 key={item.imdbId}
                                                 className="flex-none group cursor-pointer snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
-                                                onClick={() => playMovie({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.movieDetails.media_type || (item.imdbId.startsWith("tv-") ? "tv" : "movie") }, item.timestamp)}
+                                                onClick={() => {
+                                                    const mt = item.mediaType || item.movieDetails?.media_type;
+                                                    if (mt) {
+                                                        playMovie({ ...item.movieDetails, imdb_id: item.imdbId, media_type: mt }, item.timestamp);
+                                                    } else {
+                                                        (async () => {
+                                                            try {
+                                                                const r = await fetch(`${API_BASE}/api/resolve-media-type/${item.imdbId}`);
+                                                                if (r.ok) {
+                                                                    const d = await r.json();
+                                                                    if (d.mediaType) {
+                                                                        playMovie({ ...item.movieDetails, imdb_id: item.imdbId, media_type: d.mediaType }, item.timestamp);
+                                                                        return;
+                                                                    }
+                                                                }
+                                                            } catch (e) {}
+                                                            playMovie({ ...item.movieDetails, imdb_id: item.imdbId, media_type: "movie" }, item.timestamp);
+                                                        })();
+                                                    }
+                                                }}
                                             >
                                                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-slate-800/50 group-hover:border-white/40 transition-all duration-300 bg-slate-950 shadow-md">
                                                     {item.movieDetails?.backdrop_path ? (
@@ -1272,7 +1468,26 @@ export default function Home() {
                                     {watchlist.map((item: any) => (
                                         <div
                                             key={item.imdbId}
-                                            onClick={() => handleCardClick({ ...item.movieDetails, imdb_id: item.imdbId, media_type: item.movieDetails.media_type || (item.imdbId.startsWith("tv-") ? "tv" : "movie") })}
+                                            onClick={() => {
+                                                const mt = item.mediaType || item.movieDetails?.media_type;
+                                                if (mt) {
+                                                    handleCardClick({ ...item.movieDetails, imdb_id: item.imdbId, media_type: mt });
+                                                } else {
+                                                    (async () => {
+                                                        try {
+                                                            const r = await fetch(`${API_BASE}/api/resolve-media-type/${item.imdbId}`);
+                                                            if (r.ok) {
+                                                                const d = await r.json();
+                                                                if (d.mediaType) {
+                                                                    handleCardClick({ ...item.movieDetails, imdb_id: item.imdbId, media_type: d.mediaType });
+                                                                    return;
+                                                                }
+                                                            }
+                                                        } catch (e) {}
+                                                        handleCardClick({ ...item.movieDetails, imdb_id: item.imdbId, media_type: "movie" });
+                                                    })();
+                                                }
+                                            }}
                                             className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
                                         >
                                             <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950">
@@ -1333,11 +1548,11 @@ export default function Home() {
                         <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
 
                             {/* Left Column: Video Box Container */}
-                            <div className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black/40 shadow-2xl flex flex-col justify-center items-center backdrop-blur-xl">
+                            <div ref={playerContainerRef} className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black/40 shadow-2xl flex flex-col justify-center items-center backdrop-blur-xl">
 
                                 {/* Loader overlay */}
                                 {(probingCodecs || !hlsReadyUrl) && (
-                                    <div className="absolute inset-0 z-20 bg-black flex flex-col items-center justify-center p-6 text-center gap-4">
+                                    <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center gap-4 ${isSeeking ? 'bg-black/40' : 'bg-black'}`} style={frozenFrame ? { backgroundImage: `url(${frozenFrame})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}}>
                                         {hlsErrorMsg ? (
                                             <div className="flex flex-col items-center gap-3 text-rose-500">
                                                 <AlertCircle className="w-10 h-10 stroke-[1.5]" />
@@ -1350,6 +1565,8 @@ export default function Home() {
                                                     Go Back
                                                 </button>
                                             </div>
+                                        ) : isSeeking ? (
+                                            <Loader2 className="w-8 h-8 text-white/60 animate-spin stroke-[1.5]" />
                                         ) : (
                                             <>
                                                 <Loader2 className="w-8 h-8 text-white/60 animate-spin stroke-[1.5]" />
@@ -1364,45 +1581,83 @@ export default function Home() {
                                     </div>
                                 )}
 
+                                <div
+                                    className="absolute inset-0 z-10"
+                                    onMouseMove={showUi}
+                                />
                                 <video
                                     ref={videoRef}
-                                    controls={!!hlsReadyUrl}
                                     playsInline
-                                    crossOrigin="anonymous"
-                                    className="w-full h-full object-contain relative z-10"
+                                    onClick={() => {
+                                        const v = videoRef.current;
+                                        if (v) v.paused ? v.play() : v.pause();
+                                        showUi();
+                                    }}
+                                    className="w-full h-full object-contain relative z-10 cursor-pointer"
                                 >
-                                    {subtitleBlobUrl && (
+                                    {subtitleTrackUrl && (
                                         <track
-                                            key={subtitleBlobUrl}
                                             kind="subtitles"
-                                            src={subtitleBlobUrl}
+                                            src={subtitleTrackUrl}
                                             srcLang="en"
-                                            label="YTS Subs (Web)"
-                                            default={activeTorrentSub === null}
-                                            onLoad={(e) => {
-                                                const t = e.currentTarget as HTMLTrackElement;
-                                                if (t.track) t.track.mode = "showing";
-                                            }}
+                                            label={subtitleTrackLabel}
+                                            default
                                         />
                                     )}
-
-                                    {torrentSubs.map((sub: any) => (
-                                        <track
-                                            key={`sub-${sub.index}`}
-                                            kind="subtitles"
-                                            src={`${API_BASE}/api/stream/${activeSessionId}/subs/${sub.index}`}
-                                            srcLang="en"
-                                            label={sub.name}
-                                            default={activeTorrentSub === sub.index}
-                                            onLoad={(e) => {
-                                                if (activeTorrentSub === sub.index) {
-                                                    const t = e.currentTarget as HTMLTrackElement;
-                                                    if (t.track) t.track.mode = "showing";
-                                                }
-                                            }}
-                                        />
-                                    ))}
                                 </video>
+                                {hlsReadyUrl && (() => {
+                                    const vDur = videoRef.current?.duration;
+                                    const seekDur = sourceDuration || (vDur && isFinite(vDur) ? vDur : null);
+                                    if (seekDur) seekDurRef.current = seekDur;
+                                    const absTime = seekOffset + playerCurrentTime;
+                                    const controlsVisible = (uiVisible || playerPaused) && !isSeeking;
+                                    return (
+                                        <>
+                                            {playerPaused && controlsVisible && (
+                                                <div className="absolute inset-0 z-15 flex items-center justify-center pointer-events-none transition-opacity duration-300">
+                                                    <div className="w-14 h-14 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
+                                                        <Play className="w-6 h-6 text-white/70 ml-0.5" />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className={`absolute bottom-0 left-0 right-0 z-20 transition-opacity duration-300 ${controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                                                <div className="flex items-center gap-3 px-4 pb-3">
+                                                    <div className="flex-1 relative h-2 bg-white/10 rounded-full cursor-pointer overflow-hidden"
+                                                        onClick={(e) => {
+                                                            if (!seekDur) return;
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const x = e.clientX - rect.left;
+                                                            const frac = x / rect.width;
+                                                            showUi();
+                                                            seekTo(frac);
+                                                        }}
+                                                    >
+                                                        <div
+                                                            className="absolute left-0 top-0 h-full bg-white/40 rounded-full transition-all duration-75"
+                                                            style={{ width: `${seekDur ? (absTime / seekDur) * 100 : 0}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[11px] text-white/40 font-mono tabular-nums flex-shrink-0">
+                                                        {formatTime(absTime)} / {seekDur ? formatTime(seekDur) : "--:--"}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (isFullscreen) {
+                                                                document.exitFullscreen();
+                                                            } else if (playerContainerRef.current) {
+                                                                playerContainerRef.current.requestFullscreen();
+                                                            }
+                                                            showUi();
+                                                        }}
+                                                        className="flex-shrink-0 text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+                                                    >
+                                                        {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             {/* Right Column: Glassmorphic Sidebar */}
@@ -1540,7 +1795,7 @@ export default function Home() {
                                     )}
                                 </div>
 
-                                {/* 4. Subtitles (Combined) */}
+                                {/* 4. Subtitles — Download & Upload */}
                                 <div className="flex flex-col gap-2 pb-4 border-b border-white/[0.05]">
                                     <div className="flex items-center justify-between mb-1">
                                         <VariableProximity
@@ -1557,48 +1812,33 @@ export default function Home() {
                                     </div>
 
                                     <div className="flex flex-col gap-1.5 max-h-[180px] overflow-y-auto no-scrollbar">
-                                        {/* Web Subtitle Status */}
-                                        {subtitleStatus ? (
-                                            <div className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-2.5 flex flex-col gap-1 text-[11px] text-white/70">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-medium capitalize text-white/90">Web Sub: {subtitleStatus.status}</span>
-                                                    <span className="text-[9px] text-white/40 font-mono text-right line-clamp-1 max-w-[120px]">{subtitleStatus.step}</span>
-                                                </div>
-                                                {subtitleStatus.error && (
-                                                    <span className="text-[9px] text-rose-450/90 font-mono mt-0.5">
-                                                        {subtitleStatus.error}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ) : null}
-
-                                        {/* Local Torrent Subs */}
                                         {torrentSubs.length > 0 ? (
-                                            torrentSubs.map((sub: any) => {
-                                                const isActive = activeTorrentSub === sub.index;
-                                                return (
-                                                    <button
-                                                        key={sub.index}
-                                                        onClick={() => setActiveTorrentSub(isActive ? null : sub.index)}
-                                                        className={`w-full text-left rounded-lg p-2.5 transition-all duration-300 flex items-center justify-between gap-2 border border-white/[0.02] ${isActive
-                                                            ? "bg-white/[0.08] text-white"
-                                                            : "bg-white/[0.01] hover:bg-white/[0.05] text-white/60 hover:text-white/90 cursor-pointer"
-                                                            }`}
-                                                    >
-                                                        <span className={`text-[10px] font-medium leading-tight truncate ${isActive ? "text-white" : "text-white/70"}`} title={sub.name}>
-                                                            {sub.name}
-                                                        </span>
-                                                        {isActive && (
-                                                            <span className="flex-shrink-0 text-[8px] border border-white/20 text-white/90 px-1.5 py-0.5 rounded uppercase tracking-wider bg-white/10">
-                                                                Active
-                                                            </span>
+                                            torrentSubs.map((sub: any) => (
+                                                <div
+                                                    key={sub.index}
+                                                    className={`w-full rounded-lg p-2.5 flex items-center justify-between gap-2 border border-white/[0.02] ${sub.downloaded ? "bg-white/[0.02]" : "bg-white/[0.01]"}`}
+                                                >
+                                                    <span className="text-[10px] font-medium leading-tight truncate text-white/70" title={sub.name}>
+                                                        {sub.name}
+                                                    </span>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        {sub.downloaded ? (
+                                                            <>
+                                                                <span className="text-[8px] text-white/40 uppercase tracking-wider">Ready</span>
+                                                                <button
+                                                                    onClick={() => downloadSub(sub)}
+                                                                    className="flex items-center gap-1 text-[8px] bg-white/[0.05] hover:bg-white/10 text-white/60 hover:text-white/90 border border-white/10 px-2 py-1 rounded transition-colors uppercase tracking-wider cursor-pointer"
+                                                                >
+                                                                    <Download className="w-2.5 h-2.5" />
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-[8px] text-white/30 uppercase tracking-wider">Downloading...</span>
                                                         )}
-                                                    </button>
-                                                );
-                                            })
-                                        ) : null}
-
-                                        {!subtitleStatus && torrentSubs.length === 0 && (
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
                                             <div className="bg-white/[0.01] border border-white/[0.04] rounded-lg p-2 text-[10px] text-white/30 italic text-center">
                                                 No subtitles available
                                             </div>

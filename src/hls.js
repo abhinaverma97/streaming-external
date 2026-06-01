@@ -65,27 +65,27 @@ async function getAudioTracks(sessionId) {
     }
 }
 
-async function ensureHls(session, audioTrack = 0) {
+async function ensureHls(session, audioTrack = 0, startTime = 0) {
     if (!hlsEnabled) {
         throw new Error("HLS disabled");
     }
 
     if (active.has(session.id)) {
         const record = active.get(session.id);
-        if (record.audioTrack === audioTrack) {
+        if (record.audioTrack === audioTrack && record.startTime === startTime) {
             return record;
         } else {
-            console.log(`[hls] Audio track changed from ${record.audioTrack} to ${audioTrack}. Restarting HLS...`);
+            console.log(`[hls] Audio track changed or seeking. Restarting HLS...`);
             stopHls(session.id);
         }
     }
 
     if (starting.has(session.id)) {
         const startRecord = starting.get(session.id);
-        if (startRecord.audioTrack === audioTrack) {
+        if (startRecord.audioTrack === audioTrack && startRecord.startTime === startTime) {
             return await startRecord.promise;
         } else {
-            console.log(`[hls] Audio track changed while starting. Cleaning up old start promise...`);
+            console.log(`[hls] Condition changed while starting. Cleaning up old start promise...`);
             starting.delete(session.id);
         }
     }
@@ -109,17 +109,26 @@ async function ensureHls(session, audioTrack = 0) {
         const codecs = await probeStream(streamUrl, audioTrack);
         console.log(`[hls] Codecs for ${session.id} (track ${audioTrack}): Video=${codecs.videoCodec}, Audio=${codecs.audioCodec}`);
 
-        const vCodec = "copy"; // Never transcode video (4K HEVC transcoding destroys CPU)
+        const vCodec = "copy";
         const aCodec = (codecs.audioCodec === "aac" || codecs.audioCodec === "mp3") ? "copy" : "aac";
 
         const ffmpegArgs = [
             "-err_detect", "ignore_err",
             "-fflags", "+genpts",
+        ];
+
+        if (startTime > 0) {
+            ffmpegArgs.push("-ss", String(startTime), "-accurate_seek");
+        }
+
+        ffmpegArgs.push(
             "-i", streamUrl,
             "-map", "0:v:0",
             "-map", `0:a:${audioTrack}`,
             "-c:v", vCodec
-        ];
+        );
+
+        // Don't use -copyts: let ffmpeg generate fresh timestamps so the timeline always starts at 0
 
         ffmpegArgs.push("-c:a", aCodec);
         if (aCodec === "aac") {
@@ -127,20 +136,20 @@ async function ensureHls(session, audioTrack = 0) {
         }
 
         ffmpegArgs.push(
-            "-copyts",
             "-threads", "0",
             "-f", "hls",
             "-hls_time", "5",
             "-hls_playlist_type", "event",
             "-hls_segment_type", "fmp4",
             "-hls_flags", "independent_segments",
+            "-movflags", "frag_keyframe+default_base_moof",
             "-hls_segment_filename", segmentPattern,
             playlistPath
         );
 
-        console.log(`[ffmpeg] Spawning for ${session.id} (track ${audioTrack}): ${vCodec} / ${aCodec}`);
+        console.log(`[ffmpeg] Spawning for ${session.id} (track ${audioTrack}, seek ${startTime}s): ${vCodec} / ${aCodec}`);
         const proc = spawn("ffmpeg", ffmpegArgs, { cwd: sessionDir });
-        const record = { proc, playlistPath, sessionDir, audioTrack };
+        const record = { proc, playlistPath, sessionDir, audioTrack, startTime };
 
         proc.stderr.on("data", (data) => {
             const str = data.toString();
@@ -168,7 +177,7 @@ async function ensureHls(session, audioTrack = 0) {
         return record;
     })();
 
-    starting.set(session.id, { promise, audioTrack });
+    starting.set(session.id, { promise, audioTrack, startTime });
     return await promise;
 }
 

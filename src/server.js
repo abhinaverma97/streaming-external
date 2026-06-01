@@ -3,10 +3,10 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { searchMovies, searchTv, searchMulti, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre } from "./tmdb.js";
+import { searchMovies, searchTv, searchMulti, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre, resolveMediaType } from "./tmdb.js";
 import { getWatchlist, addToWatchlist, removeFromWatchlist, getProgress, saveProgress, getHistory, addToHistory, removeFromHistory, getRatings, saveRating } from "./user-db.js";
 import { findMovieByImdb, findEpisodeTorrents, buildMagnet } from "./piratebay.js";
-import { startSession, getSession, getMimeType, getStatus, stopSession, waitForBuffer } from "./torrent.js";
+import { startSession, getSession, getMimeType, getStatus, stopSession, waitForBuffer, probeSourceDuration, seekToPosition } from "./torrent.js";
 import { ensureDir } from "./cache.js";
 import { clearHlsDir, ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, getAudioTracks } from "./hls.js";
 import { port, downloadsDir } from "./config.js";
@@ -146,9 +146,9 @@ app.get("/api/watchlist", (req, res) => {
 
 app.post("/api/watchlist", (req, res) => {
     try {
-        const { imdbId, movieDetails } = req.body;
+        const { imdbId, movieDetails, mediaType } = req.body;
         if (!imdbId) return res.status(400).json({ error: "Missing imdbId" });
-        addToWatchlist(imdbId, movieDetails);
+        addToWatchlist(imdbId, movieDetails, mediaType);
         res.json({ ok: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -164,6 +164,15 @@ app.delete("/api/watchlist/:imdbId", (req, res) => {
     }
 });
 
+app.get("/api/resolve-media-type/:imdbId", async (req, res) => {
+    try {
+        const mediaType = await resolveMediaType(req.params.imdbId);
+        res.json({ mediaType });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.get("/api/continue-watching", (req, res) => {
     try {
         res.json(getProgress());
@@ -174,11 +183,22 @@ app.get("/api/continue-watching", (req, res) => {
 
 app.post("/api/progress", (req, res) => {
     try {
-        const { imdbId, timestamp, duration, movieDetails } = req.body;
-        if (!imdbId || timestamp === undefined || !duration) {
+        const { imdbId, timestamp, duration, movieDetails, mediaType, sessionId } = req.body;
+        if (!imdbId || timestamp === undefined) {
             return res.status(400).json({ error: "Missing required fields" });
         }
-        saveProgress(imdbId, Number(timestamp), Number(duration), movieDetails);
+        // Use sourceDuration from session if available (true movie length, not HLS playlist length)
+        let finalDuration = Number(duration);
+        if (sessionId) {
+            const session = getSession(sessionId);
+            if (session?.sourceDuration) {
+                finalDuration = session.sourceDuration;
+            }
+        }
+        if (!finalDuration) {
+            return res.status(400).json({ error: "Duration unavailable" });
+        }
+        saveProgress(imdbId, Number(timestamp), finalDuration, movieDetails, mediaType);
         res.json({ ok: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -265,16 +285,6 @@ app.get("/api/movie/:imdbId/subtitle-status", (req, res) => {
     }
 });
 
-app.get("/api/movie/:imdbId/english-sub", async (req, res) => {
-    try {
-        const vtt = await getEnglishVtt(req.params.imdbId);
-        res.setHeader("Content-Type", "text/vtt");
-        res.send(vtt);
-    } catch (error) {
-        res.status(500).send("WEBVTT\n\n1\n00:00:00.000 --> 00:00:05.000\nError loading subtitles: " + error.message);
-    }
-});
-
 app.post("/api/stream/start", async (req, res) => {
     try {
         const { imdbId, quality, hash, title } = req.body;
@@ -310,12 +320,15 @@ app.post("/api/stream/start", async (req, res) => {
         // Start HLS in the background after waiting for pre-buffer to avoid transcoder stalls
         waitForBuffer(session).then(() => {
             ensureHls(session).catch(err => console.log("[ensureHls] bg error:", err.message));
+            // Probe source duration after buffer is ready (file exists on disk)
+            probeSourceDuration(session);
         });
         
         res.json({
             sessionId: session.id,
             streamUrl: `/api/stream/${session.id}`,
-            hlsUrl: `/api/stream/${session.id}/hls/index.m3u8`
+            hlsUrl: `/api/stream/${session.id}/hls/index.m3u8`,
+            sourceDuration: session.sourceDuration || null
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -377,7 +390,12 @@ app.get("/api/stream/:sessionId/subs", (req, res) => {
         if (!session || !session.torrent) return res.json([]);
         
         const subs = session.torrent.files
-            .map((f, index) => ({ name: f.name, path: f.path, index }))
+            .map((f, index) => ({ 
+                name: f.name, 
+                path: f.path, 
+                index, 
+                downloaded: f.downloaded >= f.length 
+            }))
             .filter(f => f.name.toLowerCase().endsWith('.srt') || f.name.toLowerCase().endsWith('.vtt'));
         
         res.json(subs);
@@ -396,6 +414,7 @@ app.get("/api/stream/:sessionId/subs/:fileIndex", (req, res) => {
         if (!file) return res.status(404).send("File not found");
         
         res.setHeader("Content-Type", "text/vtt; charset=utf-8");
+        res.setHeader("Content-Disposition", `attachment; filename="${file.name}"`);
         res.setHeader("Cache-Control", "public, max-age=3600");
         
         file.getBuffer((err, buffer) => {
@@ -441,7 +460,8 @@ app.get("/api/stream/:sessionId/hls/index.m3u8", async (req, res) => {
         if (!session) return res.status(404).json({ error: "Session not found" });
 
         const audioTrack = req.query.audioTrack !== undefined ? Number(req.query.audioTrack) : 0;
-        await ensureHls(session, audioTrack);
+        const startTime = req.query.startTime !== undefined ? Number(req.query.startTime) : 0;
+        await ensureHls(session, audioTrack, startTime);
         const playlistPath = getPlaylist(session.id);
 
         if (!fs.existsSync(playlistPath)) {
@@ -451,6 +471,30 @@ app.get("/api/stream/:sessionId/hls/index.m3u8", async (req, res) => {
 
         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
         fs.createReadStream(playlistPath).pipe(res);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post("/api/stream/:sessionId/seek", async (req, res) => {
+    try {
+        const session = getSession(req.params.sessionId);
+        if (!session) return res.status(404).json({ error: "Session not found" });
+
+        const { time, audioTrack = 0 } = req.body;
+        if (time === undefined || typeof time !== "number" || time < 0) {
+            return res.status(400).json({ error: "Invalid seek time" });
+        }
+
+        console.log(`[seek] Session ${session.id}: seeking to ${time}s`);
+
+        // Reprioritize torrent pieces near the seek position
+        seekToPosition(session, time);
+
+        // Restart HLS from the seek position
+        await ensureHls(session, audioTrack, time);
+
+        res.json({ ok: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

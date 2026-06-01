@@ -44,12 +44,12 @@ export function getWatchlist() {
     return db.watchlist || [];
 }
 
-export function addToWatchlist(imdbId, movieDetails) {
+export function addToWatchlist(imdbId, movieDetails, mediaType) {
     const db = loadDb();
     if (!db.watchlist) db.watchlist = [];
     const exists = db.watchlist.some(item => item.imdbId === imdbId);
     if (!exists) {
-        db.watchlist.push({ imdbId, movieDetails, addedAt: Date.now() });
+        db.watchlist.push({ imdbId, movieDetails, mediaType, addedAt: Date.now() });
         saveDb(db);
     }
 }
@@ -72,7 +72,7 @@ export function getProgress() {
     return items.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-export function saveProgress(imdbId, timestamp, duration, movieDetails) {
+export function saveProgress(imdbId, timestamp, duration, movieDetails, mediaType) {
     const db = loadDb();
     if (!db.progress) db.progress = {};
     if (!db.history) db.history = [];
@@ -87,6 +87,7 @@ export function saveProgress(imdbId, timestamp, duration, movieDetails) {
             timestamp,
             duration,
             movieDetails,
+            mediaType,
             updatedAt: Date.now()
         };
     }

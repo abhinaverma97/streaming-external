@@ -66,4 +66,12 @@ async function getMoviesByGenre(genreId, page = 1) {
     return tmdbGet("/discover/movie", { with_genres: genreId, page, sort_by: "popularity.desc" });
 }
 
+export async function resolveMediaType(imdbId) {
+    if (!imdbId) return null;
+    const data = await tmdbGet(`/find/${imdbId}`, { external_source: "imdb_id" });
+    if (data.movie_results?.length > 0) return "movie";
+    if (data.tv_results?.length > 0) return "tv";
+    return null;
+}
+
 export { searchMovies, searchTv, searchMulti, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre };
