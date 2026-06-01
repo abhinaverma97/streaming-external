@@ -1564,7 +1564,7 @@ export default function Home() {
                         <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
 
                             {/* Left Column: Video Box Container */}
-                            <div ref={playerContainerRef} className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black/40 shadow-2xl flex flex-col justify-center items-center backdrop-blur-xl">
+                            <div ref={playerContainerRef} className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl flex flex-col justify-center items-center">
 
                                 {/* Loader overlay */}
                                 {(probingCodecs || !hlsReadyUrl) && (
