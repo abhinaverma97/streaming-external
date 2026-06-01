@@ -1,4 +1,4 @@
-# Bitcine
+# Streaming
 
 Self-hosted Netflix-like streaming platform. Browse TMDB metadata, stream movies/TV via WebTorrent with HLS transcoding, multi-audio tracks, subtitle support, watchlist, and continue-watching.
 
