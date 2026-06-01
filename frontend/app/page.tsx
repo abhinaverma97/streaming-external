@@ -985,8 +985,10 @@ export default function Home() {
             const m = timeRegex.exec(line);
             if (m) {
                 const [_, h1, ms1, h2, ms2] = m;
-                const start = toSec(...h1.split(':').map(Number), Number(ms1));
-                const end = toSec(...h2.split(':').map(Number), Number(ms2));
+                const [hH, hM, hS] = h1.split(':').map(Number);
+                const [eH, eM, eS] = h2.split(':').map(Number);
+                const start = toSec(hH, hM, hS, Number(ms1));
+                const end = toSec(eH, eM, eS, Number(ms2));
                 const textLines: string[] = [];
                 i++;
                 while (i < lines.length && lines[i].trim() !== '' && !timeRegex.test(lines[i])) {
