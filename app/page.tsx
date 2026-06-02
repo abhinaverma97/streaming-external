@@ -453,6 +453,8 @@ export default function Home() {
         let targetSeason = forceSeason !== undefined ? forceSeason : selectedSeason;
         let targetEpisode = forceEpisode !== undefined ? forceEpisode : selectedEpisode;
 
+        console.log(`[playMovie] isTv=${isTv} movie.id=${movie.id} targetSeason=${targetSeason} targetEpisode=${targetEpisode} startTime=${startTime} sourceOverride=${sourceOverride}`);
+
         if (isTv && forceSeason === undefined && forceEpisode === undefined) {
             const watchlistId = getWatchlistId(movie);
             if (watchlistId.startsWith("tv-")) {
@@ -500,6 +502,7 @@ export default function Home() {
         const effectiveSource = sourceOverride || selectedSource;
         const srcName = getSource(effectiveSource).name;
         const embedUrl = buildEmbedUrl(effectiveSource, movie.id, isTv ? "tv" : "movie", targetSeason, targetEpisode, startTime);
+        console.log(`[playMovie] embedUrl=${embedUrl}`);
         console.log(`[${srcName}] Playing ${isTv ? `S${targetSeason}E${targetEpisode}` : ""} ${cleanTitle}`);
 
         setActiveStream({
@@ -877,16 +880,25 @@ export default function Home() {
                                                     src = effectiveSource;
                                                 }
                                                 if (src) { console.log(`[Continue Watching] Resuming with source: ${getSource(src).name}`); setSelectedSource(src); }
+                                                let parsedMovieId = item.movieDetails?.id;
                                                 let fs: number | undefined;
                                                 let fe: number | undefined;
                                                 if (item.tmdbId?.startsWith("tv-")) {
                                                     const parts = item.tmdbId.split("-");
+                                                    if (parts.length >= 2) {
+                                                        const maybeId = parseInt(parts[1], 10);
+                                                        if (!isNaN(maybeId)) parsedMovieId = maybeId;
+                                                    }
                                                     if (parts.length >= 4) {
                                                         fs = parseInt(parts[2], 10);
                                                         fe = parseInt(parts[3], 10);
                                                     }
                                                 }
-                                                playMovie({ ...item.movieDetails, media_type: mt }, item.timestamp, fs, fe, src);
+                                                if (!fs || isNaN(fs)) fs = 1;
+                                                if (!fe || isNaN(fe)) fe = 1;
+                                                const cwMovie = { ...item.movieDetails, id: parsedMovieId, media_type: mt };
+                                                console.log(`[Continue Watching] ${item.tmdbId} parsedMovieId=${parsedMovieId} fs=${fs} fe=${fe} mt=${mt} src=${src}`);
+                                                playMovie(cwMovie, item.timestamp, fs, fe, src);
                                             }}
                                             >
                                                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-slate-800/50 group-hover:border-white/40 transition-all duration-300 bg-slate-950 shadow-md">
