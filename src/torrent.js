@@ -195,12 +195,20 @@ function getStatus(session) {
     };
 }
 
+function estimateDuration(file) {
+    // Fallback: assume ~4 Mbps average bitrate to estimate duration from file size
+    return file.length / 524288; // bytes / (4 Mbps in bytes/sec ≈ 524288 B/s)
+}
+
 function seekToPosition(session, seekTime) {
     if (!session.file || !session.torrent) return;
     const file = session.file;
     const torrent = session.torrent;
-    const duration = session.sourceDuration;
-    if (!duration || duration <= 0) return;
+    let duration = session.sourceDuration;
+    if (!duration || duration <= 0) {
+        duration = estimateDuration(file);
+        console.log(`[seek] sourceDuration unavailable, using estimate ${duration.toFixed(1)}s from file size`);
+    }
 
     const byteOffset = Math.max(0, (seekTime / duration) * file.length);
     const bytesPerPiece = torrent.pieceLength;
@@ -226,14 +234,14 @@ async function probeSourceDuration(session) {
     if (!session.file) return null;
     const streamUrl = `http://127.0.0.1:${port}/api/stream/${session.id}`;
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 3; i++) {
         try {
             const { stdout } = await execFileAsync("ffprobe", [
                 "-v", "error",
                 "-show_entries", "format=duration",
                 "-of", "default=noprint_wrappers=1:nokey=1",
                 streamUrl
-            ], { timeout: 10000 });
+            ], { timeout: 6000 });
             const duration = parseFloat(stdout.trim());
             if (duration && isFinite(duration) && duration > 0) {
                 session.sourceDuration = duration;
@@ -241,11 +249,11 @@ async function probeSourceDuration(session) {
                 return duration;
             }
         } catch (e) {
-            console.log(`[ffprobe] Retry ${i + 1}/6 for ${session.id}: ${e.message}`);
+            console.log(`[ffprobe] Retry ${i + 1}/3 for ${session.id}: ${e.message}`);
         }
-        await new Promise(r => setTimeout(r, 5000));
+        await new Promise(r => setTimeout(r, 3000));
     }
-    console.log(`[ffprobe] Failed to determine source duration for ${session.id} after 6 attempts`);
+    console.log(`[ffprobe] Failed to determine source duration for ${session.id} after 3 attempts`);
     return null;
 }
 

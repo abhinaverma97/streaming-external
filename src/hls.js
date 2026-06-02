@@ -8,6 +8,7 @@ import { ensureDir } from "./cache.js";
 const execFileAsync = util.promisify(execFile);
 const active = new Map();
 const starting = new Map();
+const codecCache = new Map();
 
 function getSessionDir(sessionId) {
     return path.join(hlsDir, sessionId);
@@ -19,22 +20,23 @@ function getPlaylistPath(sessionId) {
 
 async function probeStream(streamUrl, audioTrack = 0) {
     try {
-        const { stdout: vOut } = await execFileAsync("ffprobe", [
-            "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
-            "-of", "default=noprint_wrappers=1:nokey=1", streamUrl
-        ], { timeout: 15000 });
-
-        const { stdout: aOut } = await execFileAsync("ffprobe", [
-            "-v", "error", "-select_streams", `a:${audioTrack}`, "-show_entries", "stream=codec_name",
-            "-of", "default=noprint_wrappers=1:nokey=1", streamUrl
-        ], { timeout: 15000 });
+        const [vResult, aResult] = await Promise.all([
+            execFileAsync("ffprobe", [
+                "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
+                "-of", "default=noprint_wrappers=1:nokey=1", streamUrl
+            ], { timeout: 15000 }).catch(() => ({ stdout: "" })),
+            execFileAsync("ffprobe", [
+                "-v", "error", "-select_streams", `a:${audioTrack}`, "-show_entries", "stream=codec_name",
+                "-of", "default=noprint_wrappers=1:nokey=1", streamUrl
+            ], { timeout: 15000 }).catch(() => ({ stdout: "" }))
+        ]);
 
         return {
-            videoCodec: vOut.trim().toLowerCase(),
-            audioCodec: aOut.trim().toLowerCase()
+            videoCodec: vResult.stdout.trim().toLowerCase() || "unknown",
+            audioCodec: aResult.stdout.trim().toLowerCase() || "unknown"
         };
     } catch (err) {
-        console.log(`[ffprobe] timeout or error: ${err.message}`);
+        console.log(`[ffprobe] error: ${err.message}`);
         return { videoCodec: "unknown", audioCodec: "unknown" };
     }
 }
@@ -72,7 +74,7 @@ async function ensureHls(session, audioTrack = 0, startTime = 0) {
 
     if (active.has(session.id)) {
         const record = active.get(session.id);
-        if (record.audioTrack === audioTrack && record.startTime === startTime) {
+        if (record.audioTrack === audioTrack && Math.abs(record.startTime - startTime) < 0.001) {
             return record;
         } else {
             console.log(`[hls] Audio track changed or seeking. Restarting HLS...`);
@@ -82,7 +84,7 @@ async function ensureHls(session, audioTrack = 0, startTime = 0) {
 
     if (starting.has(session.id)) {
         const startRecord = starting.get(session.id);
-        if (startRecord.audioTrack === audioTrack && startRecord.startTime === startTime) {
+        if (startRecord.audioTrack === audioTrack && Math.abs(startRecord.startTime - startTime) < 0.001) {
             return await startRecord.promise;
         } else {
             console.log(`[hls] Condition changed while starting. Cleaning up old start promise...`);
@@ -106,7 +108,13 @@ async function ensureHls(session, audioTrack = 0, startTime = 0) {
         const segmentPattern = path.join(sessionDir, "segment_%05d.m4s");
         const streamUrl = `http://127.0.0.1:${port}/api/stream/${session.id}`;
 
-        const codecs = await probeStream(streamUrl, audioTrack);
+        // Cache codecs per session so seeks don't re-probe
+        const cacheKey = `${session.id}:${audioTrack}`;
+        let codecs = codecCache.get(cacheKey);
+        if (!codecs) {
+            codecs = await probeStream(streamUrl, audioTrack);
+            codecCache.set(cacheKey, codecs);
+        }
         console.log(`[hls] Codecs for ${session.id} (track ${audioTrack}): Video=${codecs.videoCodec}, Audio=${codecs.audioCodec}`);
 
         const vCodec = "copy";
@@ -122,15 +130,14 @@ async function ensureHls(session, audioTrack = 0, startTime = 0) {
         }
 
         ffmpegArgs.push(
-            "-copyts",
             "-i", streamUrl,
             "-map", "0:v:0",
             "-map", `0:a:${audioTrack}`,
             "-c:v", vCodec
         );
 
-        // -copyts preserves original timestamps; -noaccurate_seek snaps both streams to
-        // the same keyframe boundary so there's no audio-video offset after seeking.
+        // -noaccurate_seek snaps both streams to the same keyframe boundary
+        // so there's no audio-video offset after seeking. Timestamps are re-based to 0.
 
         ffmpegArgs.push("-c:a", aCodec);
         if (aCodec === "aac") {
@@ -199,6 +206,11 @@ function stopHls(sessionId) {
     }
     starting.delete(sessionId);
 
+    // Clear cached codecs for this session
+    for (const key of codecCache.keys()) {
+        if (key.startsWith(sessionId + ":")) codecCache.delete(key);
+    }
+
     const dir = getSessionDir(sessionId);
     if (fs.existsSync(dir)) {
         try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { }
@@ -224,42 +236,4 @@ function clearHlsDir() {
     fs.rmSync(hlsDir, { recursive: true, force: true });
 }
 
-async function getActualStartTime(sessionId) {
-    const sessionDir = getSessionDir(sessionId);
-    for (let i = 0; i < 60; i++) {
-        const files = fs.readdirSync(sessionDir).filter(f => f.endsWith(".m4s") && !f.includes("init"));
-        if (files.length > 0) {
-            files.sort();
-            const segPath = path.join(sessionDir, files[0]);
-            try {
-                const { stdout } = await execFileAsync("ffprobe", [
-                    "-v", "error",
-                    "-show_entries", "frame=pts_time",
-                    "-read_intervals", "%+#1",
-                    "-of", "csv=p=0",
-                    segPath
-                ], { timeout: 5000 });
-                const time = parseFloat(stdout.trim());
-                if (!isNaN(time) && time > 0) return time;
-            } catch (e) {}
-            // Fallback: try pts_time from packet instead
-            try {
-                const { stdout } = await execFileAsync("ffprobe", [
-                    "-v", "error",
-                    "-show_packets",
-                    "-read_intervals", "%+#1",
-                    "-of", "csv=pk=pts_time",
-                    segPath
-                ], { timeout: 5000 });
-                const lines = stdout.trim().split("\n").filter(l => l);
-                const times = lines.map(l => parseFloat(l)).filter(t => !isNaN(t) && t > 0);
-                if (times.length > 0) return Math.min(...times);
-            } catch (e) {}
-            break;
-        }
-        await new Promise(r => setTimeout(r, 200));
-    }
-    return null;
-}
-
-export { ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, clearHlsDir, getAudioTracks, getActualStartTime };
+export { ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, clearHlsDir, getAudioTracks };

@@ -8,7 +8,7 @@ import { getWatchlist, addToWatchlist, removeFromWatchlist, getProgress, savePro
 import { findMovieByImdb, findEpisodeTorrents, buildMagnet } from "./piratebay.js";
 import { startSession, getSession, getMimeType, getStatus, stopSession, waitForBuffer, probeSourceDuration, seekToPosition } from "./torrent.js";
 import { ensureDir } from "./cache.js";
-import { clearHlsDir, ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, getAudioTracks, getActualStartTime } from "./hls.js";
+import { clearHlsDir, ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, getAudioTracks } from "./hls.js";
 import { port, downloadsDir } from "./config.js";
 import { listMovies, deleteMovie, deleteAllMovies, totalStorageUsed } from "./storage.js";
 import { getEnglishVtt, startSubtitleDownload, getSubtitleStatus } from "./subtitles.js";
@@ -461,12 +461,17 @@ app.get("/api/stream/:sessionId/hls/index.m3u8", async (req, res) => {
 
         const audioTrack = req.query.audioTrack !== undefined ? Number(req.query.audioTrack) : 0;
         const startTime = req.query.startTime !== undefined ? Number(req.query.startTime) : 0;
-        await ensureHls(session, audioTrack, startTime);
         const playlistPath = getPlaylist(session.id);
 
+        // Only start HLS if the playlist doesn't exist yet (initial startup).
+        // The /seek POST handler handles re-starting HLS during seeks,
+        // and the initial ensureHls is triggered by waitForBuffer after /stream/start.
         if (!fs.existsSync(playlistPath)) {
-            res.status(204).set("Retry-After", "2").end();
-            return;
+            await ensureHls(session, audioTrack, startTime);
+            if (!fs.existsSync(playlistPath)) {
+                res.status(204).set("Retry-After", "2").end();
+                return;
+            }
         }
 
         res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
@@ -494,10 +499,7 @@ app.post("/api/stream/:sessionId/seek", async (req, res) => {
         // Restart HLS from the seek position
         await ensureHls(session, audioTrack, time);
 
-        // Probe the first segment to get the actual keyframe start time
-        const actualStartTime = await getActualStartTime(session.id);
-
-        res.json({ ok: true, actualStartTime: actualStartTime ?? time });
+        res.json({ ok: true, actualStartTime: time });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

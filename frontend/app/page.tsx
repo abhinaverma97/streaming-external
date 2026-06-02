@@ -94,12 +94,10 @@ export default function Home() {
     const [sourceDuration, setSourceDuration] = useState<number | null>(null);
     const [playerCurrentTime, setPlayerCurrentTime] = useState(0);
     const [playerPaused, setPlayerPaused] = useState(true);
-    const [uiVisible, setUiVisible] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [seekOffset, setSeekOffset] = useState(0);
     const [isSeeking, setIsSeeking] = useState(false);
     const [frozenFrame, setFrozenFrame] = useState<string | null>(null);
-    const hideTimerRef = useRef<any>(null);
     const seekingRef = useRef(false);
     const seekDurRef = useRef(0);
 
@@ -152,12 +150,6 @@ export default function Home() {
     const subsPollIntervalRef = useRef<any>(null);
     const playerListenersCleanupRef = useRef<(() => void) | null>(null);
     const playerContainerRef = useRef<HTMLDivElement>(null);
-
-    const showUi = () => {
-        setUiVisible(true);
-        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-        hideTimerRef.current = setTimeout(() => setUiVisible(false), 3000);
-    };
 
     const formatTime = (t: number) => {
         const h = Math.floor(t / 3600);
@@ -456,6 +448,23 @@ export default function Home() {
                                 maxBufferSize: 60 * 1000 * 1000
                             });
                             hlsRef.current = hls;
+                            hls.on(Hls.Events.ERROR, (_event, data) => {
+                                if (data.fatal) {
+                                    switch (data.type) {
+                                        case Hls.ErrorTypes.NETWORK_ERROR:
+                                            hls.startLoad();
+                                            break;
+                                        case Hls.ErrorTypes.MEDIA_ERROR:
+                                            hls.recoverMediaError();
+                                            break;
+                                        default:
+                                            console.error("[HLS] Fatal error in audio track switch:", data.type, data.details);
+                                            setHlsErrorMsg(`Audio track error: ${data.details}`);
+                                            hls.destroy();
+                                            break;
+                                    }
+                                }
+                            });
                             hls.loadSource(newUrl);
                             hls.attachMedia(video);
                         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -703,13 +712,12 @@ export default function Home() {
                 });
                 const seekData = await seekRes.json();
                 const actualStart = seekData.actualStartTime ?? startTime;
-                for (let i = 0; i < 120; i++) {
+                for (let i = 0; i < 300; i++) {
                     try {
                         const res = await fetch(seekUrl, { cache: "no-store" });
                         if (res.ok) {
                             const ct = res.headers.get("content-type") || "";
                             if (ct.includes("application/vnd.apple.mpegurl")) {
-                                await sleep(2000);
                                 setSeekOffset(actualStart);
                                 effectiveUrl = seekUrl;
                                 adjustedStart = 0;
@@ -717,7 +725,7 @@ export default function Home() {
                             }
                         }
                     } catch (e) {}
-                    await sleep(1000);
+                    await sleep(200);
                 }
             } catch (e) {
                 // fall through — try loading from start, adjustedStart stays as startTime
@@ -725,13 +733,12 @@ export default function Home() {
         }
 
         // Poll for the playlist (seeked or from start)
-        for (let i = 0; i < 90; i++) {
+        for (let i = 0; i < 300; i++) {
             try {
                 const res = await fetch(effectiveUrl, { cache: "no-store" });
                 if (res.ok) {
                     const contentType = res.headers.get("content-type") || "";
                     if (contentType.includes("application/vnd.apple.mpegurl")) {
-                        await sleep(4000); 
                         setHlsReadyUrl(effectiveUrl);
                         setProbingCodecs(false);
                         setTimeout(() => {
@@ -743,7 +750,7 @@ export default function Home() {
             } catch (e) {
                 // ignore
             }
-            await sleep(1000);
+            await sleep(200);
         }
 
         setHlsErrorMsg("HLS playlist generation timed out. Ensure ffmpeg is installed.");
@@ -783,8 +790,6 @@ export default function Home() {
                 maxBufferSize: 60 * 1000 * 1000
             });
             hlsRef.current = hls;
-            hls.loadSource(url);
-            hls.attachMedia(video);
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 if (startTime > 0) {
                     video.currentTime = startTime;
@@ -808,6 +813,9 @@ export default function Home() {
                     }
                 }
             });
+
+            hls.loadSource(url);
+            hls.attachMedia(video);
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
             video.src = url;
             video.addEventListener("loadedmetadata", () => {
@@ -908,16 +916,16 @@ export default function Home() {
             });
             const seekData = await seekRes.json();
             const actualStart = seekData.actualStartTime ?? targetTime;
+            setSeekOffset(actualStart);
 
-            for (let i = 0; i < 120; i++) {
+            // Poll at 200ms intervals instead of 1000ms
+            for (let i = 0; i < 300; i++) {
                 try {
                     const res = await fetch(hlsUrl, { cache: "no-store" });
                     if (res.ok) {
                         const ct = res.headers.get("content-type") || "";
                         if (ct.includes("application/vnd.apple.mpegurl")) {
-                            await sleep(2000);
-                            setSeekOffset(actualStart);
-                            setFrozenFrame(null);
+                            // Dismiss loading overlay but KEEP frozen frame until video renders
                             setHlsReadyUrl(hlsUrl);
                             setProbingCodecs(false);
                             setIsSeeking(false);
@@ -926,13 +934,32 @@ export default function Home() {
                                 if (Hls.isSupported()) {
                                     const hls = new Hls({ maxBufferLength: 30, maxBufferSize: 60 * 1000 * 1000 });
                                     hlsRef.current = hls;
-                                    hls.loadSource(hlsUrl);
-                                    hls.attachMedia(videoRef.current);
                                     hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                                        setFrozenFrame(null);
                                         videoRef.current!.currentTime = 0;
                                         videoRef.current?.play().catch(() => {});
                                     });
+                                    hls.on(Hls.Events.ERROR, (_event, data) => {
+                                        if (data.fatal) {
+                                            switch (data.type) {
+                                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                                    hls.startLoad();
+                                                    break;
+                                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                                    hls.recoverMediaError();
+                                                    break;
+                                                default:
+                                                    console.error("[HLS] Fatal error:", data.type, data.details);
+                                                    setHlsErrorMsg(`Playback error: ${data.details}`);
+                                                    hls.destroy();
+                                                    break;
+                                            }
+                                        }
+                                    });
+                                    hls.loadSource(hlsUrl);
+                                    hls.attachMedia(videoRef.current);
                                 } else {
+                                    setFrozenFrame(null);
                                     videoRef.current.src = hlsUrl;
                                     videoRef.current.play().catch(() => {});
                                 }
@@ -942,7 +969,7 @@ export default function Home() {
                         }
                     }
                 } catch (e) {}
-                await sleep(1000);
+                await sleep(200);
             }
         } catch (e) {}
 
@@ -1061,12 +1088,10 @@ export default function Home() {
         setSourceDuration(null);
         setPlayerCurrentTime(0);
         setPlayerPaused(true);
-        setUiVisible(false);
         setSeekOffset(0);
         setIsSeeking(false);
         setFrozenFrame(null);
         seekingRef.current = false;
-        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
         setSubtitleCues([]);
         setSubtitleName("");
 
@@ -1568,11 +1593,22 @@ export default function Home() {
                         <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
 
                             {/* Left Column: Video Box Container */}
-                            <div ref={playerContainerRef} className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl flex flex-col justify-center items-center">
+                            <div ref={playerContainerRef} className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl flex flex-col justify-center items-center group">
+
+                                {/* Separate frozen frame — stays visible until video renders */}
+                                {frozenFrame && (
+                                    <div className="absolute inset-0 z-15 pointer-events-none bg-black"
+                                        style={{
+                                            backgroundImage: `url(${frozenFrame})`,
+                                            backgroundSize: 'contain',
+                                            backgroundPosition: 'center',
+                                            backgroundRepeat: 'no-repeat'
+                                        }} />
+                                )}
 
                                 {/* Loader overlay */}
                                 {(probingCodecs || !hlsReadyUrl) && (
-                                    <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center gap-4 ${isSeeking ? 'bg-black/40' : 'bg-black'}`} style={frozenFrame ? { backgroundImage: `url(${frozenFrame})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}}>
+                                    <div className={`absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center gap-4 ${isSeeking ? 'bg-black/40' : 'bg-black'}`}>
                                         {hlsErrorMsg ? (
                                             <div className="flex flex-col items-center gap-3 text-rose-500">
                                                 <AlertCircle className="w-10 h-10 stroke-[1.5]" />
@@ -1601,22 +1637,18 @@ export default function Home() {
                                     </div>
                                 )}
 
-                                <div
-                                    className="absolute inset-0 z-10"
-                                    onMouseMove={showUi}
-                                />
                                 <video
                                     ref={videoRef}
                                     playsInline
                                     onClick={() => {
                                         const v = videoRef.current;
                                         if (v) v.paused ? v.play() : v.pause();
-                                        showUi();
                                     }}
                                     className="w-full h-full object-contain relative z-10 cursor-pointer"
                                 />
                                 {subtitleCues.length > 0 && (() => {
-                                    const cue = subtitleCues.find(c => playerCurrentTime >= c.start && playerCurrentTime < c.end);
+                                    const absTime = seekOffset + playerCurrentTime;
+                                    const cue = subtitleCues.find(c => absTime >= c.start && absTime < c.end);
                                     return cue ? (
                                         <div className="absolute bottom-20 left-0 right-0 z-20 flex justify-center pointer-events-none px-6" key={cue.start}>
                                             <div
@@ -1635,17 +1667,16 @@ export default function Home() {
                                     const seekDur = sourceDuration || (vDur && isFinite(vDur) ? vDur : null);
                                     if (seekDur) seekDurRef.current = seekDur;
                                     const absTime = seekOffset + playerCurrentTime;
-                                    const controlsVisible = (uiVisible || playerPaused) && !isSeeking;
                                     return (
                                         <>
-                                            {playerPaused && controlsVisible && (
+                                            {playerPaused && !isSeeking && (
                                                 <div className="absolute inset-0 z-15 flex items-center justify-center pointer-events-none transition-opacity duration-300">
                                                     <div className="w-14 h-14 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
                                                         <Play className="w-6 h-6 text-white/70 ml-0.5" />
                                                     </div>
                                                 </div>
                                             )}
-                                            <div className={`absolute bottom-0 left-0 right-0 z-20 transition-opacity duration-300 ${controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                                            <div className={`absolute bottom-0 left-0 right-0 z-20 transition-opacity duration-300 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto ${playerPaused ? 'opacity-100 pointer-events-auto' : ''}`}>
                                                 <div className="flex items-center gap-3 px-4 pb-3">
                                                     <div className="flex-1 relative h-2 bg-white/10 rounded-full cursor-pointer overflow-hidden"
                                                         onClick={(e) => {
@@ -1653,7 +1684,6 @@ export default function Home() {
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             const x = e.clientX - rect.left;
                                                             const frac = x / rect.width;
-                                                            showUi();
                                                             seekTo(frac);
                                                         }}
                                                     >
@@ -1672,7 +1702,6 @@ export default function Home() {
                                                             } else if (playerContainerRef.current) {
                                                                 playerContainerRef.current.requestFullscreen();
                                                             }
-                                                            showUi();
                                                         }}
                                                         className="flex-shrink-0 text-white/40 hover:text-white/70 transition-colors cursor-pointer"
                                                     >
