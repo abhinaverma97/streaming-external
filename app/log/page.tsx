@@ -17,6 +17,7 @@ export default function LogPage() {
     const [loading, setLoading] = useState(true);
     const [sortBy, setSortBy] = useState<"rating" | "time" | "release">("time");
     const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+    const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
     const [searchQuery, setSearchQuery] = useState("");
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -43,7 +44,13 @@ export default function LogPage() {
         }
     };
 
-    const sortedRatings = [...ratings].sort((a, b) => {
+    const totalMovies = ratings.filter((r: any) => r.movieDetails?.media_type === "movie" || (!r.movieDetails?.name && !r.movieDetails?.media_type)).length;
+    const totalTv = ratings.filter((r: any) => r.movieDetails?.media_type === "tv" || r.movieDetails?.name).length;
+    const isTv = (r: any) => r.movieDetails?.media_type === "tv" || !!r.movieDetails?.name;
+
+    const filteredRatings = mediaFilter === "all" ? ratings : ratings.filter((r: any) => mediaFilter === "tv" ? isTv(r) : !isTv(r));
+
+    const sortedRatings = [...filteredRatings].sort((a, b) => {
         let result = 0;
         if (sortBy === "rating") {
             result = b.rating - a.rating;
@@ -100,8 +107,23 @@ export default function LogPage() {
                     </form>
                 </Navbar>
 
+                {/* Stats */}
+                <div className="flex items-center justify-center gap-4 md:gap-6 mt-8 md:mt-16 mb-4 text-[10px] font-medium tracking-[0.2em] text-slate-500 uppercase">
+                    <span>{ratings.length} <span className="text-slate-600">rated</span></span>
+                    <span className="w-1 h-1 rounded-full bg-slate-800" />
+                    <span>{totalMovies} <span className="text-slate-600">movies</span></span>
+                    <span className="w-1 h-1 rounded-full bg-slate-800" />
+                    <span>{totalTv} <span className="text-slate-600">series</span></span>
+                </div>
+
                 {/* Controls - Center aligned, purely textual matching home page section headers */}
-                <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mt-8 md:mt-16 mb-8 md:mb-12 text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
+                <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mb-8 md:mb-12 text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
+                    <SortButton active={mediaFilter === "all"} onClick={() => setMediaFilter("all")} label="Both" />
+                    <SortButton active={mediaFilter === "movie"} onClick={() => setMediaFilter("movie")} label="Movies" />
+                    <SortButton active={mediaFilter === "tv"} onClick={() => setMediaFilter("tv")} label="Series" />
+
+                    <span className="text-white/20 font-light">|</span>
+
                     <SortButton active={sortBy === "time"} onClick={() => setSortBy("time")} label="Recent" />
                     <SortButton active={sortBy === "rating"} onClick={() => setSortBy("rating")} label="Rating" />
                     <SortButton active={sortBy === "release"} onClick={() => setSortBy("release")} label="Release" />
@@ -127,7 +149,7 @@ export default function LogPage() {
                             <Film className="w-6 h-6 text-white/20" />
                         </div>
                         <div className="text-[11px] text-white/40 uppercase tracking-widest font-light">
-                            You haven't rated any movies or series yet.
+                            {mediaFilter === "all" ? "You haven't rated anything yet." : mediaFilter === "movie" ? "No rated movies found." : "No rated series found."}
                         </div>
                     </div>
                 ) : (

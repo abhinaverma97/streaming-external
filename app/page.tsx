@@ -901,6 +901,15 @@ export default function Home() {
                                                 </div>
                                                 <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
                                                     {item.movieDetails?.title || "Unknown Title"}
+                                                    {item.tmdbId?.startsWith("tv-") && (() => {
+                                                        const parts = item.tmdbId.split("-");
+                                                        if (parts.length >= 4) {
+                                                            const s = String(parts[2]).padStart(2, "0");
+                                                            const e = String(parts[3]).padStart(2, "0");
+                                                            return <span className="text-[9px] text-slate-500 tracking-wider ml-2">S{s} E{e}</span>;
+                                                        }
+                                                        return null;
+                                                    })()}
                                                 </div>
                                                 <div className="text-[9px] text-slate-500 font-medium">
                                                     {percent}% completed
