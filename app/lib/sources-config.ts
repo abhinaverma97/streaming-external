@@ -14,9 +14,9 @@ export interface SourceConfig {
   };
 }
 
-const M = 808080;
-const D = 404040;
-const L = "a0a0a0";
+const M = "ffffff";
+const D = "ffffff";
+const L = "ffffff";
 
 export const SOURCES: SourceConfig[] = [
   {

@@ -50,6 +50,7 @@ export default function Home() {
     // Movie categories
     const [trending, setTrending] = useState<Movie[]>([]);
     const [trendingType, setTrendingType] = useState<"movie" | "tv">("movie");
+    const [watchlistFilter, setWatchlistFilter] = useState<"all" | "movie" | "tv">("all");
 
 
     // User lists from Backend
@@ -922,13 +923,39 @@ export default function Home() {
                         )}
 
                         {/* Watchlist */}
-                        {watchlist.length > 0 && (
+                        {(() => {
+                            const filteredWatchlist = watchlist.filter((item: any) => watchlistFilter === "all" || item.mediaType === watchlistFilter);
+                            return filteredWatchlist.length > 0 && (
                             <FadeContent className="snap-start snap-always scroll-mt-0 pt-8 pb-10">
-                                <h3 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
-                                    Watchlist
-                                </h3>
+                                <div className="flex items-center gap-6 mb-5">
+                                    <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
+                                        Watchlist
+                                    </h3>
+                                    <div className="flex items-center gap-3 text-xs font-medium tracking-wider uppercase text-slate-500">
+                                        <button
+                                            onClick={() => setWatchlistFilter('all')}
+                                            className={`hover:text-slate-300 transition-colors ${watchlistFilter === 'all' ? 'text-white cursor-default' : 'cursor-pointer'}`}
+                                        >
+                                            All
+                                        </button>
+                                        <span className="text-slate-700">|</span>
+                                        <button
+                                            onClick={() => setWatchlistFilter('movie')}
+                                            className={`hover:text-slate-300 transition-colors ${watchlistFilter === 'movie' ? 'text-white cursor-default' : 'cursor-pointer'}`}
+                                        >
+                                            Movies
+                                        </button>
+                                        <span className="text-slate-700">|</span>
+                                        <button
+                                            onClick={() => setWatchlistFilter('tv')}
+                                            className={`hover:text-slate-300 transition-colors ${watchlistFilter === 'tv' ? 'text-white cursor-default' : 'cursor-pointer'}`}
+                                        >
+                                            Series
+                                        </button>
+                                    </div>
+                                </div>
                                 <ScrollRow>
-                                    {watchlist.map((item: any) => (
+                                    {filteredWatchlist.map((item: any) => (
                                         <div
                                             key={item.tmdbId}
                                             onClick={() => {
@@ -953,7 +980,8 @@ export default function Home() {
                                     ))}
                                 </ScrollRow>
                             </FadeContent>
-                        )}
+                        );
+                    })()}
 
 
 
