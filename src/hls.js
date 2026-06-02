@@ -78,7 +78,7 @@ async function ensureHls(session, audioTrack = 0, startTime = 0) {
             return record;
         } else {
             console.log(`[hls] Audio track changed or seeking. Restarting HLS...`);
-            stopHls(session.id);
+            await stopHls(session.id);
         }
     }
 
@@ -198,7 +198,9 @@ function getSegmentPath(sessionId, segmentName) {
     return path.join(getSessionDir(sessionId), segmentName);
 }
 
-function stopHls(sessionId) {
+const sleep = util.promisify(setTimeout);
+
+async function stopHls(sessionId) {
     const record = active.get(sessionId);
     if (record) {
         try { record.proc.kill("SIGKILL"); } catch (e) { }
@@ -206,15 +208,22 @@ function stopHls(sessionId) {
     }
     starting.delete(sessionId);
 
-    // Clear cached codecs for this session
-    for (const key of codecCache.keys()) {
-        if (key.startsWith(sessionId + ":")) codecCache.delete(key);
-    }
-
     const dir = getSessionDir(sessionId);
-    if (fs.existsSync(dir)) {
-        try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) { }
+    for (let i = 0; i < 5; i++) {
+        try {
+            if (fs.existsSync(dir)) {
+                fs.rmSync(dir, { recursive: true, force: true });
+            }
+            if (!fs.existsSync(dir)) {
+                return;
+            }
+        } catch (e) {
+            console.log(`[hls] rmSync attempt ${i + 1}/5 failed for ${sessionId}: ${e.message}`);
+        }
+        // Wait for OS to release file handles before retrying
+        await sleep(200);
     }
+    console.log(`[hls] Failed to clean up HLS dir for ${sessionId} after 5 attempts`);
 }
 
 function stopAllHls() {

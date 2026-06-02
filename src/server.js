@@ -527,7 +527,7 @@ app.post("/api/stream/stop", async (req, res) => {
     try {
         const { sessionId } = req.body || {};
         if (sessionId) {
-            stopHls(sessionId);
+            await stopHls(sessionId);
             await stopSession(sessionId);
         } else {
             // Kill ffmpeg first so it releases any file handles
