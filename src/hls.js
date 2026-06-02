@@ -118,17 +118,19 @@ async function ensureHls(session, audioTrack = 0, startTime = 0) {
         ];
 
         if (startTime > 0) {
-            ffmpegArgs.push("-ss", String(startTime), "-accurate_seek");
+            ffmpegArgs.push("-ss", String(startTime), "-noaccurate_seek");
         }
 
         ffmpegArgs.push(
+            "-copyts",
             "-i", streamUrl,
             "-map", "0:v:0",
             "-map", `0:a:${audioTrack}`,
             "-c:v", vCodec
         );
 
-        // Don't use -copyts: let ffmpeg generate fresh timestamps so the timeline always starts at 0
+        // -copyts preserves original timestamps; -noaccurate_seek snaps both streams to
+        // the same keyframe boundary so there's no audio-video offset after seeking.
 
         ffmpegArgs.push("-c:a", aCodec);
         if (aCodec === "aac") {
@@ -222,4 +224,42 @@ function clearHlsDir() {
     fs.rmSync(hlsDir, { recursive: true, force: true });
 }
 
-export { ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, clearHlsDir, getAudioTracks };
+async function getActualStartTime(sessionId) {
+    const sessionDir = getSessionDir(sessionId);
+    for (let i = 0; i < 60; i++) {
+        const files = fs.readdirSync(sessionDir).filter(f => f.endsWith(".m4s") && !f.includes("init"));
+        if (files.length > 0) {
+            files.sort();
+            const segPath = path.join(sessionDir, files[0]);
+            try {
+                const { stdout } = await execFileAsync("ffprobe", [
+                    "-v", "error",
+                    "-show_entries", "frame=pts_time",
+                    "-read_intervals", "%+#1",
+                    "-of", "csv=p=0",
+                    segPath
+                ], { timeout: 5000 });
+                const time = parseFloat(stdout.trim());
+                if (!isNaN(time) && time > 0) return time;
+            } catch (e) {}
+            // Fallback: try pts_time from packet instead
+            try {
+                const { stdout } = await execFileAsync("ffprobe", [
+                    "-v", "error",
+                    "-show_packets",
+                    "-read_intervals", "%+#1",
+                    "-of", "csv=pk=pts_time",
+                    segPath
+                ], { timeout: 5000 });
+                const lines = stdout.trim().split("\n").filter(l => l);
+                const times = lines.map(l => parseFloat(l)).filter(t => !isNaN(t) && t > 0);
+                if (times.length > 0) return Math.min(...times);
+            } catch (e) {}
+            break;
+        }
+        await new Promise(r => setTimeout(r, 200));
+    }
+    return null;
+}
+
+export { ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, clearHlsDir, getAudioTracks, getActualStartTime };

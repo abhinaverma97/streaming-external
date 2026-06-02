@@ -696,11 +696,13 @@ export default function Home() {
         if (startTime > 0) {
             try {
                 const seekUrl = `${hlsUrl}?audioTrack=${currentAudioTrack}&startTime=${startTime}`;
-                await fetch(`${API_BASE}/api/stream/${sessionId}/seek`, {
+                const seekRes = await fetch(`${API_BASE}/api/stream/${sessionId}/seek`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ time: startTime, audioTrack: currentAudioTrack })
                 });
+                const seekData = await seekRes.json();
+                const actualStart = seekData.actualStartTime ?? startTime;
                 for (let i = 0; i < 120; i++) {
                     try {
                         const res = await fetch(seekUrl, { cache: "no-store" });
@@ -708,7 +710,7 @@ export default function Home() {
                             const ct = res.headers.get("content-type") || "";
                             if (ct.includes("application/vnd.apple.mpegurl")) {
                                 await sleep(2000);
-                                setSeekOffset(startTime);
+                                setSeekOffset(actualStart);
                                 effectiveUrl = seekUrl;
                                 adjustedStart = 0;
                                 break;
@@ -899,11 +901,13 @@ export default function Home() {
         const hlsUrl = `${API_BASE}/api/stream/${activeSessionId}/hls/index.m3u8?audioTrack=${currentAudioTrack}&startTime=${targetTime}`;
 
         try {
-            await fetch(`${API_BASE}/api/stream/${activeSessionId}/seek`, {
+            const seekRes = await fetch(`${API_BASE}/api/stream/${activeSessionId}/seek`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ time: targetTime, audioTrack: currentAudioTrack })
             });
+            const seekData = await seekRes.json();
+            const actualStart = seekData.actualStartTime ?? targetTime;
 
             for (let i = 0; i < 120; i++) {
                 try {
@@ -912,7 +916,7 @@ export default function Home() {
                         const ct = res.headers.get("content-type") || "";
                         if (ct.includes("application/vnd.apple.mpegurl")) {
                             await sleep(2000);
-                            setSeekOffset(targetTime);
+                            setSeekOffset(actualStart);
                             setFrozenFrame(null);
                             setHlsReadyUrl(hlsUrl);
                             setProbingCodecs(false);

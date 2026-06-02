@@ -8,7 +8,7 @@ import { getWatchlist, addToWatchlist, removeFromWatchlist, getProgress, savePro
 import { findMovieByImdb, findEpisodeTorrents, buildMagnet } from "./piratebay.js";
 import { startSession, getSession, getMimeType, getStatus, stopSession, waitForBuffer, probeSourceDuration, seekToPosition } from "./torrent.js";
 import { ensureDir } from "./cache.js";
-import { clearHlsDir, ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, getAudioTracks } from "./hls.js";
+import { clearHlsDir, ensureHls, getPlaylist, getSegmentPath, stopHls, stopAllHls, getAudioTracks, getActualStartTime } from "./hls.js";
 import { port, downloadsDir } from "./config.js";
 import { listMovies, deleteMovie, deleteAllMovies, totalStorageUsed } from "./storage.js";
 import { getEnglishVtt, startSubtitleDownload, getSubtitleStatus } from "./subtitles.js";
@@ -494,7 +494,10 @@ app.post("/api/stream/:sessionId/seek", async (req, res) => {
         // Restart HLS from the seek position
         await ensureHls(session, audioTrack, time);
 
-        res.json({ ok: true });
+        // Probe the first segment to get the actual keyframe start time
+        const actualStartTime = await getActualStartTime(session.id);
+
+        res.json({ ok: true, actualStartTime: actualStartTime ?? time });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
