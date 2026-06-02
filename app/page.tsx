@@ -877,7 +877,16 @@ export default function Home() {
                                                     src = effectiveSource;
                                                 }
                                                 if (src) { console.log(`[Continue Watching] Resuming with source: ${getSource(src).name}`); setSelectedSource(src); }
-                                                playMovie({ ...item.movieDetails, media_type: mt }, item.timestamp, undefined, undefined, src);
+                                                let fs: number | undefined;
+                                                let fe: number | undefined;
+                                                if (item.tmdbId?.startsWith("tv-")) {
+                                                    const parts = item.tmdbId.split("-");
+                                                    if (parts.length >= 4) {
+                                                        fs = parseInt(parts[2], 10);
+                                                        fe = parseInt(parts[3], 10);
+                                                    }
+                                                }
+                                                playMovie({ ...item.movieDetails, media_type: mt }, item.timestamp, fs, fe, src);
                                             }}
                                             >
                                                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-slate-800/50 group-hover:border-white/40 transition-all duration-300 bg-slate-950 shadow-md">
