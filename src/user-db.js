@@ -69,7 +69,29 @@ export function getProgress() {
         imdbId,
         ...entry
     }));
-    return items.sort((a, b) => b.updatedAt - a.updatedAt);
+
+    // Group TV episodes by show ID, keep only the latest episode per show
+    const showGroups = new Map();
+    const standalone = [];
+
+    for (const item of items) {
+        const isTv = item.mediaType === "tv" || item.imdbId.startsWith("tv-");
+        if (isTv) {
+            const showId = item.movieDetails?.id;
+            if (showId) {
+                const existing = showGroups.get(showId);
+                if (!existing || item.updatedAt > existing.updatedAt) {
+                    showGroups.set(showId, item);
+                }
+            } else {
+                standalone.push(item);
+            }
+        } else {
+            standalone.push(item);
+        }
+    }
+
+    return [...standalone, ...showGroups.values()].sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 export function saveProgress(imdbId, timestamp, duration, movieDetails, mediaType) {
