@@ -1,21 +1,29 @@
 {
-    "name": "movie-site-backend",
-    "version": "0.1.0",
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "start": "node src/server.js",
-        "test:sources": "node src/scraper/testSources.js"
-    },
-    "dependencies": {
-        "cors": "^2.8.5",
-        "express": "^4.19.2",
-        "mime-types": "^2.1.35",
-        "node-fetch": "^3.3.2",
-        "opensubtitles-api": "^5.1.2",
-        "unzipper": "^0.12.3",
-        "webtorrent": "^2.5.19",
-        "yifysubtitles": "^2.1.5",
-        "cheerio": "^1.0.0-rc.12"
-    }
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.17.0",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
 }
