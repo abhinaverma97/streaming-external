@@ -717,7 +717,7 @@ export default function Home() {
                                 {/* Minimalist Action Buttons */}
                                 <div className="flex items-center gap-2 md:gap-3.5 mt-1 md:mt-2">
                                     <button
-                                        onClick={() => playMovie(selectedMovie)}
+                                            onClick={() => playMovie(selectedMovie, 0, undefined, undefined, effectiveEnabledSources[0] || "vidking")}
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
                                     >
                                         <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" /> {selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}
