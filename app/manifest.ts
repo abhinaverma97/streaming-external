@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Bitcine",
     description: "Multi-source embed player with TMDB catalog",
     start_url: "/",
-    display: "standalone",
+    display: "fullscreen",
     background_color: "#000000",
     theme_color: "#000000",
     icons: [
