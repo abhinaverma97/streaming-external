@@ -114,6 +114,8 @@ export default function Home() {
     const progressTimeoutRef = useRef<any>(null);
     const activeStreamRef = useRef(activeStream);
     activeStreamRef.current = activeStream;
+    const selectedSourceRef = useRef(selectedSource);
+    selectedSourceRef.current = selectedSource;
 
     const effectiveEnabledSources = enabledSources.length > 0 ? enabledSources : SOURCES.map((s) => s.id);
     const effectiveSource = effectiveEnabledSources.includes(selectedSource) ? selectedSource : (effectiveEnabledSources[0] || "vidking");
@@ -330,27 +332,29 @@ export default function Home() {
     };
 
     const reportProgress = async (currentTime: number, duration: number) => {
-        if (!activeStream || !duration || currentTime < 5) return;
+        const stream = activeStreamRef.current;
+        const source = selectedSourceRef.current;
+        if (!stream || !duration || currentTime < 5) return;
 
         try {
-            const resolvedMediaType = activeStream.details.media_type || activeStream.details.mediaType || (activeStream.tmdbId.startsWith("tv-") ? "tv" : "movie");
-            console.log(`[${getSource(selectedSource).name}] Progress: ${Math.round(currentTime)}s / ${Math.round(duration)}s (${Math.round((currentTime / duration) * 100)}%)`);
+            const resolvedMediaType = stream.details.media_type || stream.details.mediaType || (stream.tmdbId.startsWith("tv-") ? "tv" : "movie");
+            console.log(`[${getSource(source).name}] Progress: ${Math.round(currentTime)}s / ${Math.round(duration)}s (${Math.round((currentTime / duration) * 100)}%)`);
             await fetch(`/api/progress`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    tmdbId: activeStream.tmdbId,
+                    tmdbId: stream.tmdbId,
                     mediaType: resolvedMediaType,
                     timestamp: currentTime,
                     duration,
-                    source: selectedSource,
+                    source,
                     movieDetails: {
-                        id: activeStream.details.id,
-                        title: activeStream.details.title || activeStream.details.name || "Untitled",
-                        poster_path: activeStream.details.poster_path,
-                        backdrop_path: activeStream.details.backdrop_path,
-                        vote_average: activeStream.details.vote_average,
-                        release_date: activeStream.details.release_date,
+                        id: stream.details.id,
+                        title: stream.details.title || stream.details.name || "Untitled",
+                        poster_path: stream.details.poster_path,
+                        backdrop_path: stream.details.backdrop_path,
+                        vote_average: stream.details.vote_average,
+                        release_date: stream.details.release_date,
                         media_type: resolvedMediaType
                     }
                 })
@@ -389,7 +393,7 @@ export default function Home() {
                     evt = d.event;
                     currentTime = d.currentTime;
                     duration = d.duration;
-                    mediaId = d.tmdbId ?? d.id;
+                    mediaId = d.tmdbId ?? d.mtmdbId ?? d.id;
                 } else if (dtype === "WATCH_PROGRESS") {
                     evt = d.eventType;
                     currentTime = d.currentTime;
@@ -398,15 +402,15 @@ export default function Home() {
                 }
 
                 if (dtype === "MEDIA_DATA") {
-                    const entries = typeof d === "object" ? d : {};
-                    for (const key of Object.keys(entries)) {
-                        const entry = entries[key];
-                        if (entry && entry.progress && String(key) === String(stream.details?.id)) {
+                    const entries = Array.isArray(d) ? d : Object.values(d);
+                    for (const entry of entries) {
+                        if (entry && entry.progress && entry.id && String(entry.id) === String(stream.details?.id)) {
                             currentTime = entry.progress.watched;
                             duration = entry.progress.duration;
                             if (currentTime && duration) {
                                 reportProgress(currentTime, duration);
                             }
+                            break;
                         }
                     }
                     return;
@@ -437,7 +441,8 @@ export default function Home() {
         movie: Movie,
         startTime: number = 0,
         forceSeason?: number,
-        forceEpisode?: number
+        forceEpisode?: number,
+        sourceOverride?: string
     ) => {
         const isTv = movie.media_type === "tv" || (!selectedShowDetails && movie.media_type === "tv");
 
@@ -488,8 +493,9 @@ export default function Home() {
 
         setPlayerError(null);
 
-        const srcName = getSource(selectedSource).name;
-        const embedUrl = buildEmbedUrl(selectedSource, movie.id, isTv ? "tv" : "movie", targetSeason, targetEpisode, startTime);
+        const effectiveSource = sourceOverride || selectedSource;
+        const srcName = getSource(effectiveSource).name;
+        const embedUrl = buildEmbedUrl(effectiveSource, movie.id, isTv ? "tv" : "movie", targetSeason, targetEpisode, startTime);
         console.log(`[${srcName}] Playing ${isTv ? `S${targetSeason}E${targetEpisode}` : ""} ${cleanTitle}`);
 
         setActiveStream({
@@ -867,7 +873,7 @@ export default function Home() {
                                                     src = effectiveSource;
                                                 }
                                                 if (src) { console.log(`[Continue Watching] Resuming with source: ${getSource(src).name}`); setSelectedSource(src); }
-                                                playMovie({ ...item.movieDetails, media_type: mt }, item.timestamp);
+                                                playMovie({ ...item.movieDetails, media_type: mt }, item.timestamp, undefined, undefined, src);
                                             }}
                                             >
                                                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-slate-800/50 group-hover:border-white/40 transition-all duration-300 bg-slate-950 shadow-md">

@@ -65,7 +65,7 @@ export const SOURCES: SourceConfig[] = [
       if (st && st > 0) u += `&startAt=${st}`;
       return u;
     },
-    supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: true, progress: false },
+    supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: true, progress: true },
   },
   {
     id: "vidfast",
@@ -122,7 +122,7 @@ export const SOURCES: SourceConfig[] = [
   {
     id: "vidsrcwtf",
     name: "VidSrc.wtf",
-    origins: ["https://vidsrc.wtf"],
+    origins: ["https://vidsrc.wtf", "https://www.vidsrc.wtf"],
     buildMovieUrl: (id) => `https://vidsrc.wtf/1/movie/${id}?color=${M}`,
     buildTvUrl: (id, s, e) => `https://vidsrc.wtf/1/tv/${id}/${s}/${e}?color=${M}`,
     supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: true, startTime: false, progress: true },
