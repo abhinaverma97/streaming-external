@@ -11,8 +11,9 @@ import {
     getSourcePrefs, saveSourcePrefs
 } from "../_lib/user-db.js";
 import { getSourceUrl } from "../_lib/sources.js";
+import { verifyToken } from "../_lib/auth.js";
 
-type RouteHandler = (req: NextRequest, segments: string[]) => Promise<NextResponse>;
+type RouteHandler = (req: NextRequest, segments: string[], username: string | null) => Promise<NextResponse>;
 
 function json(data: any, status = 200) {
     return NextResponse.json(data, { status });
@@ -31,7 +32,7 @@ function error(msg: string, status = 500) {
     return NextResponse.json({ error: msg }, { status });
 }
 
-async function handle(req: NextRequest, segments: string[]): Promise<NextResponse> {
+async function handle(req: NextRequest, segments: string[], username: string | null): Promise<NextResponse> {
     const method = req.method;
     const [s0, s1, s2, s3] = segments;
 
@@ -39,6 +40,16 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
         // ── Health ─────────────────────────────────────────────────────
         if (s0 === "health") {
             return json({ ok: true });
+        }
+
+        // ── Auth routes are public ─────────────────────────────────────
+        if (s0 === "auth") {
+            return error("Auth route not found", 404);
+        }
+
+        // ── Everything else requires authentication ────────────────────
+        if (!username) {
+            return error("Not authenticated", 401);
         }
 
         // ── Search ─────────────────────────────────────────────────────
@@ -90,15 +101,15 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
 
         // ── Watchlist ──────────────────────────────────────────────────
         if (s0 === "watchlist") {
-            if (method === "GET") return json(getWatchlist());
+            if (method === "GET") return json(getWatchlist(username));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
-                await addToWatchlist(body.tmdbId, body.movieDetails, body.mediaType);
+                await addToWatchlist(username, body.tmdbId, body.movieDetails, body.mediaType);
                 return json({ ok: true });
             }
             if ((method === "DELETE" || method === "POST") && s1) {
-                await removeFromWatchlist(s1);
+                await removeFromWatchlist(username, s1);
                 return json({ ok: true });
             }
         }
@@ -108,50 +119,50 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             const body = await req.json();
             if (!body.tmdbId || body.timestamp === undefined) return error("Missing required fields", 400);
             if (!body.duration) return error("Duration unavailable", 400);
-            saveProgress(body.tmdbId, Number(body.timestamp), Number(body.duration), body.movieDetails, body.mediaType, body.source);
+            saveProgress(username, body.tmdbId, Number(body.timestamp), Number(body.duration), body.movieDetails, body.mediaType, body.source);
             return json({ ok: true });
         }
 
         // ── Continue Watching ──────────────────────────────────────────
         if (s0 === "continue-watching") {
-            return json(getProgress());
+            return json(getProgress(username));
         }
 
         // ── History ────────────────────────────────────────────────────
         if (s0 === "history") {
-            if (method === "GET") return json(getHistory());
+            if (method === "GET") return json(getHistory(username));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
-                await addToHistory(body.tmdbId, body.movieDetails);
+                await addToHistory(username, body.tmdbId, body.movieDetails);
                 return json({ ok: true });
             }
             if ((method === "DELETE") && s1) {
-                await removeFromHistory(s1);
+                await removeFromHistory(username, s1);
                 return json({ ok: true });
             }
         }
 
         // ── Ratings ────────────────────────────────────────────────────
         if (s0 === "ratings") {
-            if (method === "GET") return json(getRatings());
+            if (method === "GET") return json(getRatings(username));
             if (method === "POST" && s1) {
                 const body = await req.json();
                 if (typeof body.rating !== "number" || body.rating < 1 || body.rating > 5) {
                     return error("Invalid rating", 400);
                 }
-                await saveRating(s1, body.rating, body.movieDetails);
+                await saveRating(username, s1, body.rating, body.movieDetails);
                 return json({ ok: true });
             }
         }
 
         // ── Source Preferences ─────────────────────────────────────────
         if (s0 === "source-prefs") {
-            if (method === "GET") return json(getSourcePrefs());
+            if (method === "GET") return json(getSourcePrefs(username));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.enabled || !body.defaultSource) return error("Missing enabled or defaultSource", 400);
-                await saveSourcePrefs(body.enabled, body.defaultSource);
+                await saveSourcePrefs(username, body.enabled, body.defaultSource);
                 return json({ ok: true });
             }
         }
@@ -162,17 +173,26 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
     }
 }
 
+function extractUsername(req: NextRequest): string | null {
+    const token = req.cookies.get("auth-token")?.value;
+    if (!token) return null;
+    return verifyToken(token);
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
     const slug = (await params).slug;
-    return handle(req, slug);
+    const username = extractUsername(req);
+    return handle(req, slug, username);
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
     const slug = (await params).slug;
-    return handle(req, slug);
+    const username = extractUsername(req);
+    return handle(req, slug, username);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
     const slug = (await params).slug;
-    return handle(req, slug);
+    const username = extractUsername(req);
+    return handle(req, slug, username);
 }

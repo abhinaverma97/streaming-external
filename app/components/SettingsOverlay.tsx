@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, LogOut } from "lucide-react";
 import GlassSurface from "./GlassSurface";
 import { SOURCES, getSource } from "../lib/sources-config";
+import { useAuth } from "./AuthProvider";
 
 const LS_ENABLED = "bitcine-enabled-sources";
 const LS_DEFAULT = "bitcine-default-source";
@@ -35,6 +36,7 @@ interface SettingsOverlayProps {
 }
 
 export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: SettingsOverlayProps) {
+  const { user, logout } = useAuth();
   const [enabled, setEnabled] = useState<string[]>([]);
   const [defaultSource, setDefaultSource] = useState("vidking");
   const [selectOpen, setSelectOpen] = useState(false);
@@ -150,6 +152,20 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                 <div className="text-[9px] text-slate-600 tracking-[0.15em] uppercase text-center pt-1">
                   Continue Watching items use their saved source regardless
                 </div>
+              </div>
+
+              {/* Account */}
+              <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.05]">
+                <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400">Account</h3>
+                <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                  <span className="text-xs text-white/70">{user}</span>
+                </div>
+                <button
+                  onClick={async () => { onClose(); await logout(); }}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-red-500/10 hover:border-red-500/20 text-white/50 hover:text-red-400 text-xs transition-all active:scale-[0.98]"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign Out
+                </button>
               </div>
             </div>
           </GlassSurface>
