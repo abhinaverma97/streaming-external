@@ -18,6 +18,15 @@ function json(data: any, status = 200) {
     return NextResponse.json(data, { status });
 }
 
+function cachedJson(data: any, ttlSeconds: number) {
+    return NextResponse.json(data, {
+        status: 200,
+        headers: {
+            "Cache-Control": `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds}, stale-while-revalidate=${Math.floor(ttlSeconds / 2)}`
+        }
+    });
+}
+
 function error(msg: string, status = 500) {
     return NextResponse.json({ error: msg }, { status });
 }
@@ -42,25 +51,25 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             if (type === "tv") data = await searchTv(query, page);
             else if (type === "multi") data = await searchMulti(query, page);
             else data = await searchMovies(query, page);
-            return json(data);
+            return cachedJson(data, 3600);
         }
 
         // ── Movie / TV Details ─────────────────────────────────────────
         const pageNum = (p: string | null) => p ? Number(p) : 1;
 
         if ((s0 === "movie" || s0 === "movies") && s1 && method === "GET") {
-            if (s1 === "trending") return json(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s1 === "top-rated") return json(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s1 === "genre" && s2) return json(await getMoviesByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s2 === "trending") return json(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s2 === "top-rated") return json(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))));
-            return json({ tmdb: await movieDetails(s1) });
+            if (s1 === "trending") return cachedJson(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))), 3600);
+            if (s1 === "top-rated") return cachedJson(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))), 86400);
+            if (s1 === "genre" && s2) return cachedJson(await getMoviesByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))), 86400);
+            if (s2 === "trending") return cachedJson(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))), 3600);
+            if (s2 === "top-rated") return cachedJson(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))), 86400);
+            return cachedJson({ tmdb: await movieDetails(s1) }, 86400);
         }
 
         if (s0 === "tv" && s1 && method === "GET") {
-            if (s1 === "trending") return json(await getTrendingTv(pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s1 === "genre" && s2) return json(await getMoviesByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))));
-            return json({ tmdb: await tvDetails(s1) });
+            if (s1 === "trending") return cachedJson(await getTrendingTv(pageNum(req.nextUrl.searchParams.get("page"))), 3600);
+            if (s1 === "genre" && s2) return cachedJson(await getMoviesByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))), 86400);
+            return cachedJson({ tmdb: await tvDetails(s1) }, 86400);
         }
 
         // ── Sources ────────────────────────────────────────────────────
@@ -85,11 +94,11 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
-                addToWatchlist(body.tmdbId, body.movieDetails, body.mediaType);
+                await addToWatchlist(body.tmdbId, body.movieDetails, body.mediaType);
                 return json({ ok: true });
             }
             if ((method === "DELETE" || method === "POST") && s1) {
-                removeFromWatchlist(s1);
+                await removeFromWatchlist(s1);
                 return json({ ok: true });
             }
         }
@@ -114,11 +123,11 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
-                addToHistory(body.tmdbId, body.movieDetails);
+                await addToHistory(body.tmdbId, body.movieDetails);
                 return json({ ok: true });
             }
             if ((method === "DELETE") && s1) {
-                removeFromHistory(s1);
+                await removeFromHistory(s1);
                 return json({ ok: true });
             }
         }
@@ -131,7 +140,7 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
                 if (typeof body.rating !== "number" || body.rating < 1 || body.rating > 5) {
                     return error("Invalid rating", 400);
                 }
-                saveRating(s1, body.rating, body.movieDetails);
+                await saveRating(s1, body.rating, body.movieDetails);
                 return json({ ok: true });
             }
         }
@@ -142,7 +151,7 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.enabled || !body.defaultSource) return error("Missing enabled or defaultSource", 400);
-                saveSourcePrefs(body.enabled, body.defaultSource);
+                await saveSourcePrefs(body.enabled, body.defaultSource);
                 return json({ ok: true });
             }
         }

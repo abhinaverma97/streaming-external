@@ -3,14 +3,22 @@ import path from "path";
 
 const configPath = path.join(process.cwd(), "sources.json");
 
+let cachedSources = null;
+
 function loadSources() {
+    if (cachedSources) return cachedSources;
     try {
-        if (!fs.existsSync(configPath)) return { movies: {}, tv: {} };
+        if (!fs.existsSync(configPath)) {
+            cachedSources = { movies: {}, tv: {} };
+            return cachedSources;
+        }
         const raw = fs.readFileSync(configPath, "utf-8");
-        return JSON.parse(raw);
+        cachedSources = JSON.parse(raw);
+        return cachedSources;
     } catch (e) {
         console.error("[Sources] Error reading sources.json:", e.message);
-        return { movies: {}, tv: {} };
+        cachedSources = { movies: {}, tv: {} };
+        return cachedSources;
     }
 }
 
