@@ -20,44 +20,20 @@ const L = "ffffff";
 
 export const SOURCES: SourceConfig[] = [
   {
-    id: "111movies",
-    name: "111Movies",
-    origins: ["https://111movies.net"],
-    buildMovieUrl: (id) => `https://111movies.net/movie/${id}`,
-    buildTvUrl: (id, s, e) => `https://111movies.net/tv/${id}/${s}/${e}`,
-    supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: false, startTime: false, progress: false },
-  },
-  {
-    id: "vidking",
-    name: "VidKing",
-    origins: ["https://www.vidking.net"],
+    id: "videasy",
+    name: "VIDEASY",
+    origins: ["https://player.videasy.net"],
     buildMovieUrl: (id, st) => {
-      let u = `https://www.vidking.net/embed/movie/${id}?color=${M}&autoPlay=true`;
+      let u = `https://player.videasy.net/movie/${id}?color=${M}`;
       if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
     buildTvUrl: (id, s, e, st) => {
-      let u = `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${M}&autoPlay=true&episodeSelector=true`;
+      let u = `https://player.videasy.net/tv/${id}/${s}/${e}?color=${M}`;
       if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
     supports: { autoPlay: true, serverSelection: false, subtitles: false, colorTheme: true, startTime: true, progress: true },
-  },
-  {
-    id: "vidlink",
-    name: "VidLink",
-    origins: ["https://vidlink.pro"],
-    buildMovieUrl: (id, st) => {
-      let u = `https://vidlink.pro/movie/${id}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
-      if (st && st > 0) u += `&startAt=${st}`;
-      return u;
-    },
-    buildTvUrl: (id, s, e, st) => {
-      let u = `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
-      if (st && st > 0) u += `&startAt=${st}`;
-      return u;
-    },
-    supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: true, progress: true },
   },
   {
     id: "vidfast",
@@ -86,14 +62,20 @@ export const SOURCES: SourceConfig[] = [
     supports: { autoPlay: true, serverSelection: true, subtitles: false, colorTheme: true, startTime: false, progress: true },
   },
   {
-    id: "vidrock",
-    name: "VidRock",
-    origins: ["https://vidrock.ru"],
-    buildMovieUrl: (id) =>
-      `https://vidrock.ru/movie/${id}?autoplay=true&theme=${M}&download=false&nextbutton=false&episodeselector=false`,
-    buildTvUrl: (id, s, e) =>
-      `https://vidrock.ru/tv/${id}/${s}/${e}?autoplay=true&theme=${M}&download=false&nextbutton=false&episodeselector=false`,
-    supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: false, progress: true },
+    id: "vidlink",
+    name: "VidLink",
+    origins: ["https://vidlink.pro"],
+    buildMovieUrl: (id, st) => {
+      let u = `https://vidlink.pro/movie/${id}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
+      if (st && st > 0) u += `&startAt=${st}`;
+      return u;
+    },
+    buildTvUrl: (id, s, e, st) => {
+      let u = `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
+      if (st && st > 0) u += `&startAt=${st}`;
+      return u;
+    },
+    supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: true, progress: true },
   },
   {
     id: "vidnest",
@@ -112,20 +94,38 @@ export const SOURCES: SourceConfig[] = [
     supports: { autoPlay: false, serverSelection: true, subtitles: false, colorTheme: false, startTime: true, progress: true },
   },
   {
-    id: "videasy",
-    name: "VIDEASY",
-    origins: ["https://player.videasy.net"],
+    id: "vidking",
+    name: "VidKing",
+    origins: ["https://www.vidking.net"],
     buildMovieUrl: (id, st) => {
-      let u = `https://player.videasy.net/movie/${id}?color=${M}`;
+      let u = `https://www.vidking.net/embed/movie/${id}?color=${M}&autoPlay=true`;
       if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
     buildTvUrl: (id, s, e, st) => {
-      let u = `https://player.videasy.net/tv/${id}/${s}/${e}?color=${M}`;
+      let u = `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${M}&autoPlay=true&episodeSelector=true`;
       if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
     supports: { autoPlay: true, serverSelection: false, subtitles: false, colorTheme: true, startTime: true, progress: true },
+  },
+  {
+    id: "vidrock",
+    name: "VidRock",
+    origins: ["https://vidrock.ru"],
+    buildMovieUrl: (id) =>
+      `https://vidrock.ru/movie/${id}?autoplay=true&theme=${M}&download=false&nextbutton=false&episodeselector=false`,
+    buildTvUrl: (id, s, e) =>
+      `https://vidrock.ru/tv/${id}/${s}/${e}?autoplay=true&theme=${M}&download=false&nextbutton=false&episodeselector=false`,
+    supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: false, progress: true },
+  },
+  {
+    id: "111movies",
+    name: "111Movies",
+    origins: ["https://111movies.net"],
+    buildMovieUrl: (id) => `https://111movies.net/movie/${id}`,
+    buildTvUrl: (id, s, e) => `https://111movies.net/tv/${id}/${s}/${e}`,
+    supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: false, startTime: false, progress: false },
   },
 ];
 
