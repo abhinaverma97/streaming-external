@@ -22,7 +22,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full scroll-smooth" data-scroll-behavior="smooth">
       <head>
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/nob.ico" sizes="any" />
+        <link rel="icon" href="/nob.png" type="image/png" sizes="192x192" />
       </head>
       <body
         className={`${outfit.className} min-h-full bg-black text-slate-100 antialiased overflow-x-hidden selection:bg-white/20 selection:text-white`}
