@@ -205,10 +205,14 @@ export default function Home() {
             if (!fs || isNaN(fs)) fs = 1;
             if (!fe || isNaN(fe)) fe = 1;
             setCwPlayContext({ movieId: item.movieDetails?.id, timestamp: item.timestamp, source: item.source, season: fs, episode: fe, percent, isTv: mt === "tv" });
-            loadMovieDetails(item.movieDetails?.id, mt);
+            if (selectedMovie?.id !== item.movieDetails?.id) {
+                loadMovieDetails(item.movieDetails?.id, mt);
+            }
         } else if (trending.length > 0) {
             setCwPlayContext(null);
-            loadMovieDetails(trending[0].id, trendingType);
+            if (selectedMovie?.id !== trending[0].id) {
+                loadMovieDetails(trending[0].id, trendingType);
+            }
         }
     }, [continueWatching, trending, activeStream]);
 
