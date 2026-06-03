@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import { AuthProvider } from "./components/AuthProvider";
+import PageTransition from "./components/PageTransition";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${outfit.className} min-h-full bg-black text-slate-100 antialiased overflow-x-hidden selection:bg-white/20 selection:text-white`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <PageTransition>{children}</PageTransition>
+        </AuthProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `
