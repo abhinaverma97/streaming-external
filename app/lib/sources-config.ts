@@ -143,6 +143,22 @@ export const SOURCES: SourceConfig[] = [
     },
     supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: false, startTime: true, progress: false },
   },
+  {
+    id: "videasy",
+    name: "VIDEASY",
+    origins: ["https://player.videasy.net"],
+    buildMovieUrl: (id, st) => {
+      let u = `https://player.videasy.net/movie/${id}?color=${M}`;
+      if (st && st > 0) u += `&progress=${Math.floor(st)}`;
+      return u;
+    },
+    buildTvUrl: (id, s, e, st) => {
+      let u = `https://player.videasy.net/tv/${id}/${s}/${e}?color=${M}`;
+      if (st && st > 0) u += `&progress=${Math.floor(st)}`;
+      return u;
+    },
+    supports: { autoPlay: true, serverSelection: false, subtitles: false, colorTheme: true, startTime: true, progress: true },
+  },
 ];
 
 export function getSource(id: string): SourceConfig {

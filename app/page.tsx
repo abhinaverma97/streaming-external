@@ -435,6 +435,19 @@ export default function Home() {
             const stream = activeStreamRef.current;
             if (!stream) return;
 
+            // VIDEASY progress tracking (flat JSON, no envelope)
+            if (event.origin === "https://player.videasy.net") {
+                const pd = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+                if (pd?.timestamp !== undefined && pd?.duration) {
+                    const mediaId = pd.id || pd.tmdbId;
+                    if (String(mediaId) === String(stream.details?.id)) {
+                        if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
+                        progressTimeoutRef.current = setTimeout(() => reportProgress(pd.timestamp, pd.duration), 500);
+                    }
+                }
+                return;
+            }
+
             try {
                 const msg = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
                 if (!msg || !msg.data) return;
