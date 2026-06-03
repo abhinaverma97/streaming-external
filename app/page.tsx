@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -301,16 +301,15 @@ export default function Home() {
 
     // ── Search Logic ──────────────────────────────────────────────────────────
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!searchQuery.trim()) {
+    const doSearch = useCallback(async (query: string) => {
+        if (!query.trim()) {
             setSearchResults([]);
             setIsSearching(false);
             return;
         }
         setIsSearching(true);
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`);
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${searchType}`);
             const data = await res.json();
             const tagged = (data.results || []).map((movie: any) => ({
                 ...movie,
@@ -326,6 +325,25 @@ export default function Home() {
         } catch (e) {
             console.error("Search error", e);
         }
+    }, [searchType]);
+
+    const searchTimerRef = useRef<any>(null);
+
+    useEffect(() => {
+        if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            setIsSearching(false);
+            return;
+        }
+        searchTimerRef.current = setTimeout(() => doSearch(searchQuery), 300);
+        return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
+    }, [searchQuery, doSearch]);
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+        doSearch(searchQuery);
     };
 
     // ── Playback / Streaming ──────────────────────────────────────────────────
