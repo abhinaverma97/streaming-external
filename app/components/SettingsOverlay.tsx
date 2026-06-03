@@ -41,31 +41,10 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
   const [defaultSource, setDefaultSource] = useState("videasy");
   const [selectOpen, setSelectOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
-  const [adminUsers, setAdminUsers] = useState<{ username: string; createdAt: number }[]>([]);
+  const [adminUsers, setAdminUsers] = useState<{ username: string; createdAt: number; lastActive: number | null }[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
   const [adminLoading, setAdminLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setEnabled(loadEnabled());
-      setDefaultSource(loadDefault());
-      if (user === "abhi") {
-        setAdminLoading(true);
-        fetch("/api/auth/users")
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => { if (data?.users) setAdminUsers(data.users); })
-          .catch(() => {})
-          .finally(() => setAdminLoading(false));
-      }
-    }
-  }, [isOpen, user]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (selectRef.current && !selectRef.current.contains(e.target as Node)) setSelectOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const toggleSource = (id: string) => {
     setEnabled((prev) => {
@@ -82,6 +61,38 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
     setSelectOpen(false);
     onSourcesChange(enabled, id);
   };
+
+  const loadAdminData = async () => {
+    setAdminLoading(true);
+    try {
+      const res = await fetch("/api/auth/users");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.users) setAdminUsers(data.users);
+      setTotalUsers(data.totalUsers ?? 0);
+      setActiveUsers(data.activeUsers ?? 0);
+    } catch {}
+    setAdminLoading(false);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setEnabled(loadEnabled());
+      setDefaultSource(loadDefault());
+      if (user === "abhi") {
+        setAdminLoading(true);
+        loadAdminData();
+      }
+    }
+  }, [isOpen, user]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (selectRef.current && !selectRef.current.contains(e.target as Node)) setSelectOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const enabledOptions = SOURCES.filter((s) => enabled.includes(s.id));
   const defaultOption = enabledOptions.find((s) => s.id === defaultSource) || enabledOptions[0];
@@ -182,23 +193,57 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
               {user === "abhi" && (
                 <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.05]">
                   <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400">Admin</h3>
+
+                  {/* Stats */}
+                  <div className="flex gap-3">
+                    <div className="flex-1 px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] text-center">
+                      <div className="text-[18px] font-bold text-white/80">{totalUsers}</div>
+                      <div className="text-[9px] text-white/30 tracking-wider uppercase mt-0.5">Total Users</div>
+                    </div>
+                    <div className="flex-1 px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] text-center">
+                      <div className="text-[18px] font-bold text-green-400">{activeUsers}</div>
+                      <div className="text-[9px] text-white/30 tracking-wider uppercase mt-0.5">Active (24h)</div>
+                    </div>
+                  </div>
+
+                  {/* User List */}
                   <div className="flex flex-col gap-1.5">
                     {adminLoading ? (
-                      <div className="text-[10px] text-white/30 text-center py-2">Loading...</div>
+                      <div className="text-[10px] text-white/30 text-center py-3">Loading...</div>
                     ) : adminUsers.length === 0 ? (
-                      <div className="text-[10px] text-white/30 text-center py-2">No users</div>
+                      <div className="text-[10px] text-white/30 text-center py-3">No users</div>
                     ) : (
-                      adminUsers.map((u) => (
-                        <div
-                          key={u.username}
-                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05]"
-                        >
-                          <span className="text-xs text-white/70">{u.username}</span>
-                          <span className="text-[10px] text-white/30">
-                            {new Date(u.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      ))
+                      adminUsers.map((u) => {
+                        const isActive = u.lastActive && u.lastActive > Date.now() - 86400000;
+                        return (
+                          <div
+                            key={u.username}
+                            className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? "bg-green-400" : "bg-white/20"}`} />
+                              <span className="text-xs text-white/70 truncate">{u.username}</span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-[10px] text-white/30">{new Date(u.createdAt).toLocaleDateString()}</span>
+                              {u.username !== "abhi" && (
+                                <button
+                                  onClick={async () => {
+                                    if (!confirm(`Delete user "${u.username}"? This cannot be undone.`)) return;
+                                    try {
+                                      const res = await fetch(`/api/auth/users/${u.username}`, { method: "DELETE" });
+                                      if (res.ok) loadAdminData();
+                                    } catch {}
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 text-[10px] font-medium transition-all active:scale-95 cursor-pointer"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </div>
