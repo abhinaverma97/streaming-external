@@ -28,15 +28,15 @@ function getDb(username) {
   return data;
 }
 
-async function writeDb(username) {
+function writeDb(username) {
   const data = dbs.get(username);
   if (!data) return;
   const dbPath = userDbPath(username);
-  ensureDir(path.dirname(dbPath));
   try {
-    await fs.promises.writeFile(dbPath, JSON.stringify(data, null, 2), "utf-8");
+    ensureDir(path.dirname(dbPath));
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
   } catch (e) {
-    console.error(`[UserDB] Error writing ${username}/user-data.json`, e);
+    console.error(`[UserDB] Error writing ${dbPath}`, e);
   }
 }
 
@@ -48,18 +48,18 @@ function scheduleWrite(username) {
   }, WRITE_DEBOUNCE_MS));
 }
 
-async function flushDb(username) {
+function flushDb(username) {
   if (writeTimers.has(username)) { clearTimeout(writeTimers.get(username)); writeTimers.delete(username); }
-  await writeDb(username);
+  writeDb(username);
 }
 
 // ── Graceful shutdown ──────────────────────────────────────────────
 
 if (typeof process !== "undefined") {
-  const handleSignal = async () => {
+  const handleSignal = () => {
     for (const username of dbs.keys()) {
       if (writeTimers.has(username)) { clearTimeout(writeTimers.get(username)); writeTimers.delete(username); }
-      await writeDb(username);
+      writeDb(username);
     }
   };
   process.on("SIGTERM", handleSignal);
@@ -143,7 +143,7 @@ export function saveProgress(username, tmdbId, timestamp, duration, movieDetails
       updatedAt: Date.now()
     };
   }
-  scheduleWrite(username);
+  flushDb(username);
 }
 
 // ── History ────────────────────────────────────────────────────────────
