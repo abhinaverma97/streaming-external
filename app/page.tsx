@@ -435,22 +435,22 @@ export default function Home() {
             const stream = activeStreamRef.current;
             if (!stream) return;
 
-            // VIDEASY progress tracking (flat JSON, no envelope)
-            if (event.origin === "https://player.videasy.net") {
-                const pd = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-                if (pd?.timestamp !== undefined && pd?.duration) {
-                    const mediaId = pd.id || pd.tmdbId;
-                    if (String(mediaId) === String(stream.details?.id)) {
-                        if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
-                        progressTimeoutRef.current = setTimeout(() => reportProgress(pd.timestamp, pd.duration), 500);
-                    }
-                }
-                return;
-            }
-
             try {
                 const msg = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-                if (!msg || !msg.data) return;
+                if (!msg) return;
+
+                // Flat JSON fallback (VIDEASY legacy): { id, timestamp, duration, ... }
+                if (msg.timestamp !== undefined && msg.duration) {
+                    console.log(`[${event.origin === "https://player.videasy.net" ? "VIDEASY" : event.origin}] Flat message: ${JSON.stringify(msg)}`);
+                    const mediaId = msg.id || msg.tmdbId;
+                    if (mediaId && String(mediaId) === String(stream.details?.id)) {
+                        if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
+                        progressTimeoutRef.current = setTimeout(() => reportProgress(msg.timestamp, msg.duration), 500);
+                    }
+                    return;
+                }
+
+                if (!msg.data) return;
 
                 const dtype = msg.type;
                 const d = msg.data;
