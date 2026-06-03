@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
     const [mode, setMode] = useState<"login" | "register">("login");
@@ -9,7 +8,6 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,7 +29,7 @@ export default function LoginPage() {
                 setLoading(false);
                 return;
             }
-            router.push("/");
+            window.location.href = "/";
         } catch {
             setError("Network error");
             setLoading(false);

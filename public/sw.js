@@ -1,11 +1,17 @@
 const CACHE = "bitcine-v3";
+const OLD_CACHES = ["bitcine-v1", "bitcine-v2"];
 
 self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(clients.claim());
+  e.waitUntil(
+    Promise.all([
+      clients.claim(),
+      ...OLD_CACHES.map(name => caches.delete(name))
+    ])
+  );
 });
 
 self.addEventListener("fetch", (e) => {

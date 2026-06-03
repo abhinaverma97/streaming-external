@@ -17,14 +17,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
 
     useEffect(() => {
+        let ignore = false;
+        setLoading(true);
         fetch("/api/auth/me")
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
-                setUser(data?.username || null);
-                setLoading(false);
+                if (!ignore) {
+                    setUser(data?.username || null);
+                    setLoading(false);
+                }
             })
-            .catch(() => setLoading(false));
-    }, []);
+            .catch((err) => {
+                console.error("Auth check error:", err);
+                if (!ignore) setLoading(false);
+            });
+        return () => { ignore = true; };
+    }, [pathname]);
 
     useEffect(() => {
         if (!loading && !user && pathname !== "/login") {
