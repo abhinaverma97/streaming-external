@@ -26,7 +26,7 @@ function loadDefault(): string {
     const val = localStorage.getItem(LS_DEFAULT);
     if (val && SOURCES.some((s) => s.id === val)) return val;
   } catch {}
-  return "vidking";
+  return "vidfast";
 }
 
 interface SettingsOverlayProps {
@@ -38,7 +38,7 @@ interface SettingsOverlayProps {
 export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: SettingsOverlayProps) {
   const { user, logout } = useAuth();
   const [enabled, setEnabled] = useState<string[]>([]);
-  const [defaultSource, setDefaultSource] = useState("vidking");
+  const [defaultSource, setDefaultSource] = useState("vidfast");
   const [selectOpen, setSelectOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +60,7 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
   const toggleSource = (id: string) => {
     setEnabled((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      const newDefault = next.includes(defaultSource) ? defaultSource : next[0] || "vidking";
+      const newDefault = next.includes(defaultSource) ? defaultSource : next[0] || "vidfast";
       if (newDefault !== defaultSource) setDefaultSource(newDefault);
       onSourcesChange(next, newDefault);
       return next;

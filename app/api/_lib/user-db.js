@@ -202,7 +202,7 @@ export async function saveRating(username, id, rating, movieDetails) {
 
 export function getSourcePrefs(username) {
   const db = getDb(username);
-  return db.sourcePrefs || { enabled: [], defaultSource: "vidking" };
+  return db.sourcePrefs || { enabled: [], defaultSource: "vidfast" };
 }
 
 export async function saveSourcePrefs(username, enabled, defaultSource) {

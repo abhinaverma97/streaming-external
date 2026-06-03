@@ -92,7 +92,7 @@ export default function Home() {
     const [showSettings, setShowSettings] = useState(false);
     const [selectedSource, setSelectedSource] = useState(() => {
         try { const v = localStorage.getItem("bitcine-default-source"); if (v && SOURCES.some((s) => s.id === v)) return v; } catch {}
-        return "vidking";
+        return "vidfast";
     });
     const defaultSourceRef = useRef(selectedSource);
     const [enabledSources, setEnabledSources] = useState<string[]>(() => {
@@ -133,7 +133,7 @@ export default function Home() {
     selectedSourceRef.current = selectedSource;
 
     const effectiveEnabledSources = enabledSources.length > 0 ? enabledSources : SOURCES.map((s) => s.id);
-    const effectiveSource = effectiveEnabledSources.includes(selectedSource) ? selectedSource : (effectiveEnabledSources[0] || "vidking");
+    const effectiveSource = effectiveEnabledSources.includes(selectedSource) ? selectedSource : (effectiveEnabledSources[0] || "vidfast");
 
     const onSourcesChange = (enabled: string[], defaultSource: string) => {
         setEnabledSources(enabled);
