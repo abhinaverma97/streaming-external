@@ -9,7 +9,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Bitcine - Premium Streaming Console",
+  title: "spicy",
   description: "Dynamic TMDB Metadata, WebTorrent Streaming & HLS Transcoding Backend Console.",
   manifest: "/manifest.webmanifest",
 };

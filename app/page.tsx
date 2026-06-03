@@ -91,12 +91,12 @@ export default function Home() {
     // Settings overlay
     const [showSettings, setShowSettings] = useState(false);
     const [selectedSource, setSelectedSource] = useState(() => {
-        try { const v = localStorage.getItem("bitcine-default-source"); if (v && SOURCES.some((s) => s.id === v)) return v; } catch {}
+        try { const v = localStorage.getItem("spicy-default-source"); if (v && SOURCES.some((s) => s.id === v)) return v; } catch {}
         return "vidfast";
     });
     const defaultSourceRef = useRef(selectedSource);
     const [enabledSources, setEnabledSources] = useState<string[]>(() => {
-        try { const raw = localStorage.getItem("bitcine-enabled-sources"); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; } } catch {}
+        try { const raw = localStorage.getItem("spicy-enabled-sources"); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; } } catch {}
         return SOURCES.map((s) => s.id);
     });
 
@@ -143,8 +143,8 @@ export default function Home() {
             return defaultSource;
         });
         defaultSourceRef.current = defaultSource;
-        localStorage.setItem("bitcine-enabled-sources", JSON.stringify(enabled));
-        localStorage.setItem("bitcine-default-source", defaultSource);
+        localStorage.setItem("spicy-enabled-sources", JSON.stringify(enabled));
+        localStorage.setItem("spicy-default-source", defaultSource);
         fetch("/api/source-prefs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -164,12 +164,12 @@ export default function Home() {
             const data = await res.json();
             if (data.enabled && Array.isArray(data.enabled) && data.enabled.length > 0) {
                 setEnabledSources(data.enabled);
-                localStorage.setItem("bitcine-enabled-sources", JSON.stringify(data.enabled));
+                localStorage.setItem("spicy-enabled-sources", JSON.stringify(data.enabled));
             }
             if (data.defaultSource && SOURCES.some((s) => s.id === data.defaultSource)) {
                 setSelectedSource(data.defaultSource);
                 defaultSourceRef.current = data.defaultSource;
-                localStorage.setItem("bitcine-default-source", data.defaultSource);
+                localStorage.setItem("spicy-default-source", data.defaultSource);
             }
         } catch {}
     };

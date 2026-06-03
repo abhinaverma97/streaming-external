@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Bitcine",
-    short_name: "Bitcine",
+    name: "spicy",
+    short_name: "spicy",
     description: "Multi-source embed player with TMDB catalog",
     start_url: "/",
     display: "fullscreen",

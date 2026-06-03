@@ -246,8 +246,8 @@ export default function LogPage() {
 
             {/* ── SETTINGS OVERLAY ── */}
             <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={(enabled, defaultSource) => {
-                localStorage.setItem("bitcine-enabled-sources", JSON.stringify(enabled));
-                localStorage.setItem("bitcine-default-source", defaultSource);
+                localStorage.setItem("spicy-enabled-sources", JSON.stringify(enabled));
+                localStorage.setItem("spicy-default-source", defaultSource);
                 fetch("/api/source-prefs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled, defaultSource }) }).catch(() => {});
             }} />
         </main>

@@ -1,5 +1,5 @@
-const CACHE = "bitcine-v3";
-const OLD_CACHES = ["bitcine-v1", "bitcine-v2"];
+const CACHE = "spicy-v3";
+const OLD_CACHES = ["spicy-v1", "spicy-v2"];
 
 self.addEventListener("install", () => {
   self.skipWaiting();

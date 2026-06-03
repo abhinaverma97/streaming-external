@@ -7,8 +7,8 @@ import GlassSurface from "./GlassSurface";
 import { SOURCES, getSource } from "../lib/sources-config";
 import { useAuth } from "./AuthProvider";
 
-const LS_ENABLED = "bitcine-enabled-sources";
-const LS_DEFAULT = "bitcine-default-source";
+const LS_ENABLED = "spicy-enabled-sources";
+const LS_DEFAULT = "spicy-default-source";
 
 function loadEnabled(): string[] {
   try {
