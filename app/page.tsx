@@ -190,6 +190,7 @@ export default function Home() {
 
     // Hero decision: prefer continue watching, fall back to trending
     useEffect(() => {
+        if (activeStream) return;
         if (continueWatching.length > 0) {
             const item = continueWatching[0];
             const mt = item.mediaType || item.movieDetails?.media_type || "movie";
@@ -209,7 +210,7 @@ export default function Home() {
             setCwPlayContext(null);
             loadMovieDetails(trending[0].id, trendingType);
         }
-    }, [continueWatching, trending]);
+    }, [continueWatching, trending, activeStream]);
 
 
 
