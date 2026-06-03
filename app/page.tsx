@@ -131,6 +131,7 @@ export default function Home() {
     activeStreamRef.current = activeStream;
     const selectedSourceRef = useRef(selectedSource);
     selectedSourceRef.current = selectedSource;
+    const heroAutoSelectDisabled = useRef(false);
 
     const effectiveEnabledSources = enabledSources.length > 0 ? enabledSources : SOURCES.map((s) => s.id);
     const effectiveSource = effectiveEnabledSources.includes(selectedSource) ? selectedSource : (effectiveEnabledSources[0] || "vidfast");
@@ -190,7 +191,7 @@ export default function Home() {
 
     // Hero decision: prefer continue watching, fall back to trending
     useEffect(() => {
-        if (activeStream) return;
+        if (activeStream || heroAutoSelectDisabled.current) return;
         if (continueWatching.length > 0) {
             const item = continueWatching[0];
             const mt = item.mediaType || item.movieDetails?.media_type || "movie";
@@ -386,6 +387,7 @@ export default function Home() {
     // ── Playback / Streaming ──────────────────────────────────────────────────
 
     const handleCardClick = (movie: Movie) => {
+        heroAutoSelectDisabled.current = true;
         setSelectedMovie(movie);
         loadMovieDetails(movie.id, movie.media_type || "movie");
     };
