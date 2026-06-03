@@ -808,9 +808,9 @@ export default function Home() {
                                     >
                                         <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
                                         {cwPlayContext && cwPlayContext.movieId === selectedMovie.id ? (
-                                            <>Resume{cwPlayContext.isTv ? ` S${String(cwPlayContext.season).padStart(2, "0")}E${String(cwPlayContext.episode).padStart(2, "0")}` : ""}</>
+                                            <>Resume</>
                                         ) : (
-                                            <>{selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}</>
+                                            <>Play</>
                                         )}
                                     </button>
                                     <button
