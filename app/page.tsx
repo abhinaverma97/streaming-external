@@ -731,11 +731,6 @@ export default function Home() {
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none z-10" />
                                 <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none z-10" />
-                                {cwPlayContext && (
-                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-white/10 z-20">
-                                        <div className="h-full bg-white/80 transition-all duration-500" style={{ width: `${cwPlayContext.percent}%` }} />
-                                    </div>
-                                )}
                             </motion.div>
                         </AnimatePresence>
                     )}
@@ -810,11 +805,6 @@ export default function Home() {
                                             <>{selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}</>
                                         )}
                                     </button>
-                                    {cwPlayContext && (
-                                        <span className="text-[10px] text-white/40 font-mono tracking-wide">
-                                            {cwPlayContext.percent}%
-                                        </span>
-                                    )}
                                     <button
                                         onClick={() => toggleWatchlist(selectedMovie)}
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 backdrop-blur-sm text-white font-semibold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
