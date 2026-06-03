@@ -5,7 +5,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
-      - app-cache:/app/.cache
+      - ./.cache:/app/.cache
 
   caddy:
     image: caddy:2-alpine
@@ -19,6 +19,5 @@ services:
       - caddy_config:/config
 
 volumes:
-  app-cache:
   caddy_data:
   caddy_config:
