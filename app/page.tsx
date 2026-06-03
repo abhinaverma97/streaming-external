@@ -79,6 +79,7 @@ export default function Home() {
 
     // Continue Watching hero context
     const [cwPlayContext, setCwPlayContext] = useState<{
+        movieId: number;
         timestamp: number;
         source?: string;
         season?: number;
@@ -202,7 +203,7 @@ export default function Home() {
             }
             if (!fs || isNaN(fs)) fs = 1;
             if (!fe || isNaN(fe)) fe = 1;
-            setCwPlayContext({ timestamp: item.timestamp, source: item.source, season: fs, episode: fe, percent, isTv: mt === "tv" });
+            setCwPlayContext({ movieId: item.movieDetails?.id, timestamp: item.timestamp, source: item.source, season: fs, episode: fe, percent, isTv: mt === "tv" });
             loadMovieDetails(item.movieDetails?.id, mt);
         } else if (trending.length > 0) {
             setCwPlayContext(null);
@@ -787,7 +788,7 @@ export default function Home() {
                                 <div className="flex items-center gap-2 md:gap-3.5 mt-1 md:mt-2">
                                     <button
                                         onClick={() => {
-                                            if (cwPlayContext) {
+                                            if (cwPlayContext && cwPlayContext.movieId === selectedMovie.id) {
                                                 const src = cwPlayContext.source && effectiveEnabledSources.includes(cwPlayContext.source)
                                                     ? cwPlayContext.source : defaultSourceRef.current;
                                                 if (src) setSelectedSource(src);
@@ -799,7 +800,7 @@ export default function Home() {
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
                                     >
                                         <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
-                                        {cwPlayContext ? (
+                                        {cwPlayContext && cwPlayContext.movieId === selectedMovie.id ? (
                                             <>Resume{cwPlayContext.isTv ? ` S${String(cwPlayContext.season).padStart(2, "0")}E${String(cwPlayContext.episode).padStart(2, "0")}` : ""}</>
                                         ) : (
                                             <>{selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}</>
