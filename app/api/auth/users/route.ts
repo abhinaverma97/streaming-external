@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { verifyToken, loadUsers } from "../../_lib/auth.js";
 
 export async function GET(req: NextRequest) {
@@ -14,10 +16,27 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     const raw = loadUsers();
-    const users = Object.entries(raw).map(([name, data]: [string, any]) => ({
-        username: name,
-        createdAt: data.createdAt
-    }));
-    users.sort((a, b) => a.createdAt - b.createdAt);
-    return NextResponse.json({ users }, { status: 200 });
+    const activeThreshold = Date.now() - 24 * 60 * 60 * 1000;
+
+    const users = Object.entries(raw).map(([name, data]: [string, any]) => {
+        const userDataPath = path.join(process.cwd(), ".cache", "users", name, "user-data.json");
+        let lastActive: number | null = null;
+        try {
+            const stat = fs.statSync(userDataPath);
+            const dataCreated = data.createdAt || 0;
+            if (stat.mtimeMs > dataCreated) {
+                lastActive = stat.mtimeMs;
+            }
+        } catch {}
+        return {
+            username: name,
+            createdAt: data.createdAt ?? null,
+            lastActive
+        };
+    });
+
+    users.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    const activeUsers = users.filter(u => u.lastActive && u.lastActive > activeThreshold).length;
+
+    return NextResponse.json({ users, totalUsers: users.length, activeUsers }, { status: 200 });
 }

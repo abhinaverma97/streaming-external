@@ -66,12 +66,17 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
     setAdminLoading(true);
     try {
       const res = await fetch("/api/auth/users");
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.error("Admin fetch failed", res.status);
+        return;
+      }
       const data = await res.json();
       if (data?.users) setAdminUsers(data.users);
-      setTotalUsers(data.totalUsers ?? 0);
+      setTotalUsers(data.totalUsers ?? data.users?.length ?? 0);
       setActiveUsers(data.activeUsers ?? 0);
-    } catch {}
+    } catch (e) {
+      console.error("Admin fetch error:", e);
+    }
     setAdminLoading(false);
   };
 
@@ -232,8 +237,16 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                                     if (!confirm(`Delete user "${u.username}"? This cannot be undone.`)) return;
                                     try {
                                       const res = await fetch(`/api/auth/users/${u.username}`, { method: "DELETE" });
-                                      if (res.ok) loadAdminData();
-                                    } catch {}
+                                      const text = await res.json().catch(() => ({}));
+                                      if (res.ok) {
+                                        loadAdminData();
+                                      } else {
+                                        alert(text.error || "Delete failed");
+                                      }
+                                    } catch (e) {
+                                      console.error("Delete error:", e);
+                                      alert("Delete failed — check console");
+                                    }
                                   }}
                                   className="px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 text-[10px] font-medium transition-all active:scale-95 cursor-pointer"
                                 >
