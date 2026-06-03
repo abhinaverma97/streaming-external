@@ -14,6 +14,8 @@ import {
     Film,
     AlertCircle,
     ChevronDown,
+    ChevronLeft,
+    ChevronRight,
     Home as HomeIcon,
     List,
     Settings as SettingsIcon,
@@ -74,6 +76,16 @@ export default function Home() {
     const [searchResults, setSearchResults] = useState<Movie[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+    // Continue Watching hero context
+    const [cwPlayContext, setCwPlayContext] = useState<{
+        timestamp: number;
+        source?: string;
+        season?: number;
+        episode?: number;
+        percent: number;
+        isTv: boolean;
+    } | null>(null);
 
     // Settings overlay
     const [showSettings, setShowSettings] = useState(false);
@@ -168,16 +180,35 @@ export default function Home() {
                 const data = await res.json();
                 const trendingItems = (data.results || []).map((m: any) => ({ ...m, media_type: m.media_type || trendingType }));
                 setTrending(trendingItems);
-
-                if (trendingItems.length > 0) {
-                    loadMovieDetails(trendingItems[0].id, trendingType);
-                }
             } catch (e) {
                 console.error("Error loading trending", e);
             }
         };
         fetchTrending();
     }, [trendingType]);
+
+    // Hero decision: prefer continue watching, fall back to trending
+    useEffect(() => {
+        if (continueWatching.length > 0) {
+            const item = continueWatching[0];
+            const mt = item.mediaType || item.movieDetails?.media_type || "movie";
+            const percent = Math.min(100, Math.round((item.timestamp / item.duration) * 100));
+            let fs: number | undefined;
+            let fe: number | undefined;
+            if (item.tmdbId?.startsWith("tv-")) {
+                const parts = item.tmdbId.split("-");
+                if (parts.length >= 2) { const maybeId = parseInt(parts[1], 10); }
+                if (parts.length >= 4) { fs = parseInt(parts[2], 10); fe = parseInt(parts[3], 10); }
+            }
+            if (!fs || isNaN(fs)) fs = 1;
+            if (!fe || isNaN(fe)) fe = 1;
+            setCwPlayContext({ timestamp: item.timestamp, source: item.source, season: fs, episode: fe, percent, isTv: mt === "tv" });
+            loadMovieDetails(item.movieDetails?.id, mt);
+        } else if (trending.length > 0) {
+            setCwPlayContext(null);
+            loadMovieDetails(trending[0].id, trendingType);
+        }
+    }, [continueWatching, trending]);
 
 
 
@@ -550,6 +581,20 @@ export default function Home() {
         changeEpisode(seasonNum, 1);
     };
 
+    const goToPrevEpisode = () => {
+        if (selectedEpisode > 1) { changeEpisode(selectedSeason, selectedEpisode - 1); return; }
+        const prevSeason = selectedShowDetails?.seasons?.filter((s: any) => s.season_number > 0).find((s: any) => s.season_number === selectedSeason - 1);
+        if (prevSeason && prevSeason.episode_count > 0) changeEpisode(prevSeason.season_number, prevSeason.episode_count);
+    };
+
+    const goToNextEpisode = () => {
+        const seasonObj = selectedShowDetails?.seasons?.find((s: any) => s.season_number === selectedSeason);
+        const maxEp = seasonObj?.episode_count || 1;
+        if (selectedEpisode < maxEp) { changeEpisode(selectedSeason, selectedEpisode + 1); return; }
+        const nextSeason = selectedShowDetails?.seasons?.filter((s: any) => s.season_number > 0).find((s: any) => s.season_number === selectedSeason + 1);
+        if (nextSeason && nextSeason.episode_count > 0) changeEpisode(nextSeason.season_number, 1);
+    };
+
     const closePlayer = () => {
         setActiveStream(null);
         setPlayerError(null);
@@ -686,6 +731,11 @@ export default function Home() {
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none z-10" />
                                 <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none z-10" />
+                                {cwPlayContext && (
+                                    <div className="absolute bottom-0 inset-x-0 h-1 bg-white/10 z-20">
+                                        <div className="h-full bg-white/80 transition-all duration-500" style={{ width: `${cwPlayContext.percent}%` }} />
+                                    </div>
+                                )}
                             </motion.div>
                         </AnimatePresence>
                     )}
@@ -741,11 +791,30 @@ export default function Home() {
                                 {/* Minimalist Action Buttons */}
                                 <div className="flex items-center gap-2 md:gap-3.5 mt-1 md:mt-2">
                                     <button
-                                            onClick={() => playMovie(selectedMovie, 0, undefined, undefined, defaultSourceRef.current)}
+                                        onClick={() => {
+                                            if (cwPlayContext) {
+                                                const src = cwPlayContext.source && effectiveEnabledSources.includes(cwPlayContext.source)
+                                                    ? cwPlayContext.source : defaultSourceRef.current;
+                                                if (src) setSelectedSource(src);
+                                                playMovie(selectedMovie, cwPlayContext.timestamp, cwPlayContext.season, cwPlayContext.episode, src);
+                                            } else {
+                                                playMovie(selectedMovie, 0, undefined, undefined, defaultSourceRef.current);
+                                            }
+                                        }}
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
                                     >
-                                        <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" /> {selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}
+                                        <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
+                                        {cwPlayContext ? (
+                                            <>Resume{cwPlayContext.isTv ? ` S${String(cwPlayContext.season).padStart(2, "0")}E${String(cwPlayContext.episode).padStart(2, "0")}` : ""}</>
+                                        ) : (
+                                            <>{selectedMovie.media_type === "tv" ? "Play Episode" : "Play"}</>
+                                        )}
                                     </button>
+                                    {cwPlayContext && (
+                                        <span className="text-[10px] text-white/40 font-mono tracking-wide">
+                                            {cwPlayContext.percent}%
+                                        </span>
+                                    )}
                                     <button
                                         onClick={() => toggleWatchlist(selectedMovie)}
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 backdrop-blur-sm text-white font-semibold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
@@ -1145,6 +1214,27 @@ export default function Home() {
                                                     options={episodesList.map(epNum => ({ value: epNum, label: `Episode ${epNum}` }))}
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Prev/Next Navigation */}
+                                        <div className="flex items-center justify-between gap-2 mt-1">
+                                            <button
+                                                onClick={goToPrevEpisode}
+                                                disabled={selectedEpisode <= 1 && (!selectedShowDetails?.seasons?.some((s: any) => s.season_number === selectedSeason - 1))}
+                                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 disabled:opacity-25 disabled:cursor-not-allowed text-white/70 hover:text-white text-xs transition-all active:scale-95"
+                                            >
+                                                <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                                            </button>
+                                            <span className="text-[10px] text-white/30 font-mono tracking-wider">
+                                                S{String(selectedSeason).padStart(2, "0")} E{String(selectedEpisode).padStart(2, "0")}
+                                            </span>
+                                            <button
+                                                onClick={goToNextEpisode}
+                                                disabled={selectedEpisode >= (selectedShowDetails?.seasons?.find((s: any) => s.season_number === selectedSeason)?.episode_count || 1) && (!selectedShowDetails?.seasons?.some((s: any) => s.season_number === selectedSeason + 1))}
+                                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 disabled:opacity-25 disabled:cursor-not-allowed text-white/70 hover:text-white text-xs transition-all active:scale-95"
+                                            >
+                                                Next <ChevronRight className="w-3.5 h-3.5" />
+                                            </button>
                                         </div>
                                     </div>
                                 )}
