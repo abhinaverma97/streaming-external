@@ -10,17 +10,24 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const { request } = e;
+
+  // Only cache GET requests (POST, PUT, DELETE pass through)
+  if (request.method !== "GET") {
+    e.respondWith(fetch(request));
+    return;
+  }
+
   const url = new URL(request.url);
 
-  // Network-first for HTML pages (they change every deploy)
-  if (request.mode === "navigate" || (request.method === "GET" && url.pathname.endsWith("/"))) {
+  // Network-first for navigations (HTML pages change every deploy)
+  if (request.mode === "navigate" || request.destination === "document") {
     e.respondWith(
       fetch(request).catch(() => caches.match(request))
     );
     return;
   }
 
-  // Cache-first for everything else (versioned chunks, images, fonts)
+  // Cache-first for assets (versioned chunks, images, fonts)
   e.respondWith(
     caches.open(CACHE).then((cache) =>
       cache.match(request).then((cached) => {
