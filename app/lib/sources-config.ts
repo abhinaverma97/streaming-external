@@ -44,14 +44,6 @@ export const SOURCES: SourceConfig[] = [
     supports: { autoPlay: true, serverSelection: false, subtitles: false, colorTheme: true, startTime: true, progress: true },
   },
   {
-    id: "vidzee",
-    name: "VidZee",
-    origins: ["https://player.vidzee.wtf"],
-    buildMovieUrl: (id) => `https://player.vidzee.wtf/embed/movie/${id}`,
-    buildTvUrl: (id, s, e) => `https://player.vidzee.wtf/embed/tv/${id}/${s}/${e}`,
-    supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: false, startTime: false, progress: true },
-  },
-  {
     id: "vidlink",
     name: "VidLink",
     origins: ["https://vidlink.pro"],
@@ -118,30 +110,6 @@ export const SOURCES: SourceConfig[] = [
       return u;
     },
     supports: { autoPlay: false, serverSelection: true, subtitles: false, colorTheme: false, startTime: true, progress: true },
-  },
-  {
-    id: "vidsrcwtf",
-    name: "VidSrc.wtf",
-    origins: ["https://vidsrc.wtf", "https://www.vidsrc.wtf"],
-    buildMovieUrl: (id) => `https://vidsrc.wtf/1/movie/${id}?color=${M}`,
-    buildTvUrl: (id, s, e) => `https://vidsrc.wtf/1/tv/${id}/${s}/${e}?color=${M}`,
-    supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: true, startTime: false, progress: true },
-  },
-  {
-    id: "primesrc",
-    name: "PrimeSrc",
-    origins: ["https://primesrc.me"],
-    buildMovieUrl: (id, st) => {
-      let u = `https://primesrc.me/embed/movie?tmdb=${id}`;
-      if (st && st > 0) u += `&startAt=${st}`;
-      return u;
-    },
-    buildTvUrl: (id, s, e, st) => {
-      let u = `https://primesrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}`;
-      if (st && st > 0) u += `&startAt=${st}`;
-      return u;
-    },
-    supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: false, startTime: true, progress: false },
   },
   {
     id: "videasy",
