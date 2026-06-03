@@ -1,4 +1,4 @@
-const CACHE = "bitcine-v2";
+const CACHE = "bitcine-v3";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -24,6 +24,12 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(request).catch(() => caches.match(request))
     );
+    return;
+  }
+
+  // Never cache API responses (auth state, user data)
+  if (url.pathname.startsWith("/api/")) {
+    e.respondWith(fetch(request));
     return;
   }
 
