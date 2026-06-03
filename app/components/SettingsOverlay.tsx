@@ -41,13 +41,23 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
   const [defaultSource, setDefaultSource] = useState("vidfast");
   const [selectOpen, setSelectOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
+  const [adminUsers, setAdminUsers] = useState<{ username: string; createdAt: number }[]>([]);
+  const [adminLoading, setAdminLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setEnabled(loadEnabled());
       setDefaultSource(loadDefault());
+      if (user === "abhi") {
+        setAdminLoading(true);
+        fetch("/api/auth/users")
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => { if (data?.users) setAdminUsers(data.users); })
+          .catch(() => {})
+          .finally(() => setAdminLoading(false));
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -167,6 +177,32 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                   <LogOut className="w-3.5 h-3.5" /> Sign Out
                 </button>
               </div>
+
+              {/* Admin */}
+              {user === "abhi" && (
+                <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.05]">
+                  <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400">Admin</h3>
+                  <div className="flex flex-col gap-1.5">
+                    {adminLoading ? (
+                      <div className="text-[10px] text-white/30 text-center py-2">Loading...</div>
+                    ) : adminUsers.length === 0 ? (
+                      <div className="text-[10px] text-white/30 text-center py-2">No users</div>
+                    ) : (
+                      adminUsers.map((u) => (
+                        <div
+                          key={u.username}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                        >
+                          <span className="text-xs text-white/70">{u.username}</span>
+                          <span className="text-[10px] text-white/30">
+                            {new Date(u.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </GlassSurface>
         </motion.div>
