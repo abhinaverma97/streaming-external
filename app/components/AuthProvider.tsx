@@ -26,6 +26,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .catch(() => setLoading(false));
     }, []);
 
+    useEffect(() => {
+        if (!loading && !user && pathname !== "/login") {
+            router.replace("/login");
+        }
+    }, [loading, user, pathname, router]);
+
     const logout = useCallback(async () => {
         await fetch("/api/auth/logout", { method: "POST" });
         setUser(null);
@@ -45,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!user) {
-        router.replace("/login");
         return null;
     }
 
