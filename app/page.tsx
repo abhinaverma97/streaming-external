@@ -28,11 +28,17 @@ import VariableProximity from "./components/VariableProximity";
 import ScrambledText from "./components/ScrambledText";
 import GlassSurface from "./components/GlassSurface";
 import FadeContent from "./components/FadeContent";
-import Dither from "./components/Dither";
 import ScrollRow from "./components/ScrollRow";
 import Navbar from "./components/Navbar";
 import SettingsOverlay from "./components/SettingsOverlay";
 import { SOURCES, getSource, buildEmbedUrl } from "./lib/sources-config";
+
+function extractTrailerUrl(videos: any): string | null {
+    const results = videos?.results;
+    if (!results) return null;
+    const trailer = results.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || results.find((v: any) => v.site === "YouTube");
+    return trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null;
+}
 
 interface Movie {
     id: number;
@@ -65,7 +71,6 @@ export default function Home() {
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
     // TV Show selection states
-    const [searchType, setSearchType] = useState<"movie" | "tv" | "multi">("multi");
     const [selectedShowDetails, setSelectedShowDetails] = useState<any | null>(null);
     const [selectedSeason, setSelectedSeason] = useState<number>(1);
     const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
@@ -132,6 +137,7 @@ export default function Home() {
     const selectedSourceRef = useRef(selectedSource);
     selectedSourceRef.current = selectedSource;
     const heroAutoSelectDisabled = useRef(false);
+    const lastProgressRef = useRef(0);
 
     const effectiveEnabledSources = enabledSources.length > 0 ? enabledSources : SOURCES.map((s) => s.id);
     const effectiveSource = effectiveEnabledSources.includes(selectedSource) ? selectedSource : (effectiveEnabledSources[0] || "videasy");
@@ -200,7 +206,6 @@ export default function Home() {
             let fe: number | undefined;
             if (item.tmdbId?.startsWith("tv-")) {
                 const parts = item.tmdbId.split("-");
-                if (parts.length >= 2) { const maybeId = parseInt(parts[1], 10); }
                 if (parts.length >= 4) { fs = parseInt(parts[2], 10); fe = parseInt(parts[3], 10); }
             }
             if (!fs || isNaN(fs)) fs = 1;
@@ -273,9 +278,7 @@ export default function Home() {
                     };
                     setSelectedMovie(normalized);
                     setSelectedShowDetails(data.tmdb);
-
-                    const trailer = data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube");
-                    setHeroTrailerUrl(trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null);
+                    setHeroTrailerUrl(extractTrailerUrl(data.tmdb.videos));
 
                     const validSeasons = (data.tmdb.seasons || []).filter((s: any) => s.season_number > 0);
                     if (validSeasons.length > 0) {
@@ -294,9 +297,7 @@ export default function Home() {
                 if (data.tmdb) {
                     setSelectedMovie({ ...data.tmdb, media_type: "movie" });
                     setSelectedShowDetails(null);
-
-                    const trailer = data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || data.tmdb.videos?.results?.find((v: any) => v.site === "YouTube");
-                    setHeroTrailerUrl(trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null);
+                    setHeroTrailerUrl(extractTrailerUrl(data.tmdb.videos));
                 }
             }
         } catch (e) {
@@ -352,11 +353,11 @@ export default function Home() {
         }
         setIsSearching(true);
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=${searchType}`);
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`);
             const data = await res.json();
             const tagged = (data.results || []).map((movie: any) => ({
                 ...movie,
-                media_type: movie.media_type || searchType
+                media_type: movie.media_type || "multi"
             }));
             setSearchResults(tagged);
             setTimeout(() => {
@@ -368,7 +369,7 @@ export default function Home() {
         } catch (e) {
             console.error("Search error", e);
         }
-    }, [searchType]);
+    }, []);
 
     const searchTimerRef = useRef<any>(null);
 
@@ -401,6 +402,7 @@ export default function Home() {
         const stream = activeStreamRef.current;
         const source = selectedSourceRef.current;
         if (!stream || !duration || currentTime < 5) return;
+        lastProgressRef.current = currentTime;
 
         try {
             const resolvedMediaType = stream.details.media_type || stream.details.mediaType || (stream.tmdbId.startsWith("tv-") ? "tv" : "movie");
@@ -540,18 +542,22 @@ export default function Home() {
             }
         }
 
+        let showName: string | undefined;
+
         if (isTv) {
             setSelectedSeason(targetSeason);
             setSelectedEpisode(targetEpisode);
             if (!selectedShowDetails || selectedShowDetails.id !== movie.id) {
-                fetch(`/api/tv/${movie.id}`).then(r => r.json()).then(data => {
-                    const tmdbData = data.tmdb || data;
-                    setSelectedShowDetails(tmdbData);
-                    const seasonObj = tmdbData.seasons ? tmdbData.seasons.find((s: any) => s.season_number === targetSeason) : null;
-                    const epCount = seasonObj ? seasonObj.episode_count : 1;
-                    setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
-                });
+                const res = await fetch(`/api/tv/${movie.id}`);
+                const data = await res.json();
+                const tmdbData = data.tmdb || data;
+                showName = tmdbData.name || tmdbData.title;
+                setSelectedShowDetails(tmdbData);
+                const seasonObj = tmdbData.seasons ? tmdbData.seasons.find((s: any) => s.season_number === targetSeason) : null;
+                const epCount = seasonObj ? seasonObj.episode_count : 1;
+                setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
             } else {
+                showName = selectedShowDetails.name || selectedShowDetails.title;
                 const seasons = selectedShowDetails.seasons || selectedShowDetails.tmdb?.seasons;
                 const seasonObj = seasons ? seasons.find((s: any) => s.season_number === targetSeason) : null;
                 const epCount = seasonObj ? seasonObj.episode_count : 1;
@@ -563,7 +569,7 @@ export default function Home() {
         let cleanTitle = baseTitle.replace(/ S\d{2}E\d{2}/g, "").trim();
 
         if (cleanTitle === "undefined" || cleanTitle === "Untitled") {
-            cleanTitle = selectedShowDetails?.name || selectedShowDetails?.title || movie.name || movie.title || "Untitled";
+            cleanTitle = showName || selectedShowDetails?.name || selectedShowDetails?.title || movie.name || movie.title || "Untitled";
             cleanTitle = cleanTitle.replace(/ S\d{2}E\d{2}/g, "").trim();
         }
 
@@ -633,12 +639,14 @@ export default function Home() {
         setSelectedSource(newSource);
         if (!activeStream) return;
         const isTv = activeStream.details?.media_type === "tv" || activeStream.details?.mediaType === "tv";
+        const startAt = lastProgressRef.current > 0 ? Math.floor(lastProgressRef.current) : undefined;
         const newUrl = buildEmbedUrl(
             newSource,
             activeStream.details?.id,
             isTv ? "tv" : "movie",
             isTv ? selectedSeason : undefined,
-            isTv ? selectedEpisode : undefined
+            isTv ? selectedEpisode : undefined,
+            startAt
         );
         setActiveStream({ ...activeStream, embedUrl: newUrl });
     };
@@ -867,34 +875,42 @@ export default function Home() {
                 <div className="max-w-[96vw] mx-auto px-6 md:px-12">
 
                     {/* Search Results */}
-                    {isSearching && searchResults.length > 0 && (
+                    {isSearching && searchQuery && (
                         <div id="search-results-section" className="mb-10 snap-start snap-always scroll-mt-0 pt-4">
                             <h2 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
                                 Search Results
                             </h2>
-                            <ScrollRow>
-                                {searchResults.map((movie, index) => (
-                                    <div
-                                        key={movie.id}
-                                        onClick={() => handleCardClick(movie)}
-                                        className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
-                                    >
-                                        <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950">
-                                            <Image
-                                                src={getCardBackdropUrl(movie.backdrop_path)}
-                                                alt={movie.title || movie.name || "Preview"}
-                                                fill
-                                                priority={index < 4}
-                                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                                                className="object-cover group-hover:scale-105 transition-all duration-300"
-                                            />
+                            {searchResults.length > 0 ? (
+                                <ScrollRow>
+                                    {searchResults.map((movie, index) => (
+                                        <div
+                                            key={movie.id}
+                                            onClick={() => handleCardClick(movie)}
+                                            className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
+                                        >
+                                            <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950">
+                                                <Image
+                                                    src={getCardBackdropUrl(movie.backdrop_path)}
+                                                    alt={movie.title || movie.name || "Preview"}
+                                                    fill
+                                                    priority={index < 4}
+                                                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                                                    className="object-cover group-hover:scale-105 transition-all duration-300"
+                                                />
+                                            </div>
+                                            <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
+                                                {movie.title || movie.name}
+                                            </div>
                                         </div>
-                                        <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
-                                            {movie.title || movie.name}
-                                        </div>
-                                    </div>
-                                ))}
-                            </ScrollRow>
+                                    ))}
+                                </ScrollRow>
+                            ) : (
+                                <div className="flex items-center justify-center py-12 w-full">
+                                    <p className="text-sm text-slate-500 font-light tracking-wide">
+                                        No results found for &ldquo;{searchQuery}&rdquo;
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
 
