@@ -504,9 +504,7 @@ export default function Home() {
                 searchResults={searchResults}
                 isSearching={isSearching}
                 searchLoading={searchLoading}
-                onCardClick={(movie) => {
-                    playMovie(movie, 0, undefined, undefined, defaultSource);
-                }}
+                onCardClick={handleCardClick}
             />
 
             <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
