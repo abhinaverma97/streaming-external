@@ -95,9 +95,9 @@ export default function Home() {
     const playerRef = useRef<HTMLIFrameElement>(null);
 
     const activeStreamRef = useRef(activeStream);
-    activeStreamRef.current = activeStream;
+    useEffect(() => { activeStreamRef.current = activeStream; }, [activeStream]);
     const selectedSourceRef = useRef(selectedSource);
-    selectedSourceRef.current = selectedSource;
+    useEffect(() => { selectedSourceRef.current = selectedSource; }, [selectedSource]);
 
     // ── Player Progress Hook ──
     usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef);
