@@ -206,7 +206,7 @@ export default function Home() {
             if (!fs || isNaN(fs)) fs = 1;
             if (!fe || isNaN(fe)) fe = 1;
             setCwPlayContext({ movieId: item.movieDetails?.id, timestamp: item.timestamp, source: item.source, season: fs, episode: fe, percent, isTv: mt === "tv" });
-            if (selectedMovie?.id !== item.movieDetails?.id) {
+            if (item.movieDetails?.id && selectedMovie?.id !== item.movieDetails?.id) {
                 loadMovieDetails(item.movieDetails?.id, mt);
             }
         } else if (trending.length > 0) {
@@ -220,19 +220,24 @@ export default function Home() {
 
 
     const fetchUserLists = async () => {
-        try {
-            const [watchRes, contRes, histRes, ratingsRes] = await Promise.all([
-                fetch(`/api/watchlist`),
-                fetch(`/api/continue-watching`),
-                fetch(`/api/history`),
-                fetch(`/api/ratings`)
-            ]);
-            setWatchlist(await watchRes.json());
-            setContinueWatching(await contRes.json());
-            setHistory(await histRes.json());
-            setRatings(await ratingsRes.json());
-        } catch (e) {
-            console.error("Error loading user lists", e);
+        const results = await Promise.allSettled([
+            fetch(`/api/watchlist`),
+            fetch(`/api/continue-watching`),
+            fetch(`/api/history`),
+            fetch(`/api/ratings`)
+        ]);
+        const [watchRes, contRes, histRes, ratingsRes] = results;
+        if (watchRes.status === "fulfilled") {
+            try { setWatchlist(await watchRes.value.json()); } catch {}
+        }
+        if (contRes.status === "fulfilled") {
+            try { setContinueWatching(await contRes.value.json()); } catch {}
+        }
+        if (histRes.status === "fulfilled") {
+            try { setHistory(await histRes.value.json()); } catch {}
+        }
+        if (ratingsRes.status === "fulfilled") {
+            try { setRatings(await ratingsRes.value.json()); } catch {}
         }
     };
 
@@ -420,7 +425,6 @@ export default function Home() {
                     }
                 })
             });
-            fetchUserLists();
         } catch (e) {
             console.error(e);
         }
@@ -619,6 +623,7 @@ export default function Home() {
     const closePlayer = () => {
         setActiveStream(null);
         setPlayerError(null);
+        fetchUserLists();
     };
 
     const handleSourceChange = (newSource: string) => {
@@ -994,7 +999,7 @@ export default function Home() {
                                                 }
                                                 if (!fs || isNaN(fs)) fs = 1;
                                                 if (!fe || isNaN(fe)) fe = 1;
-                                                const cwMovie = { ...item.movieDetails, id: parsedMovieId, media_type: mt };
+                                                const cwMovie = { ...(item.movieDetails || {}), id: parsedMovieId, media_type: mt };
                                                 console.log(`[Continue Watching] ${item.tmdbId} parsedMovieId=${parsedMovieId} fs=${fs} fe=${fe} mt=${mt} src=${src}`);
                                                 playMovie(cwMovie, item.timestamp, fs, fe, src);
                                             }}
@@ -1082,7 +1087,7 @@ export default function Home() {
                                             key={item.tmdbId}
                                             onClick={() => {
                                                 const mt = item.mediaType || item.movieDetails?.media_type || "movie";
-                                                handleCardClick({ ...item.movieDetails, media_type: mt });
+                                                handleCardClick({ ...(item.movieDetails || {}), media_type: mt });
                                             }}
                                             className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
                                         >
