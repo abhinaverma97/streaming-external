@@ -7,28 +7,6 @@ import GlassSurface from "./GlassSurface";
 import { SOURCES, getSource } from "../lib/sources-config";
 import { useAuth } from "./AuthProvider";
 
-const LS_ENABLED = "spicy-enabled-sources";
-const LS_DEFAULT = "spicy-default-source";
-
-function loadEnabled(): string[] {
-  try {
-    const raw = localStorage.getItem(LS_ENABLED);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {}
-  return SOURCES.map((s) => s.id);
-}
-
-function loadDefault(): string {
-  try {
-    const val = localStorage.getItem(LS_DEFAULT);
-    if (val && SOURCES.some((s) => s.id === val)) return val;
-  } catch {}
-  return "videasy";
-}
-
 interface SettingsOverlayProps {
   isOpen: boolean;
   onClose: () => void;
@@ -82,8 +60,24 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
 
   useEffect(() => {
     if (isOpen) {
-      setEnabled(loadEnabled());
-      setDefaultSource(loadDefault());
+      fetch("/api/source-prefs")
+        .then(r => r.json())
+        .then(data => {
+          if (data.enabled && Array.isArray(data.enabled) && data.enabled.length > 0) {
+            setEnabled(data.enabled);
+          } else {
+            setEnabled(SOURCES.map((s) => s.id));
+          }
+          if (data.defaultSource && SOURCES.some((s) => s.id === data.defaultSource)) {
+            setDefaultSource(data.defaultSource);
+          } else {
+            setDefaultSource("videasy");
+          }
+        })
+        .catch(() => {
+          setEnabled(SOURCES.map((s) => s.id));
+          setDefaultSource("videasy");
+        });
       if (user === "abhi") {
         setAdminLoading(true);
         loadAdminData();

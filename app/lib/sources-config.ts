@@ -129,6 +129,8 @@ export const SOURCES: SourceConfig[] = [
   },
 ];
 
+export const KNOWN_ORIGINS = SOURCES.flatMap((s) => s.origins);
+
 export function getSource(id: string): SourceConfig {
   return SOURCES.find((x) => x.id === id) || SOURCES[0];
 }

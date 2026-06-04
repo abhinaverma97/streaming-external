@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Film, X, Search, Home as HomeIcon, List, Settings as SettingsIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
-
-
-const getPosterUrl = (path: string) => path ? `https://image.tmdb.org/t/p/w500${path}` : "";
-const getBackdropUrl = (path: string) => path ? `https://image.tmdb.org/t/p/w500${path}` : "";
+import { SearchInput } from "../components/SearchInput";
+import { MobileBottomNav } from "../components/MobileBottomNav";
+import { getBackdropUrl, getPosterUrl } from "../lib/tmdb-utils";
 
 export default function LogPage() {
     const [ratings, setRatings] = useState<any[]>([]);
@@ -30,11 +28,7 @@ export default function LogPage() {
                 setRatings(arr);
                 setLoading(false);
             })
-            .catch(err => {
-                console.error(err);
-                setLoading(false);
-            });
-
+            .catch(() => setLoading(false));
     }, []);
 
     const handleSearch = (e: any) => {
@@ -66,10 +60,7 @@ export default function LogPage() {
 
     const containerVariants: any = {
         hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: { staggerChildren: 0.05 }
-        }
+        show: { opacity: 1, transition: { staggerChildren: 0.05 } }
     };
 
     const itemVariants: any = {
@@ -79,32 +70,15 @@ export default function LogPage() {
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
-            {/* Background Glow */}
             <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
 
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
-                {/* Navbar */}
                 <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/log">
-                    <form onSubmit={handleSearch} className="flex items-center justify-end gap-4 flex-1">
-                        <div className="relative w-48 md:w-64">
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pr-6 py-1 bg-transparent focus:outline-none text-inherit placeholder-slate-600 transition-all duration-300"
-                            />
-                            {searchQuery && (
-                                <button
-                                    type="button"
-                                    onClick={() => setSearchQuery("")}
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 transition-colors"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            )}
-                        </div>
-                    </form>
+                    <SearchInput
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        handleSearch={handleSearch}
+                    />
                 </Navbar>
 
                 {/* Stats */}
@@ -116,7 +90,7 @@ export default function LogPage() {
                     <span>{totalTv} <span className="text-slate-600">series</span></span>
                 </div>
 
-                {/* Controls - Center aligned, purely textual matching home page section headers */}
+                {/* Controls */}
                 <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mb-8 md:mb-12 text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
                     <SortButton active={mediaFilter === "all"} onClick={() => setMediaFilter("all")} label="Both" />
                     <SortButton active={mediaFilter === "movie"} onClick={() => setMediaFilter("movie")} label="Movies" />
@@ -154,13 +128,13 @@ export default function LogPage() {
                     </div>
                 ) : (
                     <motion.div
-                        variants={containerVariants as any}
+                        variants={containerVariants}
                         initial="hidden"
                         animate="show"
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10"
                     >
                         {sortedRatings.map((item) => (
-                            <motion.div variants={itemVariants as any} key={item.movieDetails.id} className="group flex flex-col cursor-default">
+                            <motion.div variants={itemVariants} key={item.movieDetails.id} className="group flex flex-col cursor-default">
                                 <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300">
                                     {item.movieDetails.backdrop_path || item.movieDetails.poster_path ? (
                                         <Image
@@ -175,7 +149,6 @@ export default function LogPage() {
                                             <Film className="w-6 h-6 text-slate-600" />
                                         </div>
                                     )}
-                                    {/* Glassmorphic Rating Badge */}
                                     <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-xl px-2.5 py-1.5 rounded-full border border-white/10 shadow-xl opacity-90 group-hover:opacity-100 transition-opacity">
                                         <Star className="w-3 h-3 fill-slate-300 text-slate-300 drop-shadow-[0_0_6px_rgba(203,213,225,0.4)]" />
                                         <span className="text-[10px] font-bold text-white tracking-wide">{item.rating}</span>
@@ -197,57 +170,18 @@ export default function LogPage() {
                 )}
             </div>
 
-            {/* Mobile Bottom Navigation (Glassmorphic) */}
-            <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-[400px]">
-                <nav className="flex items-center justify-between px-6 py-4 rounded-full bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
-                    {/* Home */}
-                    <Link href="/" className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-                        <HomeIcon className="w-5 h-5" />
-                    </Link>
+            <MobileBottomNav
+                activeStream={false}
+                isMobileSearchOpen={isMobileSearchOpen}
+                setIsMobileSearchOpen={setIsMobileSearchOpen}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                handleSearch={(e: any) => { handleSearch(e); setIsMobileSearchOpen(false); }}
+                setShowSettings={setShowSettings}
+                currentPath="/log"
+            />
 
-                    {/* Log */}
-                    <Link href="/log" className="flex flex-col items-center gap-1 text-slate-200">
-                        <List className="w-5 h-5" />
-                    </Link>
-
-                    {/* Search Toggle */}
-                    <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-                        <Search className="w-5 h-5" />
-                    </button>
-
-                    {/* Settings */}
-                    <button onClick={() => setShowSettings(true)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-                        <SettingsIcon className="w-5 h-5" />
-                    </button>
-                </nav>
-
-                {/* Mobile Search Input Overlay */}
-                <AnimatePresence>
-                    {isMobileSearchOpen && (
-                        <motion.form
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                            onSubmit={(e) => { handleSearch(e); setIsMobileSearchOpen(false); }}
-                            className="absolute bottom-full mb-4 left-0 w-full"
-                        >
-                            <input
-                                type="text"
-                                placeholder="Search movies..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-6 py-4 rounded-3xl bg-[#090b14]/90 backdrop-blur-2xl border border-white/10 text-sm focus:outline-none focus:border-white/20 text-white placeholder-slate-500 shadow-2xl"
-                                autoFocus
-                            />
-                        </motion.form>
-                    )}
-                </AnimatePresence>
-            </div>
-
-            {/* ── SETTINGS OVERLAY ── */}
             <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={(enabled, defaultSource) => {
-                localStorage.setItem("spicy-enabled-sources", JSON.stringify(enabled));
-                localStorage.setItem("spicy-default-source", defaultSource);
                 fetch("/api/source-prefs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled, defaultSource }) }).catch(() => {});
             }} />
         </main>
@@ -258,10 +192,7 @@ function SortButton({ active, onClick, label }: any) {
     return (
         <button
             onClick={onClick}
-            className={`transition-colors duration-200 cursor-pointer ${active
-                    ? "text-white"
-                    : "text-slate-500 hover:text-white"
-                }`}
+            className={`transition-colors duration-200 cursor-pointer ${active ? "text-white" : "text-slate-500 hover:text-white"}`}
         >
             {label}
         </button>
