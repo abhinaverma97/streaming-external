@@ -35,11 +35,6 @@ import { SOURCES, getSource, buildEmbedUrl } from "./lib/sources-config";
 
 const KNOWN_ORIGINS = SOURCES.flatMap((s) => s.origins);
 
-function getDefaultSource(): string {
-    try { const v = localStorage.getItem("spicy-default-source"); if (v && SOURCES.some((s) => s.id === v)) return v; } catch {}
-    return "videasy";
-}
-
 function extractTrailerUrl(videos: any): string | null {
     const results = videos?.results;
     if (!results) return null;
@@ -103,10 +98,8 @@ export default function Home() {
 
     // Settings overlay
     const [showSettings, setShowSettings] = useState(false);
-    const [selectedSource, setSelectedSource] = useState(() => {
-        try { const v = localStorage.getItem("spicy-default-source"); if (v && SOURCES.some((s) => s.id === v)) return v; } catch {}
-        return "videasy";
-    });
+    const [selectedSource, setSelectedSource] = useState<string>("videasy");
+    const [defaultSource, setDefaultSource] = useState<string>("videasy");
     const [enabledSources, setEnabledSources] = useState<string[]>(() => {
         try { const raw = localStorage.getItem("spicy-enabled-sources"); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; } } catch {}
         return SOURCES.map((s) => s.id);
@@ -151,12 +144,12 @@ export default function Home() {
 
     const onSourcesChange = (enabled: string[], defaultSource: string) => {
         setEnabledSources(enabled);
+        setDefaultSource(defaultSource);
         setSelectedSource((prev) => {
             if (enabled.includes(prev)) return prev;
             return defaultSource;
         });
         localStorage.setItem("spicy-enabled-sources", JSON.stringify(enabled));
-        localStorage.setItem("spicy-default-source", defaultSource);
         fetch("/api/source-prefs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -180,7 +173,7 @@ export default function Home() {
             }
             if (data.defaultSource && SOURCES.some((s) => s.id === data.defaultSource)) {
                 setSelectedSource(data.defaultSource);
-                localStorage.setItem("spicy-default-source", data.defaultSource);
+                setDefaultSource(data.defaultSource);
             }
         } catch {}
     };
@@ -552,6 +545,13 @@ export default function Home() {
             }
         }
 
+        if (!isTv) {
+            setSelectedShowDetails(null);
+            setEpisodesList([]);
+            setSelectedSeason(1);
+            setSelectedEpisode(1);
+        }
+
         let showName: string | undefined;
 
         if (isTv) {
@@ -601,6 +601,7 @@ export default function Home() {
         setPlayerError(null);
 
         const effectiveSource = sourceOverride || selectedSource;
+        if (effectiveSource !== selectedSource) setSelectedSource(effectiveSource);
         const srcName = getSource(effectiveSource).name;
         const embedUrl = buildEmbedUrl(effectiveSource, movie.id, isTv ? "tv" : "movie", targetSeason, targetEpisode, startTime);
         if (DEBUG) console.log(`[playMovie] embedUrl=${embedUrl}`);
@@ -844,11 +845,11 @@ export default function Home() {
                                         onClick={() => {
                                             if (cwPlayContext && cwPlayContext.movieId === selectedMovie.id) {
                                                 const src = cwPlayContext.source && effectiveEnabledSources.includes(cwPlayContext.source)
-                                                    ? cwPlayContext.source : getDefaultSource();
+                                                    ? cwPlayContext.source : defaultSource;
                                                 if (src) setSelectedSource(src);
                                                 playMovie(selectedMovie, cwPlayContext.timestamp, cwPlayContext.season, cwPlayContext.episode, src);
                                             } else {
-                                                playMovie(selectedMovie, 0, undefined, undefined, getDefaultSource());
+                                                playMovie(selectedMovie, 0, undefined, undefined, defaultSource);
                                             }
                                         }}
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
