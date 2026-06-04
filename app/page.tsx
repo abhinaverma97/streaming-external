@@ -390,7 +390,7 @@ export default function Home() {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-0 pb-24 md:pb-12">
+                    <div className="flex flex-col gap-0 pb-32 md:pb-12">
                         <TrendingSection
                             trending={trending}
                             trendingType={trendingType}
