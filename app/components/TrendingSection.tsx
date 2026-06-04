@@ -16,7 +16,7 @@ interface TrendingSectionProps {
 
 function TrendingSectionInner({ trending, trendingType, selectedMovieId, onTrendingTypeChange, onCardClick }: TrendingSectionProps) {
     return (
-        <FadeContent className="snap-start snap-always scroll-mt-0 pt-8 pb-10">
+        <FadeContent className="snap-start snap-always scroll-mt-0 py-8">
             <div className="flex items-center gap-6 mb-5">
                 <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
                     Trending

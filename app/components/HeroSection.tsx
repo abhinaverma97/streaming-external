@@ -96,7 +96,7 @@ function HeroSectionInner({
             )}
 
             {/* Hero Content Overlay */}
-            <div className="absolute inset-0 z-10 flex flex-col justify-end p-5 md:p-14 gap-3 md:gap-5">
+            <div className="absolute inset-0 z-10 flex flex-col justify-end p-5 pb-8 md:p-14 gap-3 md:gap-5">
                 {selectedMovie && (
                     <FadeContent key={selectedMovie.id} className="max-w-2xl flex flex-col gap-2 md:gap-4">
                         <div className="mb-1 md:mb-2 max-w-[90vw]">
