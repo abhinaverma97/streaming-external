@@ -379,12 +379,14 @@ export default function Home() {
             {/* ── SCROLLABLE BOTTOM AREA ── */}
             <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative mt-3 snap-y snap-mandatory">
                 <div className="max-w-[96vw] mx-auto px-6 md:px-12">
-                    <SearchResultsSection
-                        isSearching={isSearching}
-                        searchQuery={searchQuery}
-                        searchResults={searchResults}
-                        onCardClick={handleCardClick}
-                    />
+                    <div className="hidden md:block">
+                        <SearchResultsSection
+                            isSearching={isSearching}
+                            searchQuery={searchQuery}
+                            searchResults={searchResults}
+                            onCardClick={handleCardClick}
+                        />
+                    </div>
 
                     <div className="flex flex-col gap-0 pb-32 md:pb-12">
                         <TrendingSection
@@ -497,6 +499,11 @@ export default function Home() {
                 handleSearch={handleSearch}
                 setShowSettings={setShowSettings}
                 currentPath="/"
+                searchResults={searchResults}
+                isSearching={isSearching}
+                onCardClick={(movie) => {
+                    playMovie(movie, 0, undefined, undefined, defaultSource);
+                }}
             />
 
             <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
