@@ -33,6 +33,13 @@ import Navbar from "./components/Navbar";
 import SettingsOverlay from "./components/SettingsOverlay";
 import { SOURCES, getSource, buildEmbedUrl } from "./lib/sources-config";
 
+const KNOWN_ORIGINS = SOURCES.flatMap((s) => s.origins);
+
+function getDefaultSource(): string {
+    try { const v = localStorage.getItem("spicy-default-source"); if (v && SOURCES.some((s) => s.id === v)) return v; } catch {}
+    return "videasy";
+}
+
 function extractTrailerUrl(videos: any): string | null {
     const results = videos?.results;
     if (!results) return null;
@@ -55,6 +62,7 @@ interface Movie {
 }
 
 export default function Home() {
+    const DEBUG = false;
     // Movie categories
     const [trending, setTrending] = useState<Movie[]>([]);
     const [trendingType, setTrendingType] = useState<"movie" | "tv">("movie");
@@ -99,7 +107,6 @@ export default function Home() {
         try { const v = localStorage.getItem("spicy-default-source"); if (v && SOURCES.some((s) => s.id === v)) return v; } catch {}
         return "videasy";
     });
-    const defaultSourceRef = useRef(selectedSource);
     const [enabledSources, setEnabledSources] = useState<string[]>(() => {
         try { const raw = localStorage.getItem("spicy-enabled-sources"); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; } } catch {}
         return SOURCES.map((s) => s.id);
@@ -148,7 +155,6 @@ export default function Home() {
             if (enabled.includes(prev)) return prev;
             return defaultSource;
         });
-        defaultSourceRef.current = defaultSource;
         localStorage.setItem("spicy-enabled-sources", JSON.stringify(enabled));
         localStorage.setItem("spicy-default-source", defaultSource);
         fetch("/api/source-prefs", {
@@ -174,7 +180,6 @@ export default function Home() {
             }
             if (data.defaultSource && SOURCES.some((s) => s.id === data.defaultSource)) {
                 setSelectedSource(data.defaultSource);
-                defaultSourceRef.current = data.defaultSource;
                 localStorage.setItem("spicy-default-source", data.defaultSource);
             }
         } catch {}
@@ -248,6 +253,7 @@ export default function Home() {
 
     const handleRate = async (movie: Movie, rating: number) => {
         if (!movie || !movie.id) return;
+        const prevRating = ratings[movie.id];
         setRatings(prev => ({
             ...prev,
             [movie.id]: { rating, movieDetails: movie, ratedAt: Date.now() }
@@ -259,6 +265,12 @@ export default function Home() {
                 body: JSON.stringify({ rating, movieDetails: movie })
             });
         } catch (e) {
+            setRatings(prevState => {
+                const next = { ...prevState };
+                if (prevRating) next[movie.id] = prevRating;
+                else delete next[movie.id];
+                return next;
+            });
             console.error("Error saving rating", e);
         }
     };
@@ -406,7 +418,7 @@ export default function Home() {
 
         try {
             const resolvedMediaType = stream.details.media_type || stream.details.mediaType || (stream.tmdbId.startsWith("tv-") ? "tv" : "movie");
-            console.log(`[${getSource(source).name}] Progress: ${Math.round(currentTime)}s / ${Math.round(duration)}s (${Math.round((currentTime / duration) * 100)}%)`);
+            if (DEBUG) console.log(`[${getSource(source).name}] Progress: ${Math.round(currentTime)}s / ${Math.round(duration)}s (${Math.round((currentTime / duration) * 100)}%)`);
             await fetch(`/api/progress`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -432,11 +444,9 @@ export default function Home() {
         }
     };
 
-    const knownOrigins = SOURCES.flatMap((s) => s.origins);
-
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
-            if (!knownOrigins.includes(event.origin)) return;
+            if (!KNOWN_ORIGINS.includes(event.origin)) return;
 
             const stream = activeStreamRef.current;
             if (!stream) return;
@@ -447,7 +457,7 @@ export default function Home() {
 
                 // Flat JSON fallback (VIDEASY legacy): { id, timestamp, duration, ... }
                 if (msg.timestamp !== undefined && msg.duration) {
-                    console.log(`[${event.origin === "https://player.videasy.net" ? "VIDEASY" : event.origin}] Flat message: ${JSON.stringify(msg)}`);
+                    if (DEBUG) console.log(`[${event.origin === "https://player.videasy.net" ? "VIDEASY" : event.origin}] Flat message: ${JSON.stringify(msg)}`);
                     const mediaId = msg.id || msg.tmdbId;
                     if (mediaId && String(mediaId) === String(stream.details?.id)) {
                         if (progressTimeoutRef.current) clearTimeout(progressTimeoutRef.current);
@@ -462,7 +472,7 @@ export default function Home() {
                 const d = msg.data;
 
                 const sourceName = (() => { const s = SOURCES.find((x) => x.origins.includes(event.origin)); return s ? s.name : event.origin; })();
-                console.log(`[${sourceName}] Event: ${dtype}${dtype === "PLAYER_EVENT" || dtype === "WATCH_PROGRESS" ? ` (${d.event || d.eventType})` : ""}`);
+                if (DEBUG) console.log(`[${sourceName}] Event: ${dtype}${dtype === "PLAYER_EVENT" || dtype === "WATCH_PROGRESS" ? ` (${d.event || d.eventType})` : ""}`);
 
                 let evt: string | undefined;
                 let currentTime: number | undefined;
@@ -524,12 +534,12 @@ export default function Home() {
         forceEpisode?: number,
         sourceOverride?: string
     ) => {
-        const isTv = movie.media_type === "tv" || (!selectedShowDetails && movie.media_type === "tv");
+        const isTv = movie.media_type === "tv";
 
         let targetSeason = forceSeason !== undefined ? forceSeason : selectedSeason;
         let targetEpisode = forceEpisode !== undefined ? forceEpisode : selectedEpisode;
 
-        console.log(`[playMovie] isTv=${isTv} movie.id=${movie.id} targetSeason=${targetSeason} targetEpisode=${targetEpisode} startTime=${startTime} sourceOverride=${sourceOverride}`);
+        if (DEBUG) console.log(`[playMovie] isTv=${isTv} movie.id=${movie.id} targetSeason=${targetSeason} targetEpisode=${targetEpisode} startTime=${startTime} sourceOverride=${sourceOverride}`);
 
         if (isTv && forceSeason === undefined && forceEpisode === undefined) {
             const watchlistId = getWatchlistId(movie);
@@ -553,6 +563,17 @@ export default function Home() {
                 const tmdbData = data.tmdb || data;
                 showName = tmdbData.name || tmdbData.title;
                 setSelectedShowDetails(tmdbData);
+
+                if (forceSeason === undefined && forceEpisode === undefined) {
+                    const validSeasons = (tmdbData.seasons || []).filter((s: any) => s.season_number > 0);
+                    if (validSeasons.length > 0) {
+                        targetSeason = validSeasons[0].season_number;
+                        targetEpisode = 1;
+                        setSelectedSeason(targetSeason);
+                        setSelectedEpisode(targetEpisode);
+                    }
+                }
+
                 const seasonObj = tmdbData.seasons ? tmdbData.seasons.find((s: any) => s.season_number === targetSeason) : null;
                 const epCount = seasonObj ? seasonObj.episode_count : 1;
                 setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
@@ -582,8 +603,8 @@ export default function Home() {
         const effectiveSource = sourceOverride || selectedSource;
         const srcName = getSource(effectiveSource).name;
         const embedUrl = buildEmbedUrl(effectiveSource, movie.id, isTv ? "tv" : "movie", targetSeason, targetEpisode, startTime);
-        console.log(`[playMovie] embedUrl=${embedUrl}`);
-        console.log(`[${srcName}] Playing ${isTv ? `S${targetSeason}E${targetEpisode}` : ""} ${cleanTitle}`);
+        if (DEBUG) console.log(`[playMovie] embedUrl=${embedUrl}`);
+        if (DEBUG) console.log(`[${srcName}] Playing ${isTv ? `S${targetSeason}E${targetEpisode}` : ""} ${cleanTitle}`);
 
         setActiveStream({
             tmdbId,
@@ -635,7 +656,7 @@ export default function Home() {
     const handleSourceChange = (newSource: string) => {
         const oldName = getSource(selectedSource).name;
         const newName = getSource(newSource).name;
-        console.log(`[Player] Source switch: ${oldName} → ${newName}`);
+        if (DEBUG) console.log(`[Player] Source switch: ${oldName} → ${newName}`);
         setSelectedSource(newSource);
         if (!activeStream) return;
         const isTv = activeStream.details?.media_type === "tv" || activeStream.details?.mediaType === "tv";
@@ -823,11 +844,11 @@ export default function Home() {
                                         onClick={() => {
                                             if (cwPlayContext && cwPlayContext.movieId === selectedMovie.id) {
                                                 const src = cwPlayContext.source && effectiveEnabledSources.includes(cwPlayContext.source)
-                                                    ? cwPlayContext.source : defaultSourceRef.current;
+                                                    ? cwPlayContext.source : getDefaultSource();
                                                 if (src) setSelectedSource(src);
                                                 playMovie(selectedMovie, cwPlayContext.timestamp, cwPlayContext.season, cwPlayContext.episode, src);
                                             } else {
-                                                playMovie(selectedMovie, 0, undefined, undefined, defaultSourceRef.current);
+                                                playMovie(selectedMovie, 0, undefined, undefined, getDefaultSource());
                                             }
                                         }}
                                         className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
@@ -995,10 +1016,10 @@ export default function Home() {
                                                 const mt = item.mediaType || item.movieDetails?.media_type || "movie";
                                                 let src = item.source;
                                                 if (src && !effectiveEnabledSources.includes(src)) {
-                                                    console.log(`[Continue Watching] Saved source ${getSource(src).name} is disabled, falling back to default`);
+                                                    if (DEBUG) console.log(`[Continue Watching] Saved source ${getSource(src).name} is disabled, falling back to default`);
                                                     src = effectiveSource;
                                                 }
-                                                if (src) { console.log(`[Continue Watching] Resuming with source: ${getSource(src).name}`); setSelectedSource(src); }
+                                                if (src) { if (DEBUG) console.log(`[Continue Watching] Resuming with source: ${getSource(src).name}`); setSelectedSource(src); }
                                                 let parsedMovieId = item.movieDetails?.id;
                                                 let fs: number | undefined;
                                                 let fe: number | undefined;
@@ -1016,7 +1037,7 @@ export default function Home() {
                                                 if (!fs || isNaN(fs)) fs = 1;
                                                 if (!fe || isNaN(fe)) fe = 1;
                                                 const cwMovie = { ...(item.movieDetails || {}), id: parsedMovieId, media_type: mt };
-                                                console.log(`[Continue Watching] ${item.tmdbId} parsedMovieId=${parsedMovieId} fs=${fs} fe=${fe} mt=${mt} src=${src}`);
+                                                if (DEBUG) console.log(`[Continue Watching] ${item.tmdbId} parsedMovieId=${parsedMovieId} fs=${fs} fe=${fe} mt=${mt} src=${src}`);
                                                 playMovie(cwMovie, item.timestamp, fs, fe, src);
                                             }}
                                             >
@@ -1109,15 +1130,15 @@ export default function Home() {
                                         >
                                             <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950">
                                                 <Image
-                                                    src={getCardBackdropUrl(item.movieDetails.backdrop_path)}
-                                                    alt={item.movieDetails.title || item.movieDetails.name || "Preview"}
+                                                    src={getCardBackdropUrl(item.movieDetails?.backdrop_path)}
+                                                    alt={item.movieDetails?.title || item.movieDetails?.name || "Preview"}
                                                     fill
                                                     sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
                                                     className="object-cover group-hover:scale-105 transition-all duration-300"
                                                 />
                                             </div>
                                             <div className="mt-1.5 text-sm font-light tracking-wide truncate group-hover:text-white transition-colors">
-                                                {item.movieDetails.title || item.movieDetails.name}
+                                                {item.movieDetails?.title || item.movieDetails?.name}
                                             </div>
                                         </div>
                                     ))}
