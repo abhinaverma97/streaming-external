@@ -83,7 +83,7 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                 )}
             </div>
             {progressPercent !== undefined && (
-                <div className="text-[9px] text-slate-500 font-medium">
+                <div className="text-[9px] text-slate-500 font-medium hidden md:block">
                     {Math.min(100, Math.round(progressPercent))}% completed
                 </div>
             )}
