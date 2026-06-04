@@ -378,7 +378,7 @@ export default function Home() {
             </div>
 
             {/* ── SCROLLABLE BOTTOM AREA ── */}
-            <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative mt-3 snap-y snap-mandatory">
+            <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative snap-y snap-mandatory">
                 <div className="max-w-[96vw] mx-auto px-6 md:px-12">
                     <div className="hidden md:block">
                         <SearchResultsSection
@@ -390,7 +390,7 @@ export default function Home() {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-0 pb-32 md:pb-12">
+                    <div className="flex flex-col gap-0 pb-36 md:pb-12">
                         <TrendingSection
                             trending={trending}
                             trendingType={trendingType}

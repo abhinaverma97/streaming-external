@@ -55,7 +55,7 @@ function HeroSectionInner({
     }, [heroTrailerUrl, activeStream]);
 
     return (
-        <section className="relative h-[62vh] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/40 backdrop-blur-xl mt-4 md:mt-0">
+        <section className="relative h-[calc(100dvh-350px)] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/40 backdrop-blur-xl mt-4 md:mt-0">
             {selectedMovie && (
                 <AnimatePresence mode="wait">
                     <motion.div
