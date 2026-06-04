@@ -6,15 +6,18 @@ export function useSearch() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
     const doSearch = useCallback(async (query: string) => {
         if (!query.trim()) {
             setSearchResults([]);
             setIsSearching(false);
+            setSearchLoading(false);
             return;
         }
         setIsSearching(true);
+        setSearchLoading(true);
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`);
             const data = await res.json();
@@ -23,15 +26,10 @@ export function useSearch() {
                 media_type: movie.media_type || "multi"
             }));
             setSearchResults(tagged);
-            setTimeout(() => {
-                const section = document.getElementById("search-results-section");
-                if (section) {
-                    section.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
-            }, 100);
         } catch {
             // ignore
         }
+        setSearchLoading(false);
     }, []);
 
     const searchTimerRef = useRef<any>(null);
@@ -41,6 +39,7 @@ export function useSearch() {
         if (!searchQuery.trim()) {
             setSearchResults([]);
             setIsSearching(false);
+            setSearchLoading(false);
             return;
         }
         searchTimerRef.current = setTimeout(() => doSearch(searchQuery), 300);
@@ -57,6 +56,7 @@ export function useSearch() {
         setSearchQuery("");
         setSearchResults([]);
         setIsSearching(false);
+        setSearchLoading(false);
     }, []);
 
     return {
@@ -64,6 +64,7 @@ export function useSearch() {
         setSearchQuery,
         searchResults,
         isSearching,
+        searchLoading,
         isMobileSearchOpen,
         setIsMobileSearchOpen,
         handleSearch,

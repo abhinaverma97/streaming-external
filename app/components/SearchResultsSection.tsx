@@ -7,12 +7,13 @@ import { Movie } from "../lib/types";
 
 interface SearchResultsSectionProps {
     isSearching: boolean;
+    searchLoading: boolean;
     searchQuery: string;
     searchResults: Movie[];
     onCardClick: (movie: Movie) => void;
 }
 
-function SearchResultsSectionInner({ isSearching, searchQuery, searchResults, onCardClick }: SearchResultsSectionProps) {
+function SearchResultsSectionInner({ isSearching, searchLoading, searchQuery, searchResults, onCardClick }: SearchResultsSectionProps) {
     if (!isSearching || !searchQuery) return null;
 
     return (
@@ -20,7 +21,11 @@ function SearchResultsSectionInner({ isSearching, searchQuery, searchResults, on
             <h2 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
                 Search Results
             </h2>
-            {searchResults.length > 0 ? (
+            {searchLoading ? (
+                <div className="flex items-center justify-center py-12 w-full">
+                    <div className="w-5 h-5 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
+                </div>
+            ) : searchResults.length > 0 ? (
                 <ScrollRow>
                     {searchResults.map((movie, index) => (
                         <MovieCard

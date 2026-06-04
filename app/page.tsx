@@ -37,6 +37,7 @@ export default function Home() {
     const {
         searchQuery, setSearchQuery,
         searchResults, isSearching,
+        searchLoading,
         isMobileSearchOpen, setIsMobileSearchOpen,
         handleSearch, clearSearch,
     } = useSearch();
@@ -382,6 +383,7 @@ export default function Home() {
                     <div className="hidden md:block">
                         <SearchResultsSection
                             isSearching={isSearching}
+                            searchLoading={searchLoading}
                             searchQuery={searchQuery}
                             searchResults={searchResults}
                             onCardClick={handleCardClick}
@@ -501,6 +503,7 @@ export default function Home() {
                 currentPath="/"
                 searchResults={searchResults}
                 isSearching={isSearching}
+                searchLoading={searchLoading}
                 onCardClick={(movie) => {
                     playMovie(movie, 0, undefined, undefined, defaultSource);
                 }}
