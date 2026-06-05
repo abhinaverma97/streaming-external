@@ -350,7 +350,7 @@ export default function Home() {
         <div className="relative h-screen flex flex-col overflow-hidden bg-black select-none text-slate-100">
 
             {/* ── STICKY TOP AREA ── */}
-            <div className="w-[96vw] max-w-[1800px] flex-shrink-0 mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-0">
+            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-0">
                 <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/">
                     <SearchInput
                         searchQuery={searchQuery}
@@ -379,7 +379,7 @@ export default function Home() {
 
             {/* ── SCROLLABLE BOTTOM AREA ── */}
             <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative snap-y snap-mandatory">
-                <div className="w-[96vw] max-w-[1800px] mx-auto px-6 md:px-12">
+                <div className="max-w-[96vw] mx-auto px-6 md:px-12">
                     <div className="hidden md:block">
                         <SearchResultsSection
                             isSearching={isSearching}
