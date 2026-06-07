@@ -14,10 +14,12 @@ function buildUrl(path, params = {}) {
     return url.toString();
 }
 
-async function tmdbGet(path, params) {
+async function tmdbGet(path, params, noCache = false) {
     const url = buildUrl(path, params);
-    const cached = getCached(tmdbCacheDir, url, tmdbCacheTtlMs);
-    if (cached) return cached;
+    if (!noCache) {
+        const cached = getCached(tmdbCacheDir, url, tmdbCacheTtlMs);
+        if (cached) return cached;
+    }
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -26,7 +28,7 @@ async function tmdbGet(path, params) {
     }
 
     const data = await response.json();
-    setCached(tmdbCacheDir, url, data, tmdbCacheTtlMs);
+    if (!noCache) setCached(tmdbCacheDir, url, data, tmdbCacheTtlMs);
     return data;
 }
 
@@ -39,7 +41,7 @@ async function searchTv(query, page) {
 }
 
 async function searchMulti(query, page) {
-    return tmdbGet("/search/multi", { query, page });
+    return tmdbGet("/search/multi", { query, page }, true);
 }
 
 async function movieDetails(tmdbId) {

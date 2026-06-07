@@ -9,6 +9,7 @@ export function usePlayerProgress(
     activeStreamRef: React.MutableRefObject<any>,
     selectedSourceRef: React.MutableRefObject<string>,
     lastProgressRef: React.MutableRefObject<number>,
+    onProgressSaved?: () => void,
 ) {
     const progressTimeoutRef = useRef<any>(null);
 
@@ -21,7 +22,7 @@ export function usePlayerProgress(
         try {
             const resolvedMediaType = stream.details.media_type || stream.details.mediaType || (stream.tmdbId.startsWith("tv-") ? "tv" : "movie");
             if (DEBUG) console.log(`[${getSource(source).name}] Progress: ${Math.round(currentTime)}s / ${Math.round(duration)}s (${Math.round((currentTime / duration) * 100)}%)`);
-            await fetch(`/api/progress`, {
+            const res = await fetch(`/api/progress`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -41,6 +42,7 @@ export function usePlayerProgress(
                     }
                 })
             });
+            if (res.ok) onProgressSaved?.();
         } catch {
             // ignore
         }

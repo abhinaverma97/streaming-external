@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, X } from "lucide-react";
@@ -70,6 +70,12 @@ export default function Home() {
     const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
     const [episodesList, setEpisodesList] = useState<number[]>([]);
 
+    // ── Filtered Trending (exclude history) ──
+    const filteredTrending = useMemo(() => {
+        const historyIds = new Set(history.map(h => h.movieDetails?.id).filter(Boolean));
+        return trending.filter(item => !historyIds.has(item.id));
+    }, [trending, history]);
+
     // ── Continue Watching Hero Context ──
     const [cwPlayContext, setCwPlayContext] = useState<{
         movieId: number; timestamp: number; source?: string;
@@ -93,6 +99,7 @@ export default function Home() {
     const lastProgressRef = useRef(0);
     const playerContainerRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<HTMLIFrameElement>(null);
+    const hasScrolledToSearch = useRef(false);
 
     const activeStreamRef = useRef(activeStream);
     useEffect(() => { activeStreamRef.current = activeStream; }, [activeStream]);
@@ -100,10 +107,24 @@ export default function Home() {
     useEffect(() => { selectedSourceRef.current = selectedSource; }, [selectedSource]);
 
     // ── Player Progress Hook ──
-    usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef);
+    usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef, fetchUserLists);
 
     // ── Fetch user lists on mount ──
     useEffect(() => { fetchUserLists(); }, []);
+
+    // ── Auto-scroll to search results on desktop ──
+    useEffect(() => {
+        if (isSearching && !searchLoading && searchResults.length > 0 && !hasScrolledToSearch.current) {
+            const el = document.getElementById("search-results-section");
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
+                hasScrolledToSearch.current = true;
+            }
+        }
+        if (!isSearching) {
+            hasScrolledToSearch.current = false;
+        }
+    }, [isSearching, searchLoading, searchResults]);
 
     // ── Trending ──
     useEffect(() => {
@@ -392,7 +413,7 @@ export default function Home() {
 
                     <div className="flex flex-col gap-0 pb-28 md:pb-12">
                         <TrendingSection
-                            trending={trending}
+                            trending={filteredTrending}
                             trendingType={trendingType}
                             selectedMovieId={selectedMovie?.id}
                             onTrendingTypeChange={setTrendingType}

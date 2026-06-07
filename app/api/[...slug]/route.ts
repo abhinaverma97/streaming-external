@@ -42,11 +42,6 @@ async function handle(req: NextRequest, segments: string[], username: string | n
             return json({ ok: true });
         }
 
-        // ── Auth routes are public ─────────────────────────────────────
-        if (s0 === "auth") {
-            return error("Auth route not found", 404);
-        }
-
         // ── Everything else requires authentication ────────────────────
         if (!username) {
             return error("Not authenticated", 401);
@@ -62,7 +57,7 @@ async function handle(req: NextRequest, segments: string[], username: string | n
             if (type === "tv") data = await searchTv(query, page);
             else if (type === "multi") data = await searchMulti(query, page);
             else data = await searchMovies(query, page);
-            return cachedJson(data, 3600);
+            return json(data);
         }
 
         // ── Movie / TV Details ─────────────────────────────────────────
