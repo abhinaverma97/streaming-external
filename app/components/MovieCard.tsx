@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { memo, useRef } from "react";
+import { motion } from "framer-motion";
 import { Play, Film, Plus, Check } from "lucide-react";
 import { getCardBackdropUrl } from "../lib/tmdb-utils";
 import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
@@ -40,9 +41,13 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
     const isVisible = useIntersectionObserver(ref, true, { rootMargin: "400px" });
 
     return (
-        <div
+        <motion.div
             ref={ref}
             onClick={onClick}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: "50px" }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
             className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
         >
             <div
@@ -108,7 +113,7 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                     {Math.min(100, Math.round(progressPercent))}% completed
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 }
 

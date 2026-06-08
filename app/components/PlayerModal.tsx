@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, X } from "lucide-react";
 import ScrambledText from "./ScrambledText";
 import { PlayerSidebar } from "./PlayerSidebar";
@@ -45,30 +46,16 @@ export function PlayerModal({
     onRate,
     onChangeEpisode,
 }: PlayerModalProps) {
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        if (activeStream) {
-            setIsVisible(true);
-        } else {
-            setIsVisible(false);
-        }
-    }, [activeStream]);
-
-    const handleClose = () => {
-        setIsVisible(false);
-        // Call onClose after animation
-        setTimeout(onClose, 200);
-    };
-
-    if (!activeStream && !isVisible) return null;
-
     return (
-        <div
-            className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-y-auto w-full h-full transition-opacity duration-200 ${
-                isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-        >
+        <AnimatePresence>
+            {activeStream && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-y-auto w-full h-full"
+                >
             <div className="w-full max-w-7xl flex items-center justify-between mb-4">
                 <div>
                     <h2 className="text-base md:text-lg font-light tracking-wide text-white/95 flex items-center gap-2">
@@ -77,7 +64,7 @@ export function PlayerModal({
                 </div>
                 <div>
                     <button
-                        onClick={handleClose}
+                        onClick={onClose}
                         className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 duration-200 cursor-pointer"
                     >
                         <X className="w-4.5 h-4.5" />
@@ -104,7 +91,7 @@ export function PlayerModal({
                                 <div className="text-white/90 font-light tracking-wider text-sm">Playback Error</div>
                                 <div className="text-xs text-white/50 max-w-md font-light">{playerError}</div>
                                 <button
-                                    onClick={handleClose}
+                                    onClick={onClose}
                                     className="px-5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white/95 rounded-full mt-2 text-xs font-medium active:scale-95 transition-all cursor-pointer"
                                 >
                                     Go Back
@@ -128,6 +115,8 @@ export function PlayerModal({
                     onChangeEpisode={onChangeEpisode}
                 />
             </div>
-        </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }

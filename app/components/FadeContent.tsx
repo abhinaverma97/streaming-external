@@ -21,7 +21,7 @@ export default function FadeContent({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
-      transition={{ duration, delay, ease: "easeOut" }}
+      transition={{ type: "spring", stiffness: 200, damping: 20, delay }}
       className={className}
     >
       {children}

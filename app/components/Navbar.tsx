@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 interface NavbarProps {
   onSettingsClick: () => void;
@@ -13,7 +14,12 @@ function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
   return (
     <>
       {/* Desktop Navbar */}
-      <header className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300">
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20 }}
+        className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300"
+      >
         <div className="flex items-center flex-1">
           <button
             onClick={onSettingsClick}
@@ -53,7 +59,7 @@ function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
         <div className="flex items-center justify-end gap-4 flex-1">
           {children}
         </div>
-      </header>
+      </motion.header>
     </>
   );
 }
