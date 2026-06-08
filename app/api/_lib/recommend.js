@@ -50,16 +50,18 @@ function formatRatedItems(ratings) {
     .join("\n\n");
 }
 
-function buildPrompt(formatted) {
+function buildPrompt(formatted, formattedWatchlist) {
   return `You are a movie and TV show recommendation engine.
 
 Analyze this user's complete set of rated content as a whole. Identify patterns in
 genres, themes, directors, tone, and era preferences. Then recommend movies and TV
 shows the user would likely enjoy.
 
-USER'S RATED CONTENT (all items):
+USER'S RATED CONTENT:
+${formatted || "None"}
 
-${formatted}
+USER'S WATCHLIST:
+${formattedWatchlist || "None"}
 
 Based on ALL items above, return a JSON object with:
 
@@ -74,25 +76,26 @@ Based on ALL items above, return a JSON object with:
 
 IMPORTANT:
 - The "year" field must be the release year of the recommended title (used to look it up on TMDB)
-- Recommend EXACTLY 18 movies and 18 TV shows.
-- DO NOT recommend anything already in the user's rated content list above.
+- Recommend AT LEAST 18 movies and 18 TV shows.
+- DO NOT recommend anything already in the user's rated content list OR their watchlist above.
 - Provide a brief 1-sentence reason for each recommendation based on their ratings.
 - ONLY output the raw JSON object. No markdown, no introduction, no codeblocks.`;
 }
 
-export function buildRecommendationPrompt(ratings) {
+export function buildRecommendationPrompt(ratings, watchlist) {
   const formatted = formatRatedItems(ratings);
-  return buildPrompt(formatted);
+  const formattedWatchlist = (watchlist || []).map(w => `- "${w.movieDetails?.title || w.movieDetails?.name || "Unknown"}" (${(w.movieDetails?.release_date || w.movieDetails?.first_air_date || "").slice(0, 4) || "Unknown"}) - ${w.mediaType}`).join("\n");
+  return buildPrompt(formatted, formattedWatchlist);
 }
 
-export async function generateRecommendations(username, ratings, aiSettings) {
+export async function generateRecommendations(username, ratings, watchlist, aiSettings) {
   const apiKey = aiSettings?.apiKey;
   if (!apiKey) {
     throw new Error("API Key required. Please enter your OpenRouter API key in Settings.");
   }
   const model = aiSettings?.model || "openai/gpt-oss-120b:free";
 
-  const prompt = buildRecommendationPrompt(ratings);
+  const prompt = buildRecommendationPrompt(ratings, watchlist);
 
   console.log(`[Recommend] Building prompt with ${Object.keys(ratings).length} rated items`);
   console.log(`[Recommend] Prompt length: ${prompt.length} chars`);
@@ -179,8 +182,15 @@ export async function enrichWithTmdb(recommendations) {
 
   for (const item of recommendations.recommendedMovies || []) {
     try {
-      const data = await searchMovies(item.title);
-      const result = findBestMatch(data.results || [], item.title, item.year);
+      const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
+      let data = await searchMovies(searchTitle);
+      let result = findBestMatch(data.results || [], searchTitle, item.year);
+      
+      // Fallback search without exact year match filter
+      if (!result && data.results?.length > 0) {
+          result = data.results[0];
+      }
+      
       if (result) {
         enriched.recommendedMovies.push({
           ...item,
@@ -203,8 +213,15 @@ export async function enrichWithTmdb(recommendations) {
 
   for (const item of recommendations.recommendedTvShows || []) {
     try {
-      const data = await searchTv(item.title);
-      const result = findBestMatch(data.results || [], item.title, item.year);
+      const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
+      let data = await searchTv(searchTitle);
+      let result = findBestMatch(data.results || [], searchTitle, item.year);
+
+      // Fallback search
+      if (!result && data.results?.length > 0) {
+          result = data.results[0];
+      }
+
       if (result) {
         enriched.recommendedTvShows.push({
           ...item,

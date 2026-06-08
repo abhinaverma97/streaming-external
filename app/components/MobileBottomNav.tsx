@@ -57,7 +57,12 @@ function MobileBottomNavInner({
                                         <div
                                             key={movie.id}
                                             onClick={() => {
-                                                if (onCardClick) onCardClick(movie);
+                                                if (currentPath !== "/") {
+                                                    sessionStorage.setItem("pendingStream", JSON.stringify(movie));
+                                                    window.location.href = "/";
+                                                } else if (onCardClick) {
+                                                    onCardClick(movie);
+                                                }
                                                 setIsMobileSearchOpen(false);
                                                 setSearchQuery("");
                                             }}
@@ -140,15 +145,9 @@ function MobileBottomNavInner({
                         <Link href="/recommend" className={`flex flex-col items-center gap-1 ${currentPath === "/recommend" ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
                             <Sparkles className="w-5 h-5" />
                         </Link>
-                        {currentPath === "/" ? (
-                            <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-                                <Search className="w-5 h-5" />
-                            </button>
-                        ) : (
-                            <Link href="/?search=open" className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-                                <Search className="w-5 h-5" />
-                            </Link>
-                        )}
+                        <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className={`flex flex-col items-center gap-1 ${isMobileSearchOpen ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
+                            <Search className="w-5 h-5" />
+                        </button>
                         <button onClick={() => setShowSettings(true)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
                             <SettingsIcon className="w-5 h-5" />
                         </button>

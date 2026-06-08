@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "../_lib/auth.js";
-import { getRatings, getRecommendations, saveRecommendations, getDb, setGenerationStatus, setGenerationError, getAiSettings } from "../_lib/user-db.js";
+import { getRatings, getWatchlist, getRecommendations, saveRecommendations, setGenerationStatus, setGenerationError, getAiSettings } from "../_lib/user-db.js";
 import { generateRecommendations, enrichWithTmdb } from "../_lib/recommend.js";
 
 export async function GET(req: NextRequest) {
@@ -55,10 +55,11 @@ async function generateAndSaveAsync(username: string) {
   const t0 = Date.now();
 
   const ratings = await getRatings(username);
-  console.log(`[Recommend] Fetched ${Object.keys(ratings).length} ratings`);
+  const watchlist = await getWatchlist(username);
+  console.log(`[Recommend] Fetched ${Object.keys(ratings).length} ratings and ${watchlist.length} watchlist items`);
 
   const aiSettings = await getAiSettings(username);
-  const raw = await generateRecommendations(username, ratings, aiSettings);
+  const raw = await generateRecommendations(username, ratings, watchlist, aiSettings);
   const enriched = await enrichWithTmdb(raw);
   await saveRecommendations(username, enriched);
 

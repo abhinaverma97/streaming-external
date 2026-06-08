@@ -208,6 +208,21 @@ export default function Home() {
         loadMovieDetails(movie.id, movie.media_type || "movie");
     };
 
+    // ── Load Pending Stream from other pages ──
+    useEffect(() => {
+        const pending = sessionStorage.getItem("pendingStream");
+        if (pending) {
+            try {
+                const movie = JSON.parse(pending);
+                sessionStorage.removeItem("pendingStream");
+                setTimeout(() => {
+                    handleCardClick(movie);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                }, 50);
+            } catch (e) {}
+        }
+    }, []);
+
     const toggleWatchlist = async (movie: Movie) => {
         const watchlistId = getWatchlistId(movie);
         if (!watchlistId) return;
