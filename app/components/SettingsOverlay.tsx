@@ -383,6 +383,5 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
             </div>
           </div>
         </div>
-    </div>
   );
 }
