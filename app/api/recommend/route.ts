@@ -42,7 +42,11 @@ function startBackgroundGeneration(username: string) {
   setGenerationStatus(username, true).then(() => {
     generateAndSaveAsync(username).catch((err) => {
       console.error("[Recommend] Background generation error:", err);
-      setGenerationError(username, err.message || "Failed to generate recommendations.");
+      if (err.message === "User cancelled generation") {
+        setGenerationStatus(username, false);
+      } else {
+        setGenerationError(username, err.message || "Failed to generate recommendations.");
+      }
     });
   });
 }
@@ -55,7 +59,7 @@ async function generateAndSaveAsync(username: string) {
   console.log(`[Recommend] Fetched ${Object.keys(ratings).length} ratings`);
 
   const aiSettings = await getAiSettings(username);
-  const raw = await generateRecommendations(ratings, aiSettings);
+  const raw = await generateRecommendations(username, ratings, aiSettings);
   const enriched = await enrichWithTmdb(raw);
   await saveRecommendations(username, enriched);
 

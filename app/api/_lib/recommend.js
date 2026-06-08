@@ -1,5 +1,20 @@
 import { searchMovies, searchTv } from "./tmdb.js";
 
+if (!global.activeGenerations) {
+  global.activeGenerations = new Map();
+}
+const activeGenerations = global.activeGenerations;
+
+export function cancelGeneration(username) {
+  const controller = activeGenerations.get(username);
+  if (controller) {
+    controller.abort(new Error("User cancelled generation"));
+    activeGenerations.delete(username);
+    return true;
+  }
+  return false;
+}
+
 const API_KEY = () => process.env.OPENROUTER_API_KEY;
 
 const RECOMMENDATION_COUNT = 15;
@@ -70,7 +85,7 @@ export function buildRecommendationPrompt(ratings) {
   return buildPrompt(formatted);
 }
 
-export async function generateRecommendations(ratings, aiSettings) {
+export async function generateRecommendations(username, ratings, aiSettings) {
   const apiKey = aiSettings?.apiKey;
   if (!apiKey) {
     throw new Error("API Key required. Please enter your OpenRouter API key in Settings.");
@@ -83,29 +98,36 @@ export async function generateRecommendations(ratings, aiSettings) {
   console.log(`[Recommend] Prompt length: ${prompt.length} chars`);
 
   const controller = new AbortController();
+  activeGenerations.set(username, controller);
+
   const timeout = setTimeout(() => {
     console.log(`[Recommend] OpenRouter fetch timed out after 1 hour`);
-    controller.abort();
+    controller.abort(new Error("Timeout"));
   }, 3600000);
 
   const t0 = Date.now();
   console.log(`[Recommend] Calling OpenRouter with model ${model}...`);
 
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    signal: controller.signal,
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [{ role: "user", content: prompt }],
-      reasoning: { enabled: true },
-      temperature: 0.7,
-    }),
-  });
-  clearTimeout(timeout);
+  let res;
+  try {
+    res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      signal: controller.signal,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [{ role: "user", content: prompt }],
+        reasoning: { enabled: true },
+        temperature: 0.7,
+      }),
+    });
+  } finally {
+    activeGenerations.delete(username);
+    clearTimeout(timeout);
+  }
 
   console.log(`[Recommend] OpenRouter responded in ${Date.now() - t0}ms with status ${res.status}`);
 

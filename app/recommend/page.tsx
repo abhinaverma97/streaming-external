@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Star, Film, Plus, Check, Play, RotateCw, RefreshCw } from "lucide-react";
+import { Star, Film, Plus, Check, Play, RotateCw, RefreshCw, X } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
 import { PlayerModal } from "../components/PlayerModal";
@@ -65,33 +65,37 @@ export default function RecommendPage() {
     useEffect(() => { fetchUserLists(); }, []);
 
     const fetchRecommendations = useCallback(async (force = false) => {
+        if (force) setRefreshing(true);
         try {
-            setError(null);
-            if (force) setRefreshing(true);
-            else setLoading(true);
-            const res = await fetch(`/api/recommend`, { method: force ? "POST" : "GET" });
-            if (!res.ok) {
-                const body = await res.text();
-                throw new Error(`API error (${res.status}): ${body}`);
-            }
+            const res = await fetch(force ? "/api/recommend" : "/api/recommend", { method: force ? "POST" : "GET" });
             const data = await res.json();
-            
-            if (data.error) {
-                setError(data.error);
-                setRefreshing(false);
-            } else if (data.isGenerating) {
-                setRefreshing(true);
+            if (res.ok) {
+                setRecommendations(data);
+                if (data.error) setError(data.error);
+                if (data.isGenerating) {
+                    setRefreshing(true);
+                } else {
+                    setRefreshing(false);
+                }
             } else {
+                setError(data.error || "Failed to load recommendations");
                 setRefreshing(false);
             }
-            setRecommendations(data);
-        } catch (e: any) {
-            setError(e.message || "Failed to load recommendations");
+        } catch (err: any) {
+            setError(err.message);
             setRefreshing(false);
         } finally {
             setLoading(false);
         }
     }, []);
+
+    const cancelGeneration = async () => {
+        try {
+            await fetch("/api/recommend/cancel", { method: "POST" });
+            setRefreshing(false);
+            fetchRecommendations(false);
+        } catch {}
+    };
 
     useEffect(() => { fetchRecommendations(); }, [fetchRecommendations]);
 
@@ -222,6 +226,13 @@ export default function RecommendPage() {
                         <RotateCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
                         {refreshing ? "Generating..." : "Refresh"}
                     </button>
+                    {refreshing && (
+                        <button onClick={cancelGeneration}
+                            className="transition-colors duration-200 flex items-center justify-center p-1 rounded-full text-rose-500/70 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                            title="Cancel Generation">
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    )}
                 </div>
 
                 {formattedDate && (
