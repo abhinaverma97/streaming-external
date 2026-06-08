@@ -6,7 +6,7 @@ import { getWatchlistId } from "../lib/watchlist";
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function useUserLists() {
-    const { data, mutate: mutateData } = useSWR("/api/user/bootstrap", fetcher, { 
+    const { data, mutate: mutateData, isLoading } = useSWR("/api/user/bootstrap", fetcher, { 
         fallbackData: { watchlist: [], continueWatching: [], history: [], ratings: {} } 
     });
 
@@ -106,5 +106,6 @@ export function useUserLists() {
         fetchUserLists,
         handleRate,
         handleToggleWatchlist,
+        isLoading,
     };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Film, X, Search, Home as HomeIcon, List, Settings as SettingsIcon } from "lucide-react";
@@ -9,10 +9,9 @@ import SettingsOverlay from "../components/SettingsOverlay";
 import { SearchInput } from "../components/SearchInput";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { getBackdropUrl, getPosterUrl } from "../lib/tmdb-utils";
+import { useUserLists } from "../hooks/useUserListsSWR";
 
 export default function LogPage() {
-    const [ratings, setRatings] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [sortBy, setSortBy] = useState<"rating" | "time" | "release">("time");
     const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
     const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
@@ -20,16 +19,11 @@ export default function LogPage() {
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
 
-    useEffect(() => {
-        fetch(`/api/ratings`)
-            .then(res => res.json())
-            .then(data => {
-                const arr = Object.values(data).filter((item: any) => item && item.movieDetails);
-                setRatings(arr);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, []);
+    const { ratings: ratingsMap, isLoading } = useUserLists();
+
+    const ratings = useMemo(() => {
+        return Object.values(ratingsMap).filter((item: any) => item && item.movieDetails);
+    }, [ratingsMap]);
 
     const handleSearch = (e: any) => {
         e.preventDefault();
@@ -44,7 +38,7 @@ export default function LogPage() {
 
     const filteredRatings = mediaFilter === "all" ? ratings : ratings.filter((r: any) => mediaFilter === "tv" ? isTv(r) : !isTv(r));
 
-    const sortedRatings = [...filteredRatings].sort((a, b) => {
+    const sortedRatings = [...filteredRatings].sort((a: any, b: any) => {
         let result = 0;
         if (sortBy === "rating") {
             result = b.rating - a.rating;
@@ -113,7 +107,7 @@ export default function LogPage() {
                 </div>
 
                 {/* Grid */}
-                {loading ? (
+                {isLoading && ratings.length === 0 ? (
                     <div className="flex justify-center py-32">
                         <div className="w-6 h-6 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
                     </div>
@@ -133,7 +127,7 @@ export default function LogPage() {
                         animate="show"
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10"
                     >
-                        {sortedRatings.map((item) => (
+                        {sortedRatings.map((item: any) => (
                             <motion.div variants={itemVariants} key={item.movieDetails.id} className="group flex flex-col cursor-default">
                                 <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300">
                                     {item.movieDetails.backdrop_path || item.movieDetails.poster_path ? (
