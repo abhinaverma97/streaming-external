@@ -8,6 +8,7 @@ export function useSearch() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchLoading, setSearchLoading] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const doSearch = useCallback(async (query: string) => {
         if (!query.trim()) {
@@ -18,18 +19,34 @@ export function useSearch() {
         }
         setIsSearching(true);
         setSearchLoading(true);
-        try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`);
-            const data = await res.json();
-            const tagged = (data.results || []).map((movie: any) => ({
-                ...movie,
-                media_type: movie.media_type || "multi"
-            }));
-            setSearchResults(tagged);
-        } catch {
-            // ignore
+
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
         }
-        setSearchLoading(false);
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        try {
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`, {
+                signal: controller.signal
+            });
+            const data = await res.json();
+            
+            const tagged = (data.results || [])
+                .filter((item: any) => item.media_type === "movie" || item.media_type === "tv")
+                .map((movie: any) => ({
+                    ...movie,
+                    media_type: movie.media_type
+                }));
+                
+            setSearchResults(tagged);
+        } catch (err: any) {
+            if (err.name === "AbortError") return;
+        } finally {
+            if (abortControllerRef.current === controller) {
+                setSearchLoading(false);
+            }
+        }
     }, []);
 
     const searchTimerRef = useRef<any>(null);
@@ -53,6 +70,9 @@ export function useSearch() {
     }, [searchQuery, doSearch]);
 
     const clearSearch = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
         setSearchQuery("");
         setSearchResults([]);
         setIsSearching(false);
