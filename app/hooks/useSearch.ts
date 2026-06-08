@@ -28,7 +28,8 @@ export function useSearch() {
 
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`, {
-                signal: controller.signal
+                signal: controller.signal,
+                cache: "no-store"
             });
             const data = await res.json();
             

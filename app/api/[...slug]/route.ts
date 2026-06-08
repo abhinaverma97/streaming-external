@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import {
     searchMovies, searchTv, searchMulti, movieDetails, tvDetails,
     getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre
