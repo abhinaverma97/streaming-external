@@ -5,7 +5,6 @@ import { memo, useRef } from "react";
 import { Play, Film, Plus, Check } from "lucide-react";
 import { getCardBackdropUrl } from "../lib/tmdb-utils";
 import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
-import { useReveal } from "../hooks/useReveal";
 
 interface MovieCardProps {
     item: {
@@ -39,13 +38,11 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
 
     const imageRef = useRef<HTMLDivElement>(null);
     const isImageVisible = useIntersectionObserver(imageRef, true, { rootMargin: "400px" });
-    const revealRef = useReveal("0px");
 
     return (
         <div
-            ref={revealRef as React.RefObject<HTMLDivElement>}
             onClick={onClick}
-            className={`reveal-item flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]`}
+            className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
         >
             <div
                 ref={imageRef}
@@ -65,9 +62,7 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                                 priority={priority}
                                 loading={priority ? undefined : "lazy"}
                                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                                className={`object-cover transition-all duration-300 ${
-                                    showPlayOverlay ? "md:brightness-90 md:group-hover:brightness-100" : "group-hover:scale-105"
-                                }`}
+                                className="object-cover transition-all duration-300 md:brightness-90 md:group-hover:brightness-100"
                             />
                         ) : (
                             <div className="absolute inset-0 flex items-center justify-center text-slate-600 bg-slate-950">

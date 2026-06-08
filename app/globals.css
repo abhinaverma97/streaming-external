@@ -59,32 +59,28 @@
 }
 
 /* ── Premium Easing Tokens ──────────────────────── */
-/* Ease-out expo: fast entry, graceful decel — for reveals & page content */
-/* cubic-bezier(0.16, 1, 0.3, 1)  ≈ Expo Ease-Out */
+/* Ease-out cubic: fast entry, graceful decel — for reveals & page content */
+/* cubic-bezier(0.215, 0.610, 0.355, 1) or cubic-bezier(0.16, 1, 0.3, 1) */
 
 /* ── Reveal Animation ───────────────────────────── */
 .reveal-item {
   opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
 }
 
 .reveal-item.is-visible {
   opacity: 1;
-  transform: translateY(0);
 }
 
 /* Stagger delays for child items in a row */
 .reveal-stagger > .reveal-item:nth-child(1) { transition-delay: 0ms; }
-.reveal-stagger > .reveal-item:nth-child(2) { transition-delay: 40ms; }
-.reveal-stagger > .reveal-item:nth-child(3) { transition-delay: 80ms; }
-.reveal-stagger > .reveal-item:nth-child(4) { transition-delay: 120ms; }
-.reveal-stagger > .reveal-item:nth-child(5) { transition-delay: 160ms; }
-.reveal-stagger > .reveal-item:nth-child(6) { transition-delay: 200ms; }
-.reveal-stagger > .reveal-item:nth-child(n+7) { transition-delay: 240ms; }
+.reveal-stagger > .reveal-item:nth-child(2) { transition-delay: 20ms; }
+.reveal-stagger > .reveal-item:nth-child(3) { transition-delay: 40ms; }
+.reveal-stagger > .reveal-item:nth-child(4) { transition-delay: 60ms; }
+.reveal-stagger > .reveal-item:nth-child(5) { transition-delay: 80ms; }
+.reveal-stagger > .reveal-item:nth-child(6) { transition-delay: 100ms; }
+.reveal-stagger > .reveal-item:nth-child(n+7) { transition-delay: 120ms; }
 
 /* ── Native View Transitions ────────────────────── */
 /* Root: never animate — shell stays perfectly still */
@@ -103,13 +99,18 @@
   view-transition-name: content;
 }
 
-/* Shared timing for named regions */
+/* Shared timing for named regions - Ultra-fast minimalist crossfade */
+::view-transition-group(hero),
+::view-transition-group(content) {
+  animation: none;
+}
+
 ::view-transition-old(hero),
 ::view-transition-new(hero),
 ::view-transition-old(content),
 ::view-transition-new(content) {
-  animation-duration: 0.42s;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* Expo ease-out */
+  animation-duration: 0.2s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 ::view-transition-old(hero),
@@ -123,34 +124,34 @@
 }
 
 @keyframes vt-fade-out {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 @keyframes vt-fade-in {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ── Modal Transitions (@starting-style) ─────────── */
-/* Settings & Player: slide-up from bottom, no elastic bounce */
+/* Settings & Player: subtle slide-up from bottom, no scale, fast timing */
 .modal-panel {
   transition:
-    opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   opacity: 1;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
   will-change: transform, opacity;
 }
 
 @starting-style {
   .modal-panel {
     opacity: 0;
-    transform: translateY(24px) scale(0.97);
+    transform: translateY(6px);
   }
 }
 
 .modal-backdrop {
-  transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
 }
 

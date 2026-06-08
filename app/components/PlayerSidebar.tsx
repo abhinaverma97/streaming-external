@@ -3,7 +3,6 @@
 import { memo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import GlassSurface from "./GlassSurface";
-import VariableProximity from "./VariableProximity";
 import { CustomSelect } from "./CustomSelect";
 import { StarRating } from "./StarRating";
 import { SOURCES } from "../lib/sources-config";
@@ -69,13 +68,9 @@ function PlayerSidebarInner({
 
             {/* Rating System */}
             <div className="flex flex-col gap-3 pb-4 border-b border-white/[0.05]">
-                <VariableProximity
-                    text="Rate Title"
-                    fromWeight={400}
-                    toWeight={800}
-                    radius={80}
-                    className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1"
-                />
+                <span className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1">
+                    Rate Title
+                </span>
                 <StarRating
                     value={ratings[activeStreamDetails?.id]?.rating || 0}
                     onChange={(val) => activeStreamDetails && onRate(activeStreamDetails, val)}
@@ -85,13 +80,9 @@ function PlayerSidebarInner({
             {/* TV Season/Episode Selector */}
             {selectedShowDetails && (
                 <div className="flex flex-col gap-3 pb-4 border-b border-white/[0.05]">
-                    <VariableProximity
-                        text="TV Episode Control"
-                        fromWeight={400}
-                        toWeight={800}
-                        radius={80}
-                        className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1"
-                    />
+                    <span className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1">
+                        TV Episode Control
+                    </span>
                     <div className="flex flex-col gap-3">
                         <div className="flex flex-col gap-1">
                             <span className="text-[8px] font-medium uppercase tracking-[0.15em] text-white/30 mb-0.5">Season</span>

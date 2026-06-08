@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { Star, Film, X, Search, Home as HomeIcon, List, Settings as SettingsIcon } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
@@ -59,15 +58,7 @@ export default function LogPage() {
         return sortOrder === "asc" ? -result : result;
     });
 
-    const containerVariants: any = {
-        hidden: { opacity: 0 },
-        show: { opacity: 1, transition: { staggerChildren: 0.05 } }
-    };
 
-    const itemVariants: any = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-    };
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
@@ -131,14 +122,11 @@ export default function LogPage() {
                         </div>
                     </div>
                 ) : (
-                    <motion.div
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="show"
+                    <div
                         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10"
                     >
                         {sortedRatings.map((item: any) => (
-                            <motion.div variants={itemVariants} key={item.movieDetails.id} className="group flex flex-col cursor-default">
+                            <div key={item.movieDetails.id} className="group flex flex-col cursor-default">
                                 <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300">
                                     {item.movieDetails.backdrop_path || item.movieDetails.poster_path ? (
                                         <Image
@@ -168,9 +156,9 @@ export default function LogPage() {
                                         <span>{item.movieDetails.media_type === "tv" || item.movieDetails.name ? "Series" : "Movie"}</span>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
                         ))}
-                    </motion.div>
+                    </div>
                 )}
             </div>
 

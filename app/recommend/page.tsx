@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { Star, Film, Plus, Check, Play, RotateCw, RefreshCw, X } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
@@ -15,16 +14,6 @@ import { useSourcePrefs } from "../hooks/useSourcePrefs";
 import { useUserLists } from "../hooks/useUserListsSWR";
 import { usePlayerProgress } from "../hooks/usePlayerProgress";
 import { useSearch } from "../hooks/useSearch";
-
-const containerVariants: any = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
-
-const itemVariants: any = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-};
 
 export default function RecommendPage() {
     const [recommendations, setRecommendations] = useState<any>(null);
@@ -256,8 +245,7 @@ export default function RecommendPage() {
                         <div className="text-[11px] text-white/40 uppercase tracking-widest font-light">No {filter === "movie" ? "movies" : "series"} in recommendations.</div>
                     </div>
                 ) : (
-                    <motion.div variants={containerVariants} initial="hidden" animate="show"
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10">
                         {filteredItems.map((item: any) => {
                             const key = item.id || item.title;
                             const inWatchlist = isInWatchlist(item);
@@ -266,7 +254,7 @@ export default function RecommendPage() {
                             const year = (item.release_date || item.first_air_date || "").split("-")[0];
 
                             return (
-                                <motion.div variants={itemVariants} key={key} className="group flex flex-col cursor-pointer">
+                                <div key={key} className="group flex flex-col cursor-pointer">
                                     {/* Card Image */}
                                     <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300"
                                         onClick={() => playRecommendation(item)}>
@@ -311,10 +299,10 @@ export default function RecommendPage() {
                                             {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                                         </button>
                                     </div>
-                                </motion.div>
+                                </div>
                             );
                         })}
-                    </motion.div>
+                    </div>
                 )}
             </div>
 

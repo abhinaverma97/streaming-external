@@ -2,7 +2,6 @@
 
 import { memo } from "react";
 import ScrollRow from "./ScrollRow";
-import FadeContent from "./FadeContent";
 import { MovieCard } from "./MovieCard";
 import { getSource } from "../lib/sources-config";
 
@@ -18,7 +17,7 @@ function ContinueWatchingSectionInner({ continueWatching, effectiveEnabledSource
     if (continueWatching.length === 0) return null;
 
     return (
-        <FadeContent className="snap-start snap-always scroll-mt-0 py-8">
+        <div className="snap-start snap-always scroll-mt-0 py-8">
             <h3 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
                 Continue Watching
             </h3>
@@ -76,7 +75,7 @@ function ContinueWatchingSectionInner({ continueWatching, effectiveEnabledSource
                     );
                 })}
             </ScrollRow>
-        </FadeContent>
+        </div>
     );
 }
 

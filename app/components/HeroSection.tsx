@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, memo } from "react";
 import Image from "next/image";
 import { Play, Plus, Check, Star, Volume2, VolumeX } from "lucide-react";
-import VariableProximity from "./VariableProximity";
 import FadeContent from "./FadeContent";
 import { StarRating } from "./StarRating";
 import { Movie, CwPlayContext } from "../lib/types";
@@ -96,7 +95,9 @@ function HeroSectionInner({
                 {selectedMovie && (
                     <FadeContent key={selectedMovie.id} className="max-w-2xl flex flex-col gap-2 md:gap-4">
                         <div className="mb-1 md:mb-2 max-w-[90vw]">
-                            <VariableProximity text={selectedMovie.title || selectedMovie.name || ""} fromWeight={300} toWeight={800} radius={180} className="text-xl sm:text-2xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight" />
+                            <h1 className="text-xl sm:text-2xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
+                                {selectedMovie.title || selectedMovie.name || ""}
+                            </h1>
                         </div>
 
                         {/* Meta details */}

@@ -2,7 +2,6 @@
 
 import { memo } from "react";
 import ScrollRow from "./ScrollRow";
-import FadeContent from "./FadeContent";
 import { MovieCard } from "./MovieCard";
 import { Movie } from "../lib/types";
 
@@ -16,7 +15,7 @@ interface TrendingSectionProps {
 
 function TrendingSectionInner({ trending, trendingType, selectedMovieId, onTrendingTypeChange, onCardClick }: TrendingSectionProps) {
     return (
-        <FadeContent className="snap-start snap-always scroll-mt-0 py-8">
+        <div className="snap-start snap-always scroll-mt-0 py-8">
             <div className="flex items-center gap-6 mb-5">
                 <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
                     Trending
@@ -60,7 +59,7 @@ function TrendingSectionInner({ trending, trendingType, selectedMovieId, onTrend
                     </div>
                 </div>
             )}
-        </FadeContent>
+        </div>
     );
 }
 
