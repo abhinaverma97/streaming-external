@@ -27,10 +27,23 @@ export function useSearch() {
         abortControllerRef.current = controller;
 
         try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`, {
+            let res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`, {
                 signal: controller.signal,
                 cache: "no-store"
             });
+
+            // Retry once on 401 — auth cookie may not be ready yet on first load
+            if (res.status === 401) {
+                await new Promise(r => setTimeout(r, 500));
+                if (controller.signal.aborted) return;
+                res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`, {
+                    signal: controller.signal,
+                    cache: "no-store"
+                });
+            }
+
+            if (!res.ok) return;
+
             const data = await res.json();
             
             const tagged = (data.results || [])
