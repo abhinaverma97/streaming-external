@@ -65,7 +65,7 @@ export function PlayerModal({
 
     return (
         <div
-            className={`fixed inset-0 z-50 bg-black/90 md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-y-auto w-full h-full transition-opacity duration-200 ${
+            className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-y-auto w-full h-full transition-opacity duration-200 ${
                 isVisible ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
         >
