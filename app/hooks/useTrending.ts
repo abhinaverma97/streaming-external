@@ -26,6 +26,7 @@ export function useTrending(initialType: "movie" | "tv" = "movie") {
         abortControllerRef.current = new AbortController();
 
         setLoading(true);
+        setTrending([]);
         try {
             const endpoint = type === "movie" ? "movies" : "tv";
             const res = await fetch(`/api/${endpoint}/trending`, {
