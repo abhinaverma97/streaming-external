@@ -387,7 +387,7 @@ export default function Home() {
             </div>
 
             {/* ── SCROLLABLE BOTTOM AREA ── */}
-            <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative">
+            <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative snap-y snap-mandatory">
                 <div className="max-w-[96vw] mx-auto px-6 md:px-12">
                     <div className="hidden md:block">
                         <SearchResultsSection
