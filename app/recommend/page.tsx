@@ -14,6 +14,7 @@ import { getWatchlistId } from "../lib/watchlist";
 import { useSourcePrefs } from "../hooks/useSourcePrefs";
 import { useUserLists } from "../hooks/useUserListsSWR";
 import { usePlayerProgress } from "../hooks/usePlayerProgress";
+import { useSearch } from "../hooks/useSearch";
 
 const containerVariants: any = {
     hidden: { opacity: 0 },
@@ -40,6 +41,14 @@ export default function RecommendPage() {
     const [selectedSeason, setSelectedSeason] = useState(1);
     const [selectedEpisode, setSelectedEpisode] = useState(1);
     const [episodesList, setEpisodesList] = useState<number[]>([]);
+
+    const {
+        searchQuery, setSearchQuery,
+        searchResults, isSearching,
+        searchLoading,
+        isMobileSearchOpen, setIsMobileSearchOpen,
+        handleSearch
+    } = useSearch();
 
     const lastProgressRef = useRef(0);
     const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -312,9 +321,19 @@ export default function RecommendPage() {
                 episodesList={episodesList} ratings={ratings} onClose={closePlayer} onSourceChange={handleSourceChange}
                 onRate={handleRate} onChangeEpisode={changeEpisode} />
 
-            <MobileBottomNav activeStream={false} isMobileSearchOpen={false} setIsMobileSearchOpen={() => { }}
-                searchQuery="" setSearchQuery={() => { }} handleSearch={(e: any) => { e.preventDefault(); }}
-                setShowSettings={setShowSettings} currentPath="/recommend" />
+            <MobileBottomNav
+                activeStream={activeStream}
+                isMobileSearchOpen={isMobileSearchOpen}
+                setIsMobileSearchOpen={setIsMobileSearchOpen}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                handleSearch={handleSearch}
+                searchResults={searchResults}
+                isSearching={isSearching}
+                searchLoading={searchLoading}
+                setShowSettings={setShowSettings}
+                currentPath="/recommend"
+            />
 
             <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
         </main>

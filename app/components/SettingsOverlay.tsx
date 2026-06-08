@@ -178,7 +178,7 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 md:backdrop-blur-xl"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-center justify-center p-4"
         >
           <GlassSurface className="w-full max-w-lg max-h-[80vh] flex flex-col p-6 overflow-y-auto no-scrollbar">
             <div className="flex items-center justify-between mb-6">

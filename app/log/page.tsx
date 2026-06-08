@@ -10,14 +10,21 @@ import { SearchInput } from "../components/SearchInput";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { getBackdropUrl, getPosterUrl } from "../lib/tmdb-utils";
 import { useUserLists } from "../hooks/useUserListsSWR";
+import { useSearch } from "../hooks/useSearch";
 
 export default function LogPage() {
     const [sortBy, setSortBy] = useState<"rating" | "time" | "release">("time");
     const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
     const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+
+    const {
+        searchQuery, setSearchQuery,
+        searchResults, isSearching,
+        searchLoading,
+        isMobileSearchOpen, setIsMobileSearchOpen,
+        handleSearch
+    } = useSearch();
 
     const { ratings: ratingsMap, isLoading } = useUserLists();
 
@@ -25,7 +32,7 @@ export default function LogPage() {
         return Object.values(ratingsMap).filter((item: any) => item && item.movieDetails);
     }, [ratingsMap]);
 
-    const handleSearch = (e: any) => {
+    const handleDesktopSearch = (e: any) => {
         e.preventDefault();
         if (searchQuery) {
             window.location.href = `/?q=${encodeURIComponent(searchQuery)}`;
@@ -71,7 +78,7 @@ export default function LogPage() {
                     <SearchInput
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
-                        handleSearch={handleSearch}
+                        handleSearch={handleDesktopSearch}
                     />
                 </Navbar>
 
@@ -170,7 +177,10 @@ export default function LogPage() {
                 setIsMobileSearchOpen={setIsMobileSearchOpen}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
-                handleSearch={(e: any) => { handleSearch(e); setIsMobileSearchOpen(false); }}
+                handleSearch={handleSearch}
+                searchResults={searchResults}
+                isSearching={isSearching}
+                searchLoading={searchLoading}
                 setShowSettings={setShowSettings}
                 currentPath="/log"
             />
