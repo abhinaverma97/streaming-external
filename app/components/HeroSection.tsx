@@ -55,7 +55,7 @@ function HeroSectionInner({
     }, [heroTrailerUrl, activeStream]);
 
     return (
-        <section className="relative h-[calc(100dvh-350px)] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/40 backdrop-blur-xl mt-4 md:mt-0">
+        <section className="relative h-[calc(100dvh-350px)] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/90 md:bg-[#090b14]/40 md:backdrop-blur-xl mt-4 md:mt-0">
             {selectedMovie && (
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -163,7 +163,7 @@ function HeroSectionInner({
                             </button>
                             <button
                                 onClick={() => onToggleWatchlist(selectedMovie)}
-                                className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 backdrop-blur-sm text-white font-semibold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
+                                className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-slate-900/90 md:bg-slate-900/40 hover:bg-slate-800/60 border border-slate-800/80 md:backdrop-blur-sm text-white font-semibold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 active:scale-95"
                             >
                                 {(() => {
                                     const wlId = getWatchlistId(selectedMovie);

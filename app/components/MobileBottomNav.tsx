@@ -44,7 +44,7 @@ function MobileBottomNavInner({
                     {/* Mobile Search Results Overlay */}
                     {showResults && (
                         <div
-                            className="absolute bottom-[calc(100%+88px)] left-0 w-full max-h-[60vh] overflow-y-auto bg-[#090b14] backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-2 no-scrollbar origin-bottom transition-all duration-200 ease-out"
+                            className="absolute bottom-[calc(100%+88px)] left-0 w-full max-h-[60vh] overflow-y-auto bg-[#090b14] md:backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-2 no-scrollbar origin-bottom transition-all duration-200 ease-out"
                             style={{ opacity: 1, transform: "translateY(0) scaleY(1)" }}
                         >
                             {searchLoading ? (
@@ -123,14 +123,14 @@ function MobileBottomNavInner({
                                 placeholder="Search movies..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full px-6 py-4 rounded-3xl bg-[#090b14]/90 backdrop-blur-2xl border border-white/10 text-sm focus:outline-none focus:border-white/20 text-white placeholder-slate-500 shadow-2xl"
+                                className="w-full px-6 py-4 rounded-3xl bg-[#090b14]/95 md:bg-[#090b14]/90 md:backdrop-blur-2xl border border-white/10 text-sm focus:outline-none focus:border-white/20 text-white placeholder-slate-500 shadow-2xl"
                                 autoFocus
                             />
                         </form>
                     )}
 
                     {/* Nav Bar */}
-                    <nav className="flex items-center justify-between px-6 py-4 rounded-full bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+                    <nav className="flex items-center justify-between px-6 py-4 rounded-full bg-[#090b14]/95 md:bg-[#090b14]/70 md:backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
                         <Link href="/" className={`flex flex-col items-center gap-1 ${currentPath === "/" ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
                             <HomeIcon className="w-5 h-5" />
                         </Link>
@@ -140,9 +140,15 @@ function MobileBottomNavInner({
                         <Link href="/recommend" className={`flex flex-col items-center gap-1 ${currentPath === "/recommend" ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
                             <Sparkles className="w-5 h-5" />
                         </Link>
-                        <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-                            <Search className="w-5 h-5" />
-                        </button>
+                        {currentPath === "/" ? (
+                            <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+                                <Search className="w-5 h-5" />
+                            </button>
+                        ) : (
+                            <Link href="/?search=open" className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+                                <Search className="w-5 h-5" />
+                            </Link>
+                        )}
                         <button onClick={() => setShowSettings(true)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
                             <SettingsIcon className="w-5 h-5" />
                         </button>

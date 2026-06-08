@@ -1,110 +1,42 @@
-import fs from "fs/promises";
-import path from "path";
-
-const WRITE_DEBOUNCE_MS = 2000;
-
-const dbs = new Map();
-const writeTimers = new Map();
-
-async function ensureDir(dir) {
-  await fs.mkdir(dir, { recursive: true });
-}
-
-function userDbPath(username) {
-  return path.join(process.cwd(), ".cache", "users", username, "user-data.json");
-}
-
-export async function getDb(username) {
-  if (!username) throw new Error("Username required");
-  if (dbs.has(username)) return dbs.get(username);
-  const dbPath = userDbPath(username);
-  let data;
-  try {
-    const raw = await fs.readFile(dbPath, "utf-8");
-    data = JSON.parse(raw);
-  } catch {
-    data = { watchlist: [], progress: {}, history: [], ratings: {} };
-  }
-  dbs.set(username, data);
-  return data;
-}
-
-async function writeDb(username) {
-  const data = dbs.get(username);
-  if (!data) return;
-  const dbPath = userDbPath(username);
-  try {
-    await ensureDir(path.dirname(dbPath));
-    await fs.writeFile(dbPath, JSON.stringify(data, null, 2));
-  } catch (e) {
-    console.error(`[UserDB] Error writing ${dbPath}`, e);
-  }
-}
-
-function scheduleWrite(username) {
-  if (writeTimers.has(username)) clearTimeout(writeTimers.get(username));
-  writeTimers.set(username, setTimeout(() => {
-    writeTimers.delete(username);
-    writeDb(username);
-  }, WRITE_DEBOUNCE_MS));
-}
-
-async function flushDb(username) {
-  if (writeTimers.has(username)) { clearTimeout(writeTimers.get(username)); writeTimers.delete(username); }
-  await writeDb(username);
-}
-
-// ── Graceful shutdown ──────────────────────────────────────────────
-
-if (typeof process !== "undefined") {
-  const handleSignal = () => {
-    for (const username of dbs.keys()) {
-      if (writeTimers.has(username)) { clearTimeout(writeTimers.get(username)); writeTimers.delete(username); }
-      writeDb(username);
-    }
-  };
-  process.on("SIGTERM", handleSignal);
-  process.on("SIGINT", handleSignal);
-}
+import db from "./db";
 
 // ── Watchlist ──────────────────────────────────────────────────────────
 
 export async function getWatchlist(username) {
-  const db = await getDb(username);
-  return db.watchlist || [];
+  const rows = db.prepare("SELECT * FROM watchlist WHERE username = ? ORDER BY addedAt DESC").all(username);
+  return rows.map(r => ({
+    tmdbId: r.tmdbId,
+    mediaType: r.mediaType,
+    movieDetails: JSON.parse(r.movieDetails),
+    addedAt: r.addedAt
+  }));
 }
 
 export async function addToWatchlist(username, tmdbId, movieDetails, mediaType) {
-  const db = await getDb(username);
-  if (!db.watchlist) db.watchlist = [];
-  const exists = db.watchlist.some(item => item.tmdbId === tmdbId);
-  if (!exists) {
-    db.watchlist.push({ tmdbId, movieDetails, mediaType, addedAt: Date.now() });
-    scheduleWrite(username);
-    await flushDb(username);
-  }
+  db.prepare("INSERT OR REPLACE INTO watchlist (username, tmdbId, mediaType, movieDetails, addedAt) VALUES (?, ?, ?, ?, ?)")
+    .run(username, tmdbId, mediaType, JSON.stringify(movieDetails), Date.now());
 }
 
 export async function removeFromWatchlist(username, tmdbId) {
-  const db = await getDb(username);
-  if (!db.watchlist) db.watchlist = [];
-  db.watchlist = db.watchlist.filter(item => item.tmdbId !== tmdbId);
-  scheduleWrite(username);
-  await flushDb(username);
+  db.prepare("DELETE FROM watchlist WHERE username = ? AND tmdbId = ?").run(username, tmdbId);
 }
 
 // ── Continue Watching / Progress ───────────────────────────────────────
 
 export async function getProgress(username) {
-  const db = await getDb(username);
-  const items = Object.entries(db.progress || {}).map(([tmdbId, entry]) => ({
-    tmdbId,
-    ...entry
+  const rows = db.prepare("SELECT * FROM progress WHERE username = ?").all(username);
+  const items = rows.map(r => ({
+    tmdbId: r.tmdbId,
+    timestamp: r.timestamp,
+    duration: r.duration,
+    movieDetails: JSON.parse(r.movieDetails),
+    mediaType: r.mediaType,
+    source: r.source,
+    updatedAt: r.updatedAt
   }));
-
+  
   const showGroups = new Map();
   const standalone = [];
-
   for (const item of items) {
     const isTv = item.mediaType === "tv" || item.tmdbId.startsWith("tv-");
     if (isTv) {
@@ -121,169 +53,149 @@ export async function getProgress(username) {
       standalone.push(item);
     }
   }
-
   return [...standalone, ...showGroups.values()].sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 export async function saveProgress(username, tmdbId, timestamp, duration, movieDetails, mediaType, source) {
-  const db = await getDb(username);
-  if (!db.progress) db.progress = {};
-  if (!db.history) db.history = [];
-
   const percentage = timestamp / duration;
-
   if (percentage > 0.95) {
-    delete db.progress[tmdbId];
-    addToHistoryInternal(db, tmdbId, movieDetails);
+    db.prepare("DELETE FROM progress WHERE username = ? AND tmdbId = ?").run(username, tmdbId);
+    await addToHistory(username, tmdbId, movieDetails);
   } else {
-    db.progress[tmdbId] = {
-      timestamp,
-      duration,
-      movieDetails,
-      mediaType,
-      source: source || undefined,
-      updatedAt: Date.now()
-    };
+    db.prepare("INSERT OR REPLACE INTO progress (username, tmdbId, timestamp, duration, movieDetails, mediaType, source, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(username, tmdbId, timestamp, duration, JSON.stringify(movieDetails), mediaType, source || null, Date.now());
   }
-  await flushDb(username);
 }
 
 // ── History ────────────────────────────────────────────────────────────
 
 export async function getHistory(username) {
-  const db = await getDb(username);
-  return db.history || [];
-}
-
-function addToHistoryInternal(db, tmdbId, movieDetails) {
-  if (!db.history) db.history = [];
-  db.history = db.history.filter(item => item.tmdbId !== tmdbId);
-  db.history.unshift({
-    tmdbId,
-    movieDetails,
-    watchedAt: Date.now()
-  });
-  if (db.history.length > 50) {
-    db.history.pop();
-  }
+  const rows = db.prepare("SELECT * FROM history WHERE username = ? ORDER BY watchedAt DESC LIMIT 50").all(username);
+  return rows.map(r => ({
+    tmdbId: r.tmdbId,
+    movieDetails: JSON.parse(r.movieDetails),
+    watchedAt: r.watchedAt
+  }));
 }
 
 export async function addToHistory(username, tmdbId, movieDetails) {
-  const db = await getDb(username);
-  addToHistoryInternal(db, tmdbId, movieDetails);
-  scheduleWrite(username);
-  await flushDb(username);
+  db.prepare("DELETE FROM history WHERE username = ? AND tmdbId = ?").run(username, tmdbId);
+  db.prepare("INSERT INTO history (username, tmdbId, movieDetails, watchedAt) VALUES (?, ?, ?, ?)")
+    .run(username, tmdbId, JSON.stringify(movieDetails), Date.now());
+  
+  // Cleanup to keep max 50
+  const rows = db.prepare("SELECT id FROM history WHERE username = ? ORDER BY watchedAt DESC").all(username);
+  if (rows.length > 50) {
+    const toDelete = rows.slice(50).map(r => r.id);
+    const placeholders = toDelete.map(() => '?').join(',');
+    db.prepare(`DELETE FROM history WHERE id IN (${placeholders})`).run(...toDelete);
+  }
 }
 
 export async function removeFromHistory(username, tmdbId) {
-  const db = await getDb(username);
-  if (!db.history) db.history = [];
-  db.history = db.history.filter(item => item.tmdbId !== tmdbId);
-  scheduleWrite(username);
-  await flushDb(username);
+  db.prepare("DELETE FROM history WHERE username = ? AND tmdbId = ?").run(username, tmdbId);
 }
 
 // ── Ratings ────────────────────────────────────────────────────────────
 
 export async function getRatings(username) {
-  const db = await getDb(username);
-  return db.ratings || {};
+  const rows = db.prepare("SELECT * FROM ratings WHERE username = ?").all(username);
+  const ratings = {};
+  for (const r of rows) {
+    ratings[r.tmdbId] = {
+      rating: r.rating,
+      movieDetails: JSON.parse(r.movieDetails),
+      ratedAt: r.ratedAt
+    };
+  }
+  return ratings;
 }
 
-export async function saveRating(username, id, rating, movieDetails) {
-  const db = await getDb(username);
-  if (!db.ratings) db.ratings = {};
-  db.ratings[id] = {
-    rating,
-    movieDetails,
-    ratedAt: Date.now()
-  };
-  scheduleWrite(username);
-  await flushDb(username);
+export async function saveRating(username, tmdbId, rating, movieDetails) {
+  db.prepare("INSERT OR REPLACE INTO ratings (username, tmdbId, rating, movieDetails, ratedAt) VALUES (?, ?, ?, ?, ?)")
+    .run(username, tmdbId, rating, JSON.stringify(movieDetails), Date.now());
 }
 
-// ── Source Preferences ──────────────────────────────────────────────
+// ── Settings (Source & AI) ──────────────────────────────────────────────
+
+function ensureSettingsRow(username) {
+  db.prepare("INSERT OR IGNORE INTO settings (username) VALUES (?)").run(username);
+}
 
 export async function getSourcePrefs(username) {
-  const db = await getDb(username);
-  return db.sourcePrefs || { enabled: [], defaultSource: "videasy" };
+  const row = db.prepare("SELECT enabledSources, defaultSource FROM settings WHERE username = ?").get(username);
+  if (!row || !row.enabledSources) return { enabled: [], defaultSource: "videasy" };
+  return {
+    enabled: JSON.parse(row.enabledSources),
+    defaultSource: row.defaultSource || "videasy"
+  };
 }
 
 export async function saveSourcePrefs(username, enabled, defaultSource) {
-  const db = await getDb(username);
-  db.sourcePrefs = { enabled, defaultSource };
-  scheduleWrite(username);
-  await flushDb(username);
+  ensureSettingsRow(username);
+  db.prepare("UPDATE settings SET enabledSources = ?, defaultSource = ? WHERE username = ?")
+    .run(JSON.stringify(enabled), defaultSource, username);
 }
 
-// ── AI Settings ────────────────────────────────────────────────
-
 export async function getAiSettings(username) {
-  const db = await getDb(username);
-  return db.aiSettings || { apiKey: "", model: "openai/gpt-oss-120b:free" };
+  const row = db.prepare("SELECT aiApiKey, aiModel FROM settings WHERE username = ?").get(username);
+  if (!row) return { apiKey: "", model: "openai/gpt-oss-120b:free" };
+  return {
+    apiKey: row.aiApiKey || "",
+    model: row.aiModel || "openai/gpt-oss-120b:free"
+  };
 }
 
 export async function saveAiSettings(username, settings) {
-  const db = await getDb(username);
-  db.aiSettings = {
-    apiKey: settings.apiKey || "",
-    model: settings.model || "openai/gpt-oss-120b:free"
-  };
-  scheduleWrite(username);
-  await flushDb(username);
+  ensureSettingsRow(username);
+  db.prepare("UPDATE settings SET aiApiKey = ?, aiModel = ? WHERE username = ?")
+    .run(settings.apiKey || "", settings.model || "openai/gpt-oss-120b:free", username);
 }
 
 // ── Recommendations ────────────────────────────────────────────
 
+function ensureRecRow(username) {
+  db.prepare("INSERT OR IGNORE INTO recommendations (username) VALUES (?)").run(username);
+}
+
 export async function getRecommendations(username) {
-  const db = await getDb(username);
-  return db.recommendations || null;
+  const r = db.prepare("SELECT * FROM recommendations WHERE username = ?").get(username);
+  if (!r) return null;
+  return {
+    recommendedMovies: r.recommendedMovies ? JSON.parse(r.recommendedMovies) : [],
+    recommendedTvShows: r.recommendedTvShows ? JSON.parse(r.recommendedTvShows) : [],
+    isGenerating: !!r.isGenerating,
+    error: r.error,
+    generatedAt: r.generatedAt
+  };
 }
 
 export async function getGenerationStatus(username) {
-  const db = await getDb(username);
-  return db.recommendations?.isGenerating || false;
+  const r = db.prepare("SELECT isGenerating FROM recommendations WHERE username = ?").get(username);
+  return r ? !!r.isGenerating : false;
 }
 
 export async function setGenerationStatus(username, isGenerating) {
-  const db = await getDb(username);
-  if (!db.recommendations) {
-    db.recommendations = { recommendedMovies: [], recommendedTvShows: [] };
-  }
-  db.recommendations.isGenerating = isGenerating;
+  ensureRecRow(username);
   if (isGenerating) {
-    db.recommendations.startedAt = Date.now();
-    delete db.recommendations.error;
+    db.prepare("UPDATE recommendations SET isGenerating = 1, error = NULL WHERE username = ?").run(username);
+  } else {
+    db.prepare("UPDATE recommendations SET isGenerating = 0 WHERE username = ?").run(username);
   }
-  scheduleWrite(username);
-  await flushDb(username);
 }
 
 export async function setGenerationError(username, errorMsg) {
-  const db = await getDb(username);
-  if (!db.recommendations) {
-    db.recommendations = { recommendedMovies: [], recommendedTvShows: [] };
-  }
-  db.recommendations.isGenerating = false;
-  db.recommendations.error = errorMsg;
-  scheduleWrite(username);
-  await flushDb(username);
+  ensureRecRow(username);
+  db.prepare("UPDATE recommendations SET isGenerating = 0, error = ? WHERE username = ?").run(errorMsg, username);
 }
 
 export async function saveRecommendations(username, recs) {
-  const db = await getDb(username);
-  db.recommendations = {
-    generatedAt: Date.now(),
-    recommendedMovies: recs.recommendedMovies || [],
-    recommendedTvShows: recs.recommendedTvShows || [],
-    isGenerating: false,
-  };
-  scheduleWrite(username);
-  await flushDb(username);
+  ensureRecRow(username);
+  db.prepare("UPDATE recommendations SET recommendedMovies = ?, recommendedTvShows = ?, isGenerating = 0, generatedAt = ? WHERE username = ?")
+    .run(JSON.stringify(recs.recommendedMovies || []), JSON.stringify(recs.recommendedTvShows || []), Date.now(), username);
 }
 
-export function isRecommendationsStale(db) {
-  if (!db.recommendations || !db.recommendations.generatedAt) return true;
-  const twelveHours = 12 * 60 * 60 * 1000;
-  return Date.now() - db.recommendations.generatedAt > twelveHours;
+export async function getDb(username) {
+  // Dummy export for backward compatibility where needed
+  return {};
 }

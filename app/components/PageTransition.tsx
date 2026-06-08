@@ -1,23 +1,21 @@
 "use client";
 
 import { ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 
 export default function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={pathname}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <div key={pathname} style={{ animation: "pageFadeIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)" }}>
+      {children}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes pageFadeIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}} />
+    </div>
   );
 }

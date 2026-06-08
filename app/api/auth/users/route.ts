@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { verifyToken, loadUsers } from "../../_lib/auth.js";
 
 export async function GET(req: NextRequest) {
@@ -19,19 +17,10 @@ export async function GET(req: NextRequest) {
     const activeThreshold = Date.now() - 24 * 60 * 60 * 1000;
 
     const users = Object.entries(raw).map(([name, data]: [string, any]) => {
-        const userDataPath = path.join(process.cwd(), ".cache", "users", name, "user-data.json");
-        let lastActive: number | null = null;
-        try {
-            const stat = fs.statSync(userDataPath);
-            const dataCreated = data.createdAt || 0;
-            if (stat.mtimeMs > dataCreated) {
-                lastActive = stat.mtimeMs;
-            }
-        } catch {}
         return {
             username: name,
             createdAt: data.createdAt ?? null,
-            lastActive
+            lastActive: data.lastActive ?? null
         };
     });
 

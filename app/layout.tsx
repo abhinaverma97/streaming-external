@@ -21,13 +21,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full scroll-smooth" data-scroll-behavior="smooth">
+    <html lang="en" className="h-full scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/nob.ico" sizes="any" />
         <link rel="icon" href="/nob.png" type="image/png" sizes="192x192" />
       </head>
       <body
         className={`${outfit.className} min-h-full bg-black text-slate-100 antialiased overflow-x-hidden selection:bg-white/20 selection:text-white`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           <PageTransition>{children}</PageTransition>

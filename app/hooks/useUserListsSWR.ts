@@ -1,34 +1,32 @@
 "use client";
 
 import useSWR from "swr";
-import { mutate } from "swr";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function useUserLists() {
-    const { data: watchlist, mutate: mutateWatchlist } = useSWR("/api/watchlist", fetcher, { fallbackData: [] });
-    const { data: continueWatching, mutate: mutateContinueWatching } = useSWR("/api/continue-watching", fetcher, { fallbackData: [] });
-    const { data: history, mutate: mutateHistory } = useSWR("/api/history", fetcher, { fallbackData: [] });
-    const { data: ratings, mutate: mutateRatings } = useSWR("/api/ratings", fetcher, { fallbackData: {} });
+    const { data, mutate: mutateData } = useSWR("/api/user/bootstrap", fetcher, { 
+        fallbackData: { watchlist: [], continueWatching: [], history: [], ratings: {} } 
+    });
 
     const fetchUserLists = async () => {
-        await Promise.all([
-            mutate("/api/watchlist"),
-            mutate("/api/continue-watching"),
-            mutate("/api/history"),
-            mutate("/api/ratings"),
-        ]);
+        await mutateData();
     };
 
     const handleRate = async (movie: any, rating: number) => {
         if (!movie || !movie.id) return;
-        const prevRating = ratings?.[movie.id];
+        const prevRating = data?.ratings?.[movie.id];
         const director = movie.credits?.crew?.find((c: any) => c.job === "Director")?.name;
         const enrichedMovie = director ? { ...movie, director } : movie;
-        mutateRatings((prev: Record<string, any>) => ({
+        
+        mutateData((prev: any) => ({
             ...prev,
-            [movie.id]: { rating, movieDetails: enrichedMovie, ratedAt: Date.now() }
+            ratings: {
+                ...(prev?.ratings || {}),
+                [movie.id]: { rating, movieDetails: enrichedMovie, ratedAt: Date.now() }
+            }
         }), { revalidate: false });
+        
         try {
             await fetch(`/api/ratings/${movie.id}`, {
                 method: "POST",
@@ -36,20 +34,20 @@ export function useUserLists() {
                 body: JSON.stringify({ rating, movieDetails: enrichedMovie })
             });
         } catch {
-            mutateRatings((prevState: Record<string, any>) => {
-                const next = { ...prevState };
-                if (prevRating) next[movie.id] = prevRating;
-                else delete next[movie.id];
-                return next;
+            mutateData((prevState: any) => {
+                const nextRatings = { ...(prevState?.ratings || {}) };
+                if (prevRating) nextRatings[movie.id] = prevRating;
+                else delete nextRatings[movie.id];
+                return { ...prevState, ratings: nextRatings };
             }, { revalidate: false });
         }
     };
 
     return {
-        watchlist: watchlist || [],
-        continueWatching: continueWatching || [],
-        history: history || [],
-        ratings: ratings || {},
+        watchlist: data?.watchlist || [],
+        continueWatching: data?.continueWatching || [],
+        history: data?.history || [],
+        ratings: data?.ratings || {},
         fetchUserLists,
         handleRate,
     };

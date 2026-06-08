@@ -37,16 +37,17 @@ export function useSourcePrefs() {
 
     const fetchSourcePrefs = useCallback(async () => {
         try {
-            const res = await fetch("/api/source-prefs");
+            const res = await fetch("/api/user/bootstrap");
             if (!res.ok) return;
             const data = await res.json();
-            if (data.enabled && Array.isArray(data.enabled) && data.enabled.length > 0) {
-                setEnabledSources(data.enabled);
-                localStorage.setItem("spicy-enabled-sources", JSON.stringify(data.enabled));
+            const prefs = data.sourcePrefs || {};
+            if (prefs.enabled && Array.isArray(prefs.enabled) && prefs.enabled.length > 0) {
+                setEnabledSources(prefs.enabled);
+                localStorage.setItem("spicy-enabled-sources", JSON.stringify(prefs.enabled));
             }
-            if (data.defaultSource && SOURCES.some((s) => s.id === data.defaultSource)) {
-                setSelectedSource(data.defaultSource);
-                setDefaultSource(data.defaultSource);
+            if (prefs.defaultSource && SOURCES.some((s) => s.id === prefs.defaultSource)) {
+                setSelectedSource(prefs.defaultSource);
+                setDefaultSource(prefs.defaultSource);
             }
         } catch {}
     }, []);

@@ -18,7 +18,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         let ignore = false;
-        setLoading(true);
         fetch("/api/auth/me")
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {

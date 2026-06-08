@@ -8,14 +8,13 @@ export async function GET(req: NextRequest) {
     const username = extractUsername(req);
     if (!username) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-    const db = await getDb(username);
-    const cached = getRecommendationsFromDb(db);
+    const cached = await getRecommendations(username);
 
     if (cached?.isGenerating) {
       return NextResponse.json(cached);
     }
 
-    if (!cached || isStale(cached)) {
+    if (!cached || (isStale(cached) && !cached.error)) {
       startBackgroundGeneration(username);
       return NextResponse.json({ ...cached, isGenerating: true });
     }
@@ -71,10 +70,6 @@ function extractUsername(req: NextRequest): string | null {
   const token = req.cookies.get("auth-token")?.value;
   if (!token) return null;
   return verifyToken(token);
-}
-
-function getRecommendationsFromDb(db: any) {
-  return db.recommendations || null;
 }
 
 function isStale(recs: any): boolean {

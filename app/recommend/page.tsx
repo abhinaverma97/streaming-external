@@ -297,21 +297,27 @@ export default function RecommendPage() {
 
                                         {/* Watchlist Button */}
                                         <button onClick={(e) => { e.stopPropagation(); toggleWatchlist(item); }}
-                                            className="absolute top-2.5 right-2.5 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100">
+                                            className="hidden md:flex absolute top-2.5 right-2.5 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100">
                                             {inWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                                         </button>
                                     </div>
 
                                     {/* Title & Meta */}
-                                    <div className="mt-4 px-1">
-                                        <h3 className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors duration-300">
-                                            {title}
-                                        </h3>
-                                        <div className="flex items-center gap-2 mt-1.5 text-[9px] text-slate-500 uppercase tracking-[0.2em] font-medium">
-                                            <span>{year || "N/A"}</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                            <span>{item.media_type === "tv" ? "Series" : "Movie"}</span>
+                                    <div className="mt-4 px-1 flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <h3 className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors duration-300">
+                                                {title}
+                                            </h3>
+                                            <div className="flex items-center gap-2 mt-1.5 text-[9px] text-slate-500 uppercase tracking-[0.2em] font-medium">
+                                                <span>{year || "N/A"}</span>
+                                                <span className="w-1 h-1 rounded-full bg-slate-700" />
+                                                <span>{item.media_type === "tv" ? "Series" : "Movie"}</span>
+                                            </div>
                                         </div>
+                                        <button onClick={(e) => { e.stopPropagation(); toggleWatchlist(item); }}
+                                            className="md:hidden shrink-0 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/80 active:scale-95 transition-transform">
+                                            {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                        </button>
                                     </div>
                                 </motion.div>
                             );

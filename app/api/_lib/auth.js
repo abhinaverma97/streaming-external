@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import db from "./db";
 
-const USERS_FILE = path.join(process.cwd(), ".cache", "users.json");
 const SECRET_FILE = path.join(process.cwd(), ".cache", "auth-secret.txt");
 
 function ensureDir(dir) {
@@ -54,23 +54,29 @@ export function verifyToken(token) {
 }
 
 export function loadUsers() {
-  ensureDir(path.dirname(USERS_FILE));
-  if (!fs.existsSync(USERS_FILE)) return {};
-  return JSON.parse(fs.readFileSync(USERS_FILE, "utf-8"));
+  const rows = db.prepare("SELECT * FROM users").all();
+  const users = {};
+  for (const row of rows) {
+    users[row.username] = {
+      hash: row.hash,
+      salt: row.salt,
+      createdAt: row.createdAt,
+      lastActive: row.lastActive
+    };
+  }
+  return users;
 }
 
 export function saveUsers(users) {
-  ensureDir(path.dirname(USERS_FILE));
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  const stmt = db.prepare("INSERT OR REPLACE INTO users (username, hash, salt, createdAt, lastActive) VALUES (?, ?, ?, ?, ?)");
+  const transaction = db.transaction(() => {
+    for (const [username, data] of Object.entries(users)) {
+      stmt.run(username, data.hash, data.salt, data.createdAt || Date.now(), data.lastActive || null);
+    }
+  });
+  transaction();
 }
 
 export function migrateLegacyData(username) {
-  const legacyPath = path.join(process.cwd(), ".cache", "user-data.json");
-  if (!fs.existsSync(legacyPath)) return;
-  const userDir = path.join(process.cwd(), ".cache", "users", username);
-  const destPath = path.join(userDir, "user-data.json");
-  if (fs.existsSync(destPath)) return;
-  ensureDir(userDir);
-  fs.copyFileSync(legacyPath, destPath);
-  console.log(`[Auth] Migrated legacy user-data.json to user '${username}'`);
+  // Migration disabled as per user request to start fresh
 }

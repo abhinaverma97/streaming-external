@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/react-window": "^1.8.8",
+    "better-sqlite3": "^12.10.0",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
     "next": "16.2.6",

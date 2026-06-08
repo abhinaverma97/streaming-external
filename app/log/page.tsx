@@ -149,7 +149,7 @@ export default function LogPage() {
                                             <Film className="w-6 h-6 text-slate-600" />
                                         </div>
                                     )}
-                                    <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-xl px-2.5 py-1.5 rounded-full border border-white/10 shadow-xl opacity-90 group-hover:opacity-100 transition-opacity">
+                                    <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/90 md:bg-black/40 md:backdrop-blur-xl px-2.5 py-1.5 rounded-full border border-white/10 shadow-xl opacity-90 group-hover:opacity-100 transition-opacity">
                                         <Star className="w-3 h-3 fill-slate-300 text-slate-300 drop-shadow-[0_0_6px_rgba(203,213,225,0.4)]" />
                                         <span className="text-[10px] font-bold text-white tracking-wide">{item.rating}</span>
                                     </div>

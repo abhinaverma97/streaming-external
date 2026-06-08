@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { Navbar } from "./components/Navbar";
 import SettingsOverlay from "./components/SettingsOverlay";
 import { PlayerModal } from "./components/PlayerModal";
+
 import FadeContent from "./components/FadeContent";
 import ScrollRow from "./components/ScrollRow";
 import { SearchInput } from "./components/SearchInput";
@@ -122,6 +123,15 @@ export default function Home() {
             hasScrolledToSearch.current = false;
         }
     }, [isSearching, searchLoading, searchResults]);
+
+    // ── Open mobile search from redirect ──
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("search") === "open") {
+            setIsMobileSearchOpen(true);
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, [setIsMobileSearchOpen]);
 
     // ── Hero Decision ──
     useEffect(() => {
