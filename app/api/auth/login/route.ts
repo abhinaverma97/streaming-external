@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
         if (!username || !password) {
             return NextResponse.json({ error: "Username and password required" }, { status: 400 });
         }
-        const users = loadUsers();
+        const users: Record<string, any> = loadUsers();
         const user = users[username];
         if (!user || !verifyPassword(password, user.hash, user.salt)) {
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });

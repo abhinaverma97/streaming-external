@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     if (username !== "abhi") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const raw = loadUsers();
+    const raw: Record<string, any> = loadUsers();
     const activeThreshold = Date.now() - 24 * 60 * 60 * 1000;
 
     const users = Object.entries(raw).map(([name, data]: [string, any]) => {

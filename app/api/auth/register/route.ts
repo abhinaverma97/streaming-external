@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
         if (!/^[a-zA-Z0-9_]+$/.test(username)) {
             return NextResponse.json({ error: "Username can only contain letters, numbers, and underscores" }, { status: 400 });
         }
-        const users = loadUsers();
+        const users: Record<string, any> = loadUsers();
         if (users[username]) {
             return NextResponse.json({ error: "Username already taken" }, { status: 409 });
         }

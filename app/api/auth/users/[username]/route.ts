@@ -24,7 +24,7 @@ export async function DELETE(
         return NextResponse.json({ error: "Cannot delete admin account" }, { status: 400 });
     }
 
-    const users = loadUsers();
+    const users: Record<string, any> = loadUsers();
     if (!users[targetUsername]) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
