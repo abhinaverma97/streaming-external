@@ -25,7 +25,7 @@ export default function ScrollRow({ children }: ScrollRowProps) {
                 aria-label="Scroll Left"
             />
             
-            <div ref={rowRef} className="reveal-stagger flex gap-4 overflow-x-auto py-2 no-scrollbar snap-x snap-mandatory scroll-smooth relative z-10">
+            <div ref={rowRef} className="reveal-stagger flex gap-4 overflow-x-auto py-6 -my-4 px-2 -mx-2 no-scrollbar snap-x snap-mandatory scroll-smooth relative z-10">
                 {children}
             </div>
 
