@@ -59,9 +59,10 @@ Based on ALL items above, return a JSON object with:
 
 IMPORTANT:
 - The "year" field must be the release year of the recommended title (used to look it up on TMDB)
-- Recommend ${RECOMMENDATION_COUNT}-15 items in each array
-- Only recommend titles the user has NOT already rated
-- Be specific — explain why each recommendation fits their taste`;
+- Recommend EXACTLY 18 movies and 18 TV shows.
+- DO NOT recommend anything already in the user's rated content list above.
+- Provide a brief 1-sentence reason for each recommendation based on their ratings.
+- ONLY output the raw JSON object. No markdown, no introduction, no codeblocks.`;
 }
 
 export function buildRecommendationPrompt(ratings) {
@@ -69,11 +70,12 @@ export function buildRecommendationPrompt(ratings) {
   return buildPrompt(formatted);
 }
 
-export async function generateRecommendations(ratings) {
-  const apiKey = API_KEY();
+export async function generateRecommendations(ratings, aiSettings) {
+  const apiKey = aiSettings?.apiKey;
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not configured");
+    throw new Error("API Key required. Please enter your OpenRouter API key in Settings.");
   }
+  const model = aiSettings?.model || "openai/gpt-oss-120b:free";
 
   const prompt = buildRecommendationPrompt(ratings);
 
@@ -87,7 +89,7 @@ export async function generateRecommendations(ratings) {
   }, 3600000);
 
   const t0 = Date.now();
-  console.log(`[Recommend] Calling OpenRouter...`);
+  console.log(`[Recommend] Calling OpenRouter with model ${model}...`);
 
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     signal: controller.signal,
@@ -97,7 +99,7 @@ export async function generateRecommendations(ratings) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openai/gpt-oss-120b:free",
+      model: model,
       messages: [{ role: "user", content: prompt }],
       reasoning: { enabled: true },
       temperature: 0.7,
@@ -106,6 +108,10 @@ export async function generateRecommendations(ratings) {
   clearTimeout(timeout);
 
   console.log(`[Recommend] OpenRouter responded in ${Date.now() - t0}ms with status ${res.status}`);
+
+  if (res.status === 429) {
+    throw new Error("Rate Limit Reached. Please try again later or check your OpenRouter account.");
+  }
 
   if (!res.ok) {
     const body = await res.text();

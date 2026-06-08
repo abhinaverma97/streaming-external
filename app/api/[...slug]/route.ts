@@ -8,7 +8,8 @@ import {
     getProgress, saveProgress,
     getHistory, addToHistory, removeFromHistory,
     getRatings, saveRating,
-    getSourcePrefs, saveSourcePrefs
+    getSourcePrefs, saveSourcePrefs,
+    getAiSettings, saveAiSettings
 } from "../_lib/user-db.js";
 import { getSourceUrl } from "../_lib/sources.js";
 import { verifyToken } from "../_lib/auth.js";
@@ -175,6 +176,16 @@ async function handle(req: NextRequest, segments: string[], username: string | n
                 const body = await req.json();
                 if (!body.enabled || !body.defaultSource) return error("Missing enabled or defaultSource", 400);
                 await saveSourcePrefs(username, body.enabled, body.defaultSource);
+                return json({ ok: true });
+            }
+        }
+
+        // ── AI Settings ────────────────────────────────────────────────
+        if (s0 === "ai-settings") {
+            if (method === "GET") return json(await getAiSettings(username));
+            if (method === "POST") {
+                const body = await req.json();
+                await saveAiSettings(username, { apiKey: body.apiKey, model: body.model });
                 return json({ ok: true });
             }
         }

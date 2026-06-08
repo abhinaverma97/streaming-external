@@ -24,6 +24,18 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
   const [activeUsers, setActiveUsers] = useState(0);
   const [adminLoading, setAdminLoading] = useState(false);
 
+  const [aiSettings, setAiSettings] = useState({ apiKey: "", model: "openai/gpt-oss-120b:free" });
+  const [logTokens, setLogTokens] = useState<number | null>(null);
+  const [modelSelectOpen, setModelSelectOpen] = useState(false);
+  const modelSelectRef = useRef<HTMLDivElement>(null);
+  const [aiModels, setAiModels] = useState<{ id: string; name: string; context: string }[]>([
+    { id: "google/gemini-2.0-pro-exp-02-05:free", name: "Gemini 2.0 Pro Exp", context: "2000k Context" },
+    { id: "google/gemini-2.0-flash-thinking-exp:free", name: "Gemini 2.0 Flash Thinking", context: "1000k Context" },
+    { id: "google/gemini-2.0-flash-lite-preview-02-05:free", name: "Gemini 2.0 Flash Lite", context: "1000k Context" },
+    { id: "google/gemini-2.5-pro-exp:free", name: "Gemini 2.5 Pro Exp", context: "2000k Context" },
+    { id: "openai/gpt-oss-120b:free", name: "GPT OSS 120B", context: "120k Context" }
+  ]);
+
   const toggleSource = (id: string) => {
     setEnabled((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
@@ -78,6 +90,57 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
           setEnabled(SOURCES.map((s) => s.id));
           setDefaultSource("videasy");
         });
+
+      fetch("/api/ai-settings")
+        .then(r => r.json())
+        .then(data => {
+            if (data) setAiSettings({ apiKey: data.apiKey || "", model: data.model || "openai/gpt-oss-120b:free" });
+        })
+        .catch(() => {});
+
+      fetch("/api/ratings")
+        .then(r => r.json())
+        .then(data => {
+            const entries = Object.entries(data).filter(([, v]: any) => v && v.movieDetails);
+            const formatted = entries.map(([tmdbId, item]: any, i) => {
+                const d = item.movieDetails;
+                const title = d.title || d.name || "Unknown";
+                const year = (d.release_date || d.first_air_date || "").slice(0, 4) || "Unknown";
+                const mediaType = tmdbId.startsWith("tv-") ? "TV Show" : "Movie";
+                const userRating = item.rating ?? "?";
+                const tmdbRating = d.vote_average ?? "N/A";
+                let director = "Unknown";
+                if (d.director) director = d.director;
+                else if (d.credits?.crew) {
+                    const dir = d.credits.crew.find((c: any) => c.job === "Director");
+                    if (dir) director = dir.name;
+                }
+                const synopsis = d.overview || "N/A";
+                return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5\n   TMDB Rating: ${tmdbRating}/10\n   Director: ${director}\n   Synopsis: ${synopsis}`;
+            }).join("\n\n");
+            
+            const promptTemplateLength = 800;
+            const totalChars = formatted.length + promptTemplateLength;
+            setLogTokens(Math.ceil(totalChars / 4));
+        })
+        .catch(() => {});
+
+      fetch("https://openrouter.ai/api/v1/models")
+        .then(r => r.json())
+        .then(res => {
+            if (res.data) {
+                const freeLarge = res.data
+                    .filter((m: any) => m.id.endsWith(":free") && m.context_length >= 100000)
+                    .map((m: any) => ({
+                        id: m.id,
+                        name: m.name.replace(/ \(free\)/i, ''),
+                        context: `${Math.round(m.context_length / 1000)}k Context`
+                    }));
+                if (freeLarge.length > 0) setAiModels(freeLarge);
+            }
+        })
+        .catch(() => {});
+
       if (user === "abhi") {
         setAdminLoading(true);
         loadAdminData();
@@ -88,10 +151,22 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (selectRef.current && !selectRef.current.contains(e.target as Node)) setSelectOpen(false);
+      if (modelSelectRef.current && !modelSelectRef.current.contains(e.target as Node)) setModelSelectOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const saveAiSettings = (newSettings: typeof aiSettings) => {
+    setAiSettings(newSettings);
+    fetch("/api/ai-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSettings)
+    }).catch(() => {});
+  };
+
+
 
   const enabledOptions = SOURCES.filter((s) => enabled.includes(s.id));
   const defaultOption = enabledOptions.find((s) => s.id === defaultSource) || enabledOptions[0];
@@ -171,6 +246,53 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                 </div>
                 <div className="text-[9px] text-slate-600 tracking-[0.15em] uppercase text-center pt-1">
                   Continue Watching items use their saved source regardless
+                </div>
+              </div>
+
+              {/* AI Settings */}
+              <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.05]">
+                <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400 flex items-center justify-between">
+                    <span>AI Configuration</span>
+                    {logTokens !== null && <span className="text-[9px] text-white/30 tracking-widest normal-case">Log size: ~{logTokens.toLocaleString()} tokens</span>}
+                </h3>
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] text-slate-500 uppercase tracking-widest pl-1">OpenRouter API Key</label>
+                  <input
+                    type="password"
+                    placeholder="sk-or-v1-..."
+                    value={aiSettings.apiKey}
+                    onChange={(e) => saveAiSettings({ ...aiSettings, apiKey: e.target.value })}
+                    className="w-full bg-white/[0.02] border border-white/[0.05] focus:border-white/20 rounded-xl px-3 py-2.5 text-xs text-white/80 placeholder:text-white/20 outline-none transition-all"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5 relative" ref={modelSelectRef}>
+                  <label className="text-[9px] text-slate-500 uppercase tracking-widest pl-1">Model Selection</label>
+                  <div
+                    onClick={() => setModelSelectOpen(!modelSelectOpen)}
+                    className="flex items-center justify-between bg-white/[0.02] border border-white/[0.05] hover:border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/80 cursor-pointer transition-all"
+                  >
+                    <span>{aiModels.find(m => m.id === aiSettings.model)?.name || aiSettings.model || "Select Model"}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-white/40 transition-transform ${modelSelectOpen ? "rotate-180" : ""}`} />
+                  </div>
+                  {modelSelectOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-[#0b0c10] border border-white/10 rounded-xl max-h-60 overflow-y-auto no-scrollbar z-[100] shadow-2xl">
+                      {aiModels.map((m) => (
+                        <div
+                          key={m.id}
+                          onClick={() => {
+                            saveAiSettings({ ...aiSettings, model: m.id });
+                            setModelSelectOpen(false);
+                          }}
+                          className={`flex items-center justify-between px-3 py-2 text-xs cursor-pointer transition-colors ${m.id === aiSettings.model ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/5 hover:text-white/90"}`}
+                        >
+                          <span>{m.name}</span>
+                          <span className="text-[9px] text-white/30 uppercase tracking-widest">{m.context}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

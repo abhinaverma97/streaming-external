@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "../_lib/auth.js";
-import { getRatings, getRecommendations, saveRecommendations, getDb, setGenerationStatus } from "../_lib/user-db.js";
+import { getRatings, getRecommendations, saveRecommendations, getDb, setGenerationStatus, setGenerationError, getAiSettings } from "../_lib/user-db.js";
 import { generateRecommendations, enrichWithTmdb } from "../_lib/recommend.js";
 
 export async function GET(req: NextRequest) {
@@ -42,7 +42,7 @@ function startBackgroundGeneration(username: string) {
   setGenerationStatus(username, true).then(() => {
     generateAndSaveAsync(username).catch((err) => {
       console.error("[Recommend] Background generation error:", err);
-      setGenerationStatus(username, false);
+      setGenerationError(username, err.message || "Failed to generate recommendations.");
     });
   });
 }
@@ -54,7 +54,8 @@ async function generateAndSaveAsync(username: string) {
   const ratings = await getRatings(username);
   console.log(`[Recommend] Fetched ${Object.keys(ratings).length} ratings`);
 
-  const raw = await generateRecommendations(ratings);
+  const aiSettings = await getAiSettings(username);
+  const raw = await generateRecommendations(ratings, aiSettings);
   const enriched = await enrichWithTmdb(raw);
   await saveRecommendations(username, enriched);
 

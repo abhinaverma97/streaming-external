@@ -216,6 +216,23 @@ export async function saveSourcePrefs(username, enabled, defaultSource) {
   await flushDb(username);
 }
 
+// ── AI Settings ────────────────────────────────────────────────
+
+export async function getAiSettings(username) {
+  const db = await getDb(username);
+  return db.aiSettings || { apiKey: "", model: "openai/gpt-oss-120b:free" };
+}
+
+export async function saveAiSettings(username, settings) {
+  const db = await getDb(username);
+  db.aiSettings = {
+    apiKey: settings.apiKey || "",
+    model: settings.model || "openai/gpt-oss-120b:free"
+  };
+  scheduleWrite(username);
+  await flushDb(username);
+}
+
 // ── Recommendations ────────────────────────────────────────────
 
 export async function getRecommendations(username) {
@@ -236,7 +253,19 @@ export async function setGenerationStatus(username, isGenerating) {
   db.recommendations.isGenerating = isGenerating;
   if (isGenerating) {
     db.recommendations.startedAt = Date.now();
+    delete db.recommendations.error;
   }
+  scheduleWrite(username);
+  await flushDb(username);
+}
+
+export async function setGenerationError(username, errorMsg) {
+  const db = await getDb(username);
+  if (!db.recommendations) {
+    db.recommendations = { recommendedMovies: [], recommendedTvShows: [] };
+  }
+  db.recommendations.isGenerating = false;
+  db.recommendations.error = errorMsg;
   scheduleWrite(username);
   await flushDb(username);
 }

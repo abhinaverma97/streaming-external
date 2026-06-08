@@ -76,7 +76,10 @@ export default function RecommendPage() {
             }
             const data = await res.json();
             
-            if (data.isGenerating) {
+            if (data.error) {
+                setError(data.error);
+                setRefreshing(false);
+            } else if (data.isGenerating) {
                 setRefreshing(true);
             } else {
                 setRefreshing(false);
