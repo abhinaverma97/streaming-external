@@ -39,15 +39,13 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
 
     const imageRef = useRef<HTMLDivElement>(null);
     const isImageVisible = useIntersectionObserver(imageRef, true, { rootMargin: "400px" });
-    const { ref: revealRef, isRevealed } = useReveal("0px");
+    const revealRef = useReveal("0px");
 
     return (
         <div
-            ref={revealRef}
+            ref={revealRef as React.RefObject<HTMLDivElement>}
             onClick={onClick}
-            className={`flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)] transition-all duration-700 ease-out transform ${
-                isRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-            }`}
+            className={`reveal-item flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]`}
         >
             <div
                 ref={imageRef}

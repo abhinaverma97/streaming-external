@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, memo } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
 import { Play, Plus, Check, Star, Volume2, VolumeX } from "lucide-react";
 import VariableProximity from "./VariableProximity";
 import FadeContent from "./FadeContent";
@@ -57,42 +56,39 @@ function HeroSectionInner({
     return (
         <section className="relative h-[calc(100dvh-350px)] md:h-[66vh] w-full rounded-2xl overflow-hidden border border-slate-800/40 shadow-2xl bg-[#090b14]/90 md:bg-[#090b14]/40 md:backdrop-blur-xl mt-4 md:mt-0">
             {selectedMovie && (
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={selectedMovie.id}
-                        className="absolute inset-0 z-0"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <Image
-                            src={getBackdropUrl(selectedMovie.backdrop_path)}
-                            alt={selectedMovie.title || selectedMovie.name || "Movie Backdrop"}
-                            fill
-                            priority
-                            className={`object-cover object-center pointer-events-none transition-opacity duration-1000 ${showHeroTrailer ? 'opacity-0' : 'opacity-100'}`}
-                        />
-                        {heroTrailerUrl && !activeStream && (
-                            <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-1000 pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
-                                <div className="w-[170%] h-[170%] md:w-[140%] md:h-[140%] relative scale-105 md:scale-110">
-                                    <iframe
-                                        key={heroTrailerUrl}
-                                        ref={heroIframeRef}
-                                        width="100%"
-                                        height="100%"
-                                        src={`https://www.youtube.com/embed/${heroTrailerUrl.split("v=")[1]}?autoplay=1&mute=1&controls=0&disablekb=1&modestbranding=1&enablejsapi=1&loop=1&playlist=${heroTrailerUrl.split("v=")[1]}`}
-                                        allow="autoplay; encrypted-media"
-                                        frameBorder="0"
-                                        className="w-full h-full pointer-events-none"
-                                    />
-                                </div>
+                <div
+                    key={selectedMovie.id}
+                    className="absolute inset-0 z-0 transition-opacity duration-700 ease-out will-animate"
+                    style={{ opacity: 1 }}
+                >
+                    <Image
+                        src={getBackdropUrl(selectedMovie.backdrop_path)}
+                        alt={selectedMovie.title || selectedMovie.name || "Movie Backdrop"}
+                        fill
+                        priority
+                        className={`object-cover object-center pointer-events-none transition-opacity duration-700 ease-out ${
+                            showHeroTrailer ? 'opacity-0' : 'opacity-100'
+                        }`}
+                    />
+                    {heroTrailerUrl && !activeStream && (
+                        <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-700 ease-out pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
+                            <div className="w-[170%] h-[170%] md:w-[140%] md:h-[140%] relative scale-105 md:scale-110">
+                                <iframe
+                                    key={heroTrailerUrl}
+                                    ref={heroIframeRef}
+                                    width="100%"
+                                    height="100%"
+                                    src={`https://www.youtube.com/embed/${heroTrailerUrl.split("v=")[1]}?autoplay=1&mute=1&controls=0&disablekb=1&modestbranding=1&enablejsapi=1&loop=1&playlist=${heroTrailerUrl.split("v=")[1]}`}
+                                    allow="autoplay; encrypted-media"
+                                    frameBorder="0"
+                                    className="w-full h-full pointer-events-none"
+                                />
                             </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none z-10" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none z-10" />
-                    </motion.div>
-                </AnimatePresence>
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none z-10" />
+                </div>
             )}
 
             {/* Hero Content Overlay */}

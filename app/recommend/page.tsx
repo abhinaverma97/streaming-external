@@ -189,6 +189,9 @@ export default function RecommendPage() {
 
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/recommend" />
+            </div>
+
+            <div className="content-transition w-full flex-1 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pb-12">
 
                 {/* Stats */}
                 <div className="flex items-center justify-center gap-4 md:gap-6 mt-8 md:mt-16 mb-4 text-[10px] font-medium tracking-[0.2em] text-slate-500 uppercase">

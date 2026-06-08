@@ -7,6 +7,11 @@
   text-rendering: optimizeLegibility;
 }
 
+/* ── GPU Compositing hint ───────────────────────── */
+.will-animate {
+  will-change: transform, opacity;
+}
+
 /* Sleek Minimalist Scrollbars */
 ::-webkit-scrollbar {
   width: 4px;
@@ -34,9 +39,7 @@
 
 .no-scrollbar {
   -ms-overflow-style: none;
-  /* IE and Edge */
   scrollbar-width: none;
-  /* Firefox */
   scrollbar-color: transparent transparent;
 }
 
@@ -55,30 +58,104 @@
   transform: translateY(-2px);
 }
 
-/* ── Native View Transitions ───────────────────── */
+/* ── Premium Easing Tokens ──────────────────────── */
+/* Ease-out expo: fast entry, graceful decel — for reveals & page content */
+/* cubic-bezier(0.16, 1, 0.3, 1)  ≈ Expo Ease-Out */
+
+/* ── Reveal Animation ───────────────────────────── */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.reveal-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger delays for child items in a row */
+.reveal-stagger > .reveal-item:nth-child(1) { transition-delay: 0ms; }
+.reveal-stagger > .reveal-item:nth-child(2) { transition-delay: 40ms; }
+.reveal-stagger > .reveal-item:nth-child(3) { transition-delay: 80ms; }
+.reveal-stagger > .reveal-item:nth-child(4) { transition-delay: 120ms; }
+.reveal-stagger > .reveal-item:nth-child(5) { transition-delay: 160ms; }
+.reveal-stagger > .reveal-item:nth-child(6) { transition-delay: 200ms; }
+.reveal-stagger > .reveal-item:nth-child(n+7) { transition-delay: 240ms; }
+
+/* ── Native View Transitions ────────────────────── */
+/* Root: never animate — shell stays perfectly still */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 0.35s;
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation: none;
+  mix-blend-mode: normal;
 }
 
-::view-transition-old(root) {
-  animation-name: fade-out, slide-to-left;
+/* Named regions: content areas only */
+.hero-transition {
+  view-transition-name: hero;
 }
 
-::view-transition-new(root) {
-  animation-name: fade-in, slide-from-right;
+.content-transition {
+  view-transition-name: content;
 }
 
-@keyframes fade-out {
-  to { opacity: 0; }
+/* Shared timing for named regions */
+::view-transition-old(hero),
+::view-transition-new(hero),
+::view-transition-old(content),
+::view-transition-new(content) {
+  animation-duration: 0.42s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* Expo ease-out */
 }
-@keyframes fade-in {
-  from { opacity: 0; }
+
+::view-transition-old(hero),
+::view-transition-old(content) {
+  animation-name: vt-fade-out;
 }
-@keyframes slide-to-left {
-  to { transform: translateX(-20px); }
+
+::view-transition-new(hero),
+::view-transition-new(content) {
+  animation-name: vt-fade-in;
 }
-@keyframes slide-from-right {
-  from { transform: translateX(20px); }
+
+@keyframes vt-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes vt-fade-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Modal Transitions (@starting-style) ─────────── */
+/* Settings & Player: slide-up from bottom, no elastic bounce */
+.modal-panel {
+  transition:
+    opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  will-change: transform, opacity;
+}
+
+@starting-style {
+  .modal-panel {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+}
+
+.modal-backdrop {
+  transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+}
+
+@starting-style {
+  .modal-backdrop {
+    opacity: 0;
+  }
 }

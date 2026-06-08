@@ -369,25 +369,27 @@ export default function Home() {
                     />
                 </Navbar>
 
-                <HeroSection
-                    selectedMovie={selectedMovie}
-                    heroTrailerUrl={heroTrailerUrl}
-                    cwPlayContext={cwPlayContext}
-                    watchlist={watchlist}
-                    ratings={ratings}
-                    defaultSource={defaultSource}
-                    effectiveEnabledSources={effectiveEnabledSources}
-                    selectedSource={selectedSource}
-                    activeStream={activeStream}
-                    onPlay={playMovie}
-                    onToggleWatchlist={toggleWatchlist}
-                    onRate={handleRate}
-                    getWatchlistId={getWatchlistId}
-                />
+                <div className="hero-transition flex-none w-full">
+                    <HeroSection
+                        selectedMovie={selectedMovie}
+                        heroTrailerUrl={heroTrailerUrl}
+                        cwPlayContext={cwPlayContext}
+                        watchlist={watchlist}
+                        ratings={ratings}
+                        defaultSource={defaultSource}
+                        effectiveEnabledSources={effectiveEnabledSources}
+                        selectedSource={selectedSource}
+                        activeStream={activeStream}
+                        onPlay={playMovie}
+                        onToggleWatchlist={toggleWatchlist}
+                        onRate={handleRate}
+                        getWatchlistId={getWatchlistId}
+                    />
+                </div>
             </div>
 
             {/* ── SCROLLABLE BOTTOM AREA ── */}
-            <div className="w-full flex-1 overflow-y-auto no-scrollbar z-10 relative snap-y snap-mandatory">
+            <div className="content-transition w-full flex-1 overflow-y-auto no-scrollbar z-10 relative snap-y snap-mandatory">
                 <div className="max-w-[96vw] mx-auto px-6 md:px-12">
                     <div className="hidden md:block">
                         <SearchResultsSection

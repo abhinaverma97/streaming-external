@@ -38,7 +38,7 @@ export default function LoginPage() {
 
     return (
         <div className="h-screen flex items-center justify-center bg-black">
-            <div className="w-full max-w-sm mx-auto px-6">
+            <div className="content-transition w-full max-w-sm mx-auto px-6">
                 <div className="mb-8 text-center">
                     <p className="text-[11px] text-white/30 tracking-wider font-light">
                         {mode === "login" ? "Sign in to continue" : "Create a new account"}

@@ -5,26 +5,22 @@ import { useReveal } from "../hooks/useReveal";
 
 interface FadeContentProps {
   children: ReactNode;
-  delay?: number;
-  duration?: number;
   className?: string;
+  delay?: number;
 }
 
 export default function FadeContent({
   children,
-  delay = 0,
-  duration = 0.5,
   className = "",
+  delay = 0,
 }: FadeContentProps) {
-  const { ref, isRevealed } = useReveal("0px");
+  const ref = useReveal("-10px");
 
   return (
     <div
-      ref={ref}
-      className={`transition-all ease-out ${className} ${
-        isRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      }`}
-      style={{ transitionDuration: `${duration}s`, transitionDelay: `${delay}s` }}
+      ref={ref as React.RefObject<HTMLDivElement>}
+      className={`reveal-item ${className}`}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
     </div>

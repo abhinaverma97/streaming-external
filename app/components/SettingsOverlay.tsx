@@ -171,17 +171,17 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-[400ms] ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
         isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
     >
         <div 
-            className={`absolute inset-0 bg-black/40 backdrop-blur-xl transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} 
+            className={`absolute inset-0 modal-backdrop bg-black/40 backdrop-blur-xl ${!isOpen ? "opacity-0" : ""}`} 
             onClick={onClose} 
         />
         <div 
-            className={`w-full max-w-lg max-h-[80vh] flex flex-col p-6 overflow-y-auto no-scrollbar bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl relative z-10 transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${
-                isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95"
+            className={`modal-panel w-full max-w-lg max-h-[80vh] flex flex-col p-6 overflow-y-auto no-scrollbar bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl relative z-10 ${
+                !isOpen ? "opacity-0 translate-y-6 scale-[0.97]" : ""
             }`}
         >
             <div className="flex items-center justify-between mb-6">
