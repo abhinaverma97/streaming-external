@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { memo } from "react";
-import { Play, Film } from "lucide-react";
+import { Play, Film, Plus, Check } from "lucide-react";
 import { getCardBackdropUrl } from "../lib/tmdb-utils";
 
 interface MovieCardProps {
@@ -26,9 +26,11 @@ interface MovieCardProps {
     label?: React.ReactNode;
     showPlayOverlay?: boolean;
     priority?: boolean;
+    onWatchlist?: (e: React.MouseEvent) => void;
+    isInWatchlist?: boolean;
 }
 
-function MovieCardInner({ item, onClick, isActive, progressPercent, label, showPlayOverlay, priority }: MovieCardProps) {
+function MovieCardInner({ item, onClick, isActive, progressPercent, label, showPlayOverlay, priority, onWatchlist, isInWatchlist }: MovieCardProps) {
     const title = item.movieDetails?.title || item.movieDetails?.name || item.title || item.name || "Unknown Title";
     const backdropPath = item.movieDetails?.backdrop_path || item.backdrop_path;
     const posterPath = item.movieDetails?.poster_path || item.poster_path;
@@ -69,6 +71,15 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                             <Play className="w-3.5 h-3.5 fill-black pl-0.5" />
                         </div>
                     </div>
+                )}
+
+                {onWatchlist && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onWatchlist(e); }}
+                        className="absolute top-2 right-2 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                    >
+                        {isInWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                    </button>
                 )}
 
                 {progressPercent !== undefined && (

@@ -14,7 +14,7 @@ function userDbPath(username) {
   return path.join(process.cwd(), ".cache", "users", username, "user-data.json");
 }
 
-async function getDb(username) {
+export async function getDb(username) {
   if (!username) throw new Error("Username required");
   if (dbs.has(username)) return dbs.get(username);
   const dbPath = userDbPath(username);
@@ -214,4 +214,47 @@ export async function saveSourcePrefs(username, enabled, defaultSource) {
   db.sourcePrefs = { enabled, defaultSource };
   scheduleWrite(username);
   await flushDb(username);
+}
+
+// ── Recommendations ────────────────────────────────────────────
+
+export async function getRecommendations(username) {
+  const db = await getDb(username);
+  return db.recommendations || null;
+}
+
+export async function getGenerationStatus(username) {
+  const db = await getDb(username);
+  return db.recommendations?.isGenerating || false;
+}
+
+export async function setGenerationStatus(username, isGenerating) {
+  const db = await getDb(username);
+  if (!db.recommendations) {
+    db.recommendations = { recommendedMovies: [], recommendedTvShows: [] };
+  }
+  db.recommendations.isGenerating = isGenerating;
+  if (isGenerating) {
+    db.recommendations.startedAt = Date.now();
+  }
+  scheduleWrite(username);
+  await flushDb(username);
+}
+
+export async function saveRecommendations(username, recs) {
+  const db = await getDb(username);
+  db.recommendations = {
+    generatedAt: Date.now(),
+    recommendedMovies: recs.recommendedMovies || [],
+    recommendedTvShows: recs.recommendedTvShows || [],
+    isGenerating: false,
+  };
+  scheduleWrite(username);
+  await flushDb(username);
+}
+
+export function isRecommendationsStale(db) {
+  if (!db.recommendations || !db.recommendations.generatedAt) return true;
+  const twelveHours = 12 * 60 * 60 * 1000;
+  return Date.now() - db.recommendations.generatedAt > twelveHours;
 }

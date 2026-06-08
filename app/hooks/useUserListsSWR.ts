@@ -23,15 +23,17 @@ export function useUserLists() {
     const handleRate = async (movie: any, rating: number) => {
         if (!movie || !movie.id) return;
         const prevRating = ratings?.[movie.id];
+        const director = movie.credits?.crew?.find((c: any) => c.job === "Director")?.name;
+        const enrichedMovie = director ? { ...movie, director } : movie;
         mutateRatings((prev: Record<string, any>) => ({
             ...prev,
-            [movie.id]: { rating, movieDetails: movie, ratedAt: Date.now() }
+            [movie.id]: { rating, movieDetails: enrichedMovie, ratedAt: Date.now() }
         }), { revalidate: false });
         try {
             await fetch(`/api/ratings/${movie.id}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ rating, movieDetails: movie })
+                body: JSON.stringify({ rating, movieDetails: enrichedMovie })
             });
         } catch {
             mutateRatings((prevState: Record<string, any>) => {

@@ -40,6 +40,14 @@ function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
           >
             Log
           </Link>
+          <Link
+            href="/recommend"
+            className={`transition-colors duration-200 cursor-pointer ${
+              currentPath === "/recommend" ? "text-white" : "hover:text-white"
+            }`}
+          >
+            Recs
+          </Link>
         </nav>
 
         <div className="flex items-center justify-end gap-4 flex-1">
