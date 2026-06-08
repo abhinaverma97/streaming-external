@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown, LogOut } from "lucide-react";
-import { X, ChevronDown, LogOut } from "lucide-react";
 import { SOURCES, getSource } from "../lib/sources-config";
 import { useAuth } from "./AuthProvider";
 
