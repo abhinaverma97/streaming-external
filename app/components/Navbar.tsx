@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import Link from "next/link";
+import { ViewTransitionLink as Link } from "./ViewTransitionLink";
 import { motion } from "framer-motion";
 
 interface NavbarProps {

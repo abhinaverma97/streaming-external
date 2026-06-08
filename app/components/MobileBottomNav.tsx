@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import Link from "next/link";
+import { ViewTransitionLink as Link } from "./ViewTransitionLink";
 import Image from "next/image";
 import { Search, Home as HomeIcon, List, Settings as SettingsIcon, Film, Star, Sparkles } from "lucide-react";
 import { getCardBackdropUrl } from "../lib/tmdb-utils";

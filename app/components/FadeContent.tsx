@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { useReveal } from "../hooks/useReveal";
 
 interface FadeContentProps {
   children: ReactNode;
@@ -16,15 +16,17 @@ export default function FadeContent({
   duration = 0.5,
   className = "",
 }: FadeContentProps) {
+  const { ref, isRevealed } = useReveal("0px");
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ type: "spring", stiffness: 200, damping: 20, delay }}
-      className={className}
+    <div
+      ref={ref}
+      className={`transition-all ease-out ${className} ${
+        isRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+      style={{ transitionDuration: `${duration}s`, transitionDelay: `${delay}s` }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

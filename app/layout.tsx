@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import { AuthProvider } from "./components/AuthProvider";
-import PageTransition from "./components/PageTransition";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -31,7 +30,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <PageTransition>{children}</PageTransition>
+          {children}
         </AuthProvider>
         <script
           dangerouslySetInnerHTML={{

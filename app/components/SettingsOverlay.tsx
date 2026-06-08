@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown, LogOut } from "lucide-react";
 import { SOURCES, getSource } from "../lib/sources-config";
 import { useAuth } from "./AuthProvider";
@@ -171,22 +170,20 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
   const defaultOption = enabledOptions.find((s) => s.id === defaultSource) || enabledOptions[0];
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-center justify-center p-4"
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-[400ms] ${
+        isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      }`}
+    >
+        <div 
+            className={`absolute inset-0 bg-black/40 backdrop-blur-xl transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} 
+            onClick={onClose} 
+        />
+        <div 
+            className={`w-full max-w-lg max-h-[80vh] flex flex-col p-6 overflow-y-auto no-scrollbar bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl relative z-10 transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] ${
+                isOpen ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-8 scale-95"
+            }`}
         >
-          <motion.div 
-            initial={{ scale: 0.95, y: 20 }} 
-            animate={{ scale: 1, y: 0 }} 
-            exit={{ scale: 0.95, y: 20 }} 
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full max-w-lg max-h-[80vh] flex flex-col p-6 overflow-y-auto no-scrollbar bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl"
-          >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-sm font-medium tracking-[0.15em] uppercase text-white/80">Settings</h2>
               <button
@@ -384,9 +381,8 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                 </div>
               )}
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </div>
+        </div>
+    </div>
   );
 }

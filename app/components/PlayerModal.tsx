@@ -1,8 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, X } from "lucide-react";
+import { X, AlertCircle } from "lucide-react";
 import ScrambledText from "./ScrambledText";
 import { PlayerSidebar } from "./PlayerSidebar";
 
@@ -47,14 +46,10 @@ export function PlayerModal({
     onChangeEpisode,
 }: PlayerModalProps) {
     return (
-        <AnimatePresence>
+        <>
             {activeStream && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-y-auto w-full h-full"
+                <div
+                    className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-y-auto w-full h-full transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] starting:opacity-0 starting:translate-y-8 starting:scale-95"
                 >
             <div className="w-full max-w-7xl flex items-center justify-between mb-4">
                 <div>
@@ -115,8 +110,8 @@ export function PlayerModal({
                     onChangeEpisode={onChangeEpisode}
                 />
             </div>
-                </motion.div>
+                </div>
             )}
-        </AnimatePresence>
+        </>
     );
 }

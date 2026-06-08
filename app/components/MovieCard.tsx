@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { memo, useRef } from "react";
-import { motion } from "framer-motion";
 import { Play, Film, Plus, Check } from "lucide-react";
 import { getCardBackdropUrl } from "../lib/tmdb-utils";
 import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
+import { useReveal } from "../hooks/useReveal";
 
 interface MovieCardProps {
     item: {
@@ -37,27 +37,27 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
     const backdropPath = item.movieDetails?.backdrop_path || item.backdrop_path;
     const posterPath = item.movieDetails?.poster_path || item.poster_path;
 
-    const ref = useRef<HTMLDivElement>(null);
-    const isVisible = useIntersectionObserver(ref, true, { rootMargin: "400px" });
+    const imageRef = useRef<HTMLDivElement>(null);
+    const isImageVisible = useIntersectionObserver(imageRef, true, { rootMargin: "400px" });
+    const { ref: revealRef, isRevealed } = useReveal("0px");
 
     return (
-        <motion.div
-            ref={ref}
+        <div
+            ref={revealRef}
             onClick={onClick}
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px" }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
+            className={`flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)] transition-all duration-700 ease-out transform ${
+                isRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            }`}
         >
             <div
+                ref={imageRef}
                 className={`relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border transition-all duration-300 shadow-md bg-slate-950 ${
                     isActive
                         ? "border-white shadow-[0_0_16px_rgba(255,255,255,0.18)]"
                         : "border-slate-800/40 group-hover:border-white/40"
                 }`}
             >
-                {isVisible ? (
+                {isImageVisible ? (
                     <>
                         {backdropPath || posterPath ? (
                             <Image
@@ -113,7 +113,7 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                     {Math.min(100, Math.round(progressPercent))}% completed
                 </div>
             )}
-        </motion.div>
+        </div>
     );
 }
 
