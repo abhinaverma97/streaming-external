@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown, LogOut } from "lucide-react";
-import GlassSurface from "./GlassSurface";
+import { X, ChevronDown, LogOut } from "lucide-react";
 import { SOURCES, getSource } from "../lib/sources-config";
 import { useAuth } from "./AuthProvider";
 
@@ -180,7 +180,7 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xl flex items-center justify-center p-4"
         >
-          <GlassSurface className="w-full max-w-lg max-h-[80vh] flex flex-col p-6 overflow-y-auto no-scrollbar">
+          <div className="w-full max-w-lg max-h-[80vh] flex flex-col p-6 overflow-y-auto no-scrollbar bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-sm font-medium tracking-[0.15em] uppercase text-white/80">Settings</h2>
               <button
@@ -378,7 +378,7 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                 </div>
               )}
             </div>
-          </GlassSurface>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
