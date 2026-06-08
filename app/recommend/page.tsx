@@ -57,8 +57,8 @@ export default function RecommendPage() {
     useEffect(() => { selectedSourceRef.current = selectedSource; }, [selectedSource]);
 
     const {
-        watchlist, ratings,
-        fetchUserLists, handleRate,
+        watchlist, continueWatching, history, ratings,
+        fetchUserLists, handleRate, handleToggleWatchlist: toggleWatchlist,
     } = useUserLists();
 
     usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef, fetchUserLists);
@@ -125,27 +125,7 @@ export default function RecommendPage() {
         return (watchlist as any[]).some((w) => w.tmdbId === wlId);
     };
 
-    const toggleWatchlist = async (item: any) => {
-        if (!item.id) return;
-        const wlId = getWatchlistId(item);
-        const isQueued = (watchlist as any[]).some((w) => w.tmdbId === wlId);
-        try {
-            if (isQueued) {
-                await fetch(`/api/watchlist/${wlId}`, { method: "DELETE" });
-            } else {
-                await fetch(`/api/watchlist`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        tmdbId: wlId,
-                        mediaType: item.media_type || "movie",
-                        movieDetails: { id: item.id, title: item.title || item.name, poster_path: item.poster_path, backdrop_path: item.backdrop_path, vote_average: item.vote_average, release_date: item.release_date || item.first_air_date, media_type: item.media_type || "movie" },
-                    }),
-                });
-            }
-            fetchUserLists();
-        } catch { }
-    };
+
 
     const playRecommendation = async (item: any) => {
         const isTv = item.media_type === "tv" || item._type === "tv";

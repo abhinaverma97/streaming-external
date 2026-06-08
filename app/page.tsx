@@ -52,7 +52,7 @@ export default function Home() {
     // ── User Lists ──
     const {
         watchlist, continueWatching, history, ratings,
-        fetchUserLists, handleRate,
+        fetchUserLists, handleRate, handleToggleWatchlist: toggleWatchlist,
     } = useUserLists();
 
     // ── Movie Categories ──
@@ -223,35 +223,7 @@ export default function Home() {
         }
     }, []);
 
-    const toggleWatchlist = async (movie: Movie) => {
-        const watchlistId = getWatchlistId(movie);
-        if (!watchlistId) return;
-        const isQueued = (watchlist as any[]).some((item) => item.tmdbId === watchlistId);
-        try {
-            if (isQueued) {
-                await fetch(`/api/watchlist/${watchlistId}`, { method: "DELETE" });
-            } else {
-                await fetch(`/api/watchlist`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        tmdbId: watchlistId,
-                        mediaType: movie.media_type,
-                        movieDetails: {
-                            id: movie.id,
-                            title: movie.title,
-                            poster_path: movie.poster_path,
-                            backdrop_path: movie.backdrop_path,
-                            vote_average: movie.vote_average,
-                            release_date: movie.release_date,
-                            media_type: movie.media_type
-                        }
-                    })
-                });
-            }
-            fetchUserLists();
-        } catch {}
-    };
+
 
     const playMovie = async (
         movie: Movie,

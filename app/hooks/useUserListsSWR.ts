@@ -1,6 +1,7 @@
 "use client";
 
 import useSWR from "swr";
+import { getWatchlistId } from "../lib/watchlist";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -43,6 +44,60 @@ export function useUserLists() {
         }
     };
 
+    const handleToggleWatchlist = async (movie: any) => {
+        if (!movie || !movie.id) return;
+        const wlId = getWatchlistId(movie);
+        if (!wlId) return;
+
+        const currentWatchlist = data?.watchlist || [];
+        const isQueued = currentWatchlist.some((item: any) => item.tmdbId === wlId);
+        
+        const mediaType = movie.media_type || (movie.first_air_date ? "tv" : "movie");
+        const details = {
+            id: movie.id,
+            title: movie.title || movie.name,
+            poster_path: movie.poster_path,
+            backdrop_path: movie.backdrop_path,
+            vote_average: movie.vote_average,
+            release_date: movie.release_date || movie.first_air_date,
+            media_type: mediaType
+        };
+
+        const optimisticItem = {
+            tmdbId: wlId,
+            mediaType: mediaType,
+            movieDetails: details,
+            addedAt: Date.now()
+        };
+
+        mutateData((prev: any) => {
+            const nextWatchlist = isQueued 
+                ? (prev?.watchlist || []).filter((item: any) => item.tmdbId !== wlId)
+                : [optimisticItem, ...(prev?.watchlist || [])];
+            return { ...prev, watchlist: nextWatchlist };
+        }, { revalidate: false });
+
+        try {
+            if (isQueued) {
+                await fetch(`/api/watchlist/${wlId}`, { method: "DELETE" });
+            } else {
+                await fetch(`/api/watchlist`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        tmdbId: wlId,
+                        mediaType: mediaType,
+                        movieDetails: details
+                    })
+                });
+            }
+        } catch {
+            mutateData((prev: any) => {
+                return { ...prev, watchlist: currentWatchlist };
+            }, { revalidate: false });
+        }
+    };
+
     return {
         watchlist: data?.watchlist || [],
         continueWatching: data?.continueWatching || [],
@@ -50,5 +105,6 @@ export function useUserLists() {
         ratings: data?.ratings || {},
         fetchUserLists,
         handleRate,
+        handleToggleWatchlist,
     };
 }
