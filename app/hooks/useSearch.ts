@@ -42,9 +42,16 @@ export function useSearch() {
                 });
             }
 
-            if (!res.ok) return;
+            if (!res.ok) {
+                if (abortControllerRef.current === controller) {
+                    setSearchLoading(false);
+                }
+                return;
+            }
 
             const data = await res.json();
+            
+            if (abortControllerRef.current !== controller) return;
             
             const tagged = (data.results || [])
                 .filter((item: any) => item.media_type === "movie" || item.media_type === "tv")
@@ -63,25 +70,18 @@ export function useSearch() {
         }
     }, []);
 
-    const searchTimerRef = useRef<any>(null);
+    const handleSearch = useCallback((e: React.FormEvent) => {
+        e.preventDefault();
+        doSearch(searchQuery);
+    }, [searchQuery, doSearch]);
 
     useEffect(() => {
-        if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
         if (!searchQuery.trim()) {
             setSearchResults([]);
             setIsSearching(false);
             setSearchLoading(false);
-            return;
         }
-        searchTimerRef.current = setTimeout(() => doSearch(searchQuery), 300);
-        return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
-    }, [searchQuery, doSearch]);
-
-    const handleSearch = useCallback((e: React.FormEvent) => {
-        e.preventDefault();
-        if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-        doSearch(searchQuery);
-    }, [searchQuery, doSearch]);
+    }, [searchQuery]);
 
     const clearSearch = useCallback(() => {
         if (abortControllerRef.current) {
