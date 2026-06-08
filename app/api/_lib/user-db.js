@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 
 const WRITE_DEBOUNCE_MS = 2000;
@@ -6,21 +6,22 @@ const WRITE_DEBOUNCE_MS = 2000;
 const dbs = new Map();
 const writeTimers = new Map();
 
-function ensureDir(dir) {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+async function ensureDir(dir) {
+  await fs.mkdir(dir, { recursive: true });
 }
 
 function userDbPath(username) {
   return path.join(process.cwd(), ".cache", "users", username, "user-data.json");
 }
 
-function getDb(username) {
+async function getDb(username) {
   if (!username) throw new Error("Username required");
   if (dbs.has(username)) return dbs.get(username);
   const dbPath = userDbPath(username);
   let data;
   try {
-    data = JSON.parse(fs.readFileSync(dbPath, "utf-8"));
+    const raw = await fs.readFile(dbPath, "utf-8");
+    data = JSON.parse(raw);
   } catch {
     data = { watchlist: [], progress: {}, history: [], ratings: {} };
   }
@@ -28,13 +29,13 @@ function getDb(username) {
   return data;
 }
 
-function writeDb(username) {
+async function writeDb(username) {
   const data = dbs.get(username);
   if (!data) return;
   const dbPath = userDbPath(username);
   try {
-    ensureDir(path.dirname(dbPath));
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+    await ensureDir(path.dirname(dbPath));
+    await fs.writeFile(dbPath, JSON.stringify(data, null, 2));
   } catch (e) {
     console.error(`[UserDB] Error writing ${dbPath}`, e);
   }
@@ -48,9 +49,9 @@ function scheduleWrite(username) {
   }, WRITE_DEBOUNCE_MS));
 }
 
-function flushDb(username) {
+async function flushDb(username) {
   if (writeTimers.has(username)) { clearTimeout(writeTimers.get(username)); writeTimers.delete(username); }
-  writeDb(username);
+  await writeDb(username);
 }
 
 // ── Graceful shutdown ──────────────────────────────────────────────
@@ -68,12 +69,13 @@ if (typeof process !== "undefined") {
 
 // ── Watchlist ──────────────────────────────────────────────────────────
 
-export function getWatchlist(username) {
-  return getDb(username).watchlist || [];
+export async function getWatchlist(username) {
+  const db = await getDb(username);
+  return db.watchlist || [];
 }
 
 export async function addToWatchlist(username, tmdbId, movieDetails, mediaType) {
-  const db = getDb(username);
+  const db = await getDb(username);
   if (!db.watchlist) db.watchlist = [];
   const exists = db.watchlist.some(item => item.tmdbId === tmdbId);
   if (!exists) {
@@ -84,7 +86,7 @@ export async function addToWatchlist(username, tmdbId, movieDetails, mediaType) 
 }
 
 export async function removeFromWatchlist(username, tmdbId) {
-  const db = getDb(username);
+  const db = await getDb(username);
   if (!db.watchlist) db.watchlist = [];
   db.watchlist = db.watchlist.filter(item => item.tmdbId !== tmdbId);
   scheduleWrite(username);
@@ -93,8 +95,8 @@ export async function removeFromWatchlist(username, tmdbId) {
 
 // ── Continue Watching / Progress ───────────────────────────────────────
 
-export function getProgress(username) {
-  const db = getDb(username);
+export async function getProgress(username) {
+  const db = await getDb(username);
   const items = Object.entries(db.progress || {}).map(([tmdbId, entry]) => ({
     tmdbId,
     ...entry
@@ -123,8 +125,8 @@ export function getProgress(username) {
   return [...standalone, ...showGroups.values()].sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-export function saveProgress(username, tmdbId, timestamp, duration, movieDetails, mediaType, source) {
-  const db = getDb(username);
+export async function saveProgress(username, tmdbId, timestamp, duration, movieDetails, mediaType, source) {
+  const db = await getDb(username);
   if (!db.progress) db.progress = {};
   if (!db.history) db.history = [];
 
@@ -143,13 +145,14 @@ export function saveProgress(username, tmdbId, timestamp, duration, movieDetails
       updatedAt: Date.now()
     };
   }
-  flushDb(username);
+  await flushDb(username);
 }
 
 // ── History ────────────────────────────────────────────────────────────
 
-export function getHistory(username) {
-  return getDb(username).history || [];
+export async function getHistory(username) {
+  const db = await getDb(username);
+  return db.history || [];
 }
 
 function addToHistoryInternal(db, tmdbId, movieDetails) {
@@ -166,14 +169,14 @@ function addToHistoryInternal(db, tmdbId, movieDetails) {
 }
 
 export async function addToHistory(username, tmdbId, movieDetails) {
-  const db = getDb(username);
+  const db = await getDb(username);
   addToHistoryInternal(db, tmdbId, movieDetails);
   scheduleWrite(username);
   await flushDb(username);
 }
 
 export async function removeFromHistory(username, tmdbId) {
-  const db = getDb(username);
+  const db = await getDb(username);
   if (!db.history) db.history = [];
   db.history = db.history.filter(item => item.tmdbId !== tmdbId);
   scheduleWrite(username);
@@ -182,12 +185,13 @@ export async function removeFromHistory(username, tmdbId) {
 
 // ── Ratings ────────────────────────────────────────────────────────────
 
-export function getRatings(username) {
-  return getDb(username).ratings || {};
+export async function getRatings(username) {
+  const db = await getDb(username);
+  return db.ratings || {};
 }
 
 export async function saveRating(username, id, rating, movieDetails) {
-  const db = getDb(username);
+  const db = await getDb(username);
   if (!db.ratings) db.ratings = {};
   db.ratings[id] = {
     rating,
@@ -200,13 +204,13 @@ export async function saveRating(username, id, rating, movieDetails) {
 
 // ── Source Preferences ──────────────────────────────────────────────
 
-export function getSourcePrefs(username) {
-  const db = getDb(username);
+export async function getSourcePrefs(username) {
+  const db = await getDb(username);
   return db.sourcePrefs || { enabled: [], defaultSource: "videasy" };
 }
 
 export async function saveSourcePrefs(username, enabled, defaultSource) {
-  const db = getDb(username);
+  const db = await getDb(username);
   db.sourcePrefs = { enabled, defaultSource };
   scheduleWrite(username);
   await flushDb(username);

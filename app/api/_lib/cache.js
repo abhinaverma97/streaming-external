@@ -1,11 +1,11 @@
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
 const memory = new Map();
 
-function ensureDir(dirPath) {
-    fs.mkdirSync(dirPath, { recursive: true });
+async function ensureDir(dirPath) {
+    await fs.mkdir(dirPath, { recursive: true });
 }
 
 function hashKey(key) {
@@ -33,14 +33,18 @@ function setInMemory(key, value, ttlMs) {
     });
 }
 
-function getFromDisk(cacheDir, key, ttlMs) {
+async function getFromDisk(cacheDir, key, ttlMs) {
     const cachePath = getCachePath(cacheDir, key);
-    if (!fs.existsSync(cachePath)) return null;
     try {
-        const raw = fs.readFileSync(cachePath, "utf8");
+        await fs.access(cachePath);
+    } catch {
+        return null;
+    }
+    try {
+        const raw = await fs.readFile(cachePath, "utf8");
         const data = JSON.parse(raw);
         if (ttlMs && Date.now() - data.savedAt > ttlMs) {
-            fs.unlinkSync(cachePath);
+            await fs.unlink(cachePath);
             return null;
         }
         return data.value;
@@ -49,29 +53,29 @@ function getFromDisk(cacheDir, key, ttlMs) {
     }
 }
 
-function setToDisk(cacheDir, key, value) {
-    ensureDir(cacheDir);
+async function setToDisk(cacheDir, key, value) {
+    await ensureDir(cacheDir);
     const cachePath = getCachePath(cacheDir, key);
     const payload = {
         savedAt: Date.now(),
         value
     };
-    fs.writeFileSync(cachePath, JSON.stringify(payload));
+    await fs.writeFile(cachePath, JSON.stringify(payload));
 }
 
-function getCached(cacheDir, key, ttlMs) {
+export async function getCached(cacheDir, key, ttlMs) {
     const memValue = getFromMemory(key);
     if (memValue) return memValue;
-    const diskValue = getFromDisk(cacheDir, key, ttlMs);
+    const diskValue = await getFromDisk(cacheDir, key, ttlMs);
     if (diskValue) {
         setInMemory(key, diskValue, ttlMs);
     }
     return diskValue;
 }
 
-function setCached(cacheDir, key, value, ttlMs) {
+export async function setCached(cacheDir, key, value, ttlMs) {
     setInMemory(key, value, ttlMs);
-    setToDisk(cacheDir, key, value);
+    await setToDisk(cacheDir, key, value);
 }
 
-export { ensureDir, getCached, setCached };
+export { ensureDir };

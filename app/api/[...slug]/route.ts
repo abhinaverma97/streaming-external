@@ -42,6 +42,17 @@ async function handle(req: NextRequest, segments: string[], username: string | n
             return json({ ok: true });
         }
 
+        // ── Combined User Lists ────────────────────────────────────────
+        if (s0 === "user-lists" && method === "GET") {
+            if (!username) return error("Not authenticated", 401);
+            return json({
+                watchlist: getWatchlist(username),
+                continueWatching: getProgress(username),
+                history: getHistory(username),
+                ratings: getRatings(username),
+            });
+        }
+
         // ── Everything else requires authentication ────────────────────
         if (!username) {
             return error("Not authenticated", 401);
@@ -57,7 +68,13 @@ async function handle(req: NextRequest, segments: string[], username: string | n
             if (type === "tv") data = await searchTv(query, page);
             else if (type === "multi") data = await searchMulti(query, page);
             else data = await searchMovies(query, page);
-            return json(data);
+            return NextResponse.json(data, {
+                headers: {
+                    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+                    Pragma: "no-cache",
+                    Expires: "0",
+                },
+            });
         }
 
         // ── Movie / TV Details ─────────────────────────────────────────
@@ -96,7 +113,7 @@ async function handle(req: NextRequest, segments: string[], username: string | n
 
         // ── Watchlist ──────────────────────────────────────────────────
         if (s0 === "watchlist") {
-            if (method === "GET") return json(getWatchlist(username));
+            if (method === "GET") return json(await getWatchlist(username));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
@@ -114,18 +131,18 @@ async function handle(req: NextRequest, segments: string[], username: string | n
             const body = await req.json();
             if (!body.tmdbId || body.timestamp === undefined) return error("Missing required fields", 400);
             if (!body.duration) return error("Duration unavailable", 400);
-            saveProgress(username, body.tmdbId, Number(body.timestamp), Number(body.duration), body.movieDetails, body.mediaType, body.source);
+            await saveProgress(username, body.tmdbId, Number(body.timestamp), Number(body.duration), body.movieDetails, body.mediaType, body.source);
             return json({ ok: true });
         }
 
         // ── Continue Watching ──────────────────────────────────────────
         if (s0 === "continue-watching") {
-            return json(getProgress(username));
+            return json(await getProgress(username));
         }
 
         // ── History ────────────────────────────────────────────────────
         if (s0 === "history") {
-            if (method === "GET") return json(getHistory(username));
+            if (method === "GET") return json(await getHistory(username));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
@@ -140,7 +157,7 @@ async function handle(req: NextRequest, segments: string[], username: string | n
 
         // ── Ratings ────────────────────────────────────────────────────
         if (s0 === "ratings") {
-            if (method === "GET") return json(getRatings(username));
+            if (method === "GET") return json(await getRatings(username));
             if (method === "POST" && s1) {
                 const body = await req.json();
                 if (typeof body.rating !== "number" || body.rating < 1 || body.rating > 5) {
@@ -153,7 +170,7 @@ async function handle(req: NextRequest, segments: string[], username: string | n
 
         // ── Source Preferences ─────────────────────────────────────────
         if (s0 === "source-prefs") {
-            if (method === "GET") return json(getSourcePrefs(username));
+            if (method === "GET") return json(await getSourcePrefs(username));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.enabled || !body.defaultSource) return error("Missing enabled or defaultSource", 400);

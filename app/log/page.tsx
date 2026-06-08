@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Film, X, Search, Home as HomeIcon, List, Settings as SettingsIcon } from "lucide-react";
-import Navbar from "../components/Navbar";
+import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
 import { SearchInput } from "../components/SearchInput";
 import { MobileBottomNav } from "../components/MobileBottomNav";

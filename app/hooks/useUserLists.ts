@@ -9,25 +9,13 @@ export function useUserLists() {
     const [ratings, setRatings] = useState<Record<string, any>>({});
 
     const fetchUserLists = useCallback(async () => {
-        const results = await Promise.allSettled([
-            fetch(`/api/watchlist`),
-            fetch(`/api/continue-watching`),
-            fetch(`/api/history`),
-            fetch(`/api/ratings`)
-        ]);
-        const [watchRes, contRes, histRes, ratingsRes] = results;
-        if (watchRes.status === "fulfilled") {
-            try { setWatchlist(await watchRes.value.json()); } catch {}
-        }
-        if (contRes.status === "fulfilled") {
-            try { setContinueWatching(await contRes.value.json()); } catch {}
-        }
-        if (histRes.status === "fulfilled") {
-            try { setHistory(await histRes.value.json()); } catch {}
-        }
-        if (ratingsRes.status === "fulfilled") {
-            try { setRatings(await ratingsRes.value.json()); } catch {}
-        }
+        const res = await fetch(`/api/user-lists`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setWatchlist(data.watchlist || []);
+        setContinueWatching(data.continueWatching || []);
+        setHistory(data.history || []);
+        setRatings(data.ratings || {});
     }, []);
 
     const handleRate = useCallback(async (movie: any, rating: number) => {

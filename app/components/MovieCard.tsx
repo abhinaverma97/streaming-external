@@ -51,6 +51,7 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                         alt={title}
                         fill
                         priority={priority}
+                        loading={priority ? undefined : "lazy"}
                         sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
                         className={`object-cover transition-all duration-300 ${
                             showPlayOverlay ? "brightness-90 group-hover:brightness-100" : "group-hover:scale-105"

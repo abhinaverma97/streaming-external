@@ -2,12 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
-import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, X } from "lucide-react";
 
-import Navbar from "./components/Navbar";
+import { Navbar } from "./components/Navbar";
 import SettingsOverlay from "./components/SettingsOverlay";
-import ScrambledText from "./components/ScrambledText";
+import { PlayerModal } from "./components/PlayerModal";
 import FadeContent from "./components/FadeContent";
 import ScrollRow from "./components/ScrollRow";
 import { SearchInput } from "./components/SearchInput";
@@ -18,7 +16,6 @@ import { ContinueWatchingSection } from "./components/ContinueWatchingSection";
 import { WatchlistSection } from "./components/WatchlistSection";
 import { MovieCard } from "./components/MovieCard";
 import { HeroSection } from "./components/HeroSection";
-import { PlayerSidebar } from "./components/PlayerSidebar";
 import { SOURCES, getSource, buildEmbedUrl } from "./lib/sources-config";
 import { extractTrailerUrl } from "./lib/tmdb-utils";
 import { getWatchlistId } from "./lib/watchlist";
@@ -26,8 +23,9 @@ import { Movie } from "./lib/types";
 
 import { useSearch } from "./hooks/useSearch";
 import { useSourcePrefs } from "./hooks/useSourcePrefs";
-import { useUserLists } from "./hooks/useUserLists";
+import { useUserLists } from "./hooks/useUserListsSWR";
 import { usePlayerProgress } from "./hooks/usePlayerProgress";
+import { useTrending } from "./hooks/useTrending";
 
 const DEBUG = false;
 const CN = "relative aspect-[16/9] rounded-xl overflow-hidden mb-2 border border-slate-800/40 group-hover:border-white/40 transition-all duration-300 shadow-md bg-slate-950";
@@ -57,8 +55,7 @@ export default function Home() {
     } = useUserLists();
 
     // ── Movie Categories ──
-    const [trending, setTrending] = useState<Movie[]>([]);
-    const [trendingType, setTrendingType] = useState<"movie" | "tv">("movie");
+    const { trending, trendingType, setTrendingType } = useTrending("movie");
     const [watchlistFilter, setWatchlistFilter] = useState<"all" | "movie" | "tv">("all");
 
     // ── Selected Movie for Hero ──
@@ -72,7 +69,7 @@ export default function Home() {
 
     // ── Filtered Trending (exclude history) ──
     const filteredTrending = useMemo(() => {
-        const historyIds = new Set(history.map(h => h.movieDetails?.id).filter(Boolean));
+        const historyIds = new Set((history as any[]).map(h => h.movieDetails?.id).filter(Boolean));
         return trending.filter(item => !historyIds.has(item.id));
     }, [trending, history]);
 
@@ -125,20 +122,6 @@ export default function Home() {
             hasScrolledToSearch.current = false;
         }
     }, [isSearching, searchLoading, searchResults]);
-
-    // ── Trending ──
-    useEffect(() => {
-        const fetchTrending = async () => {
-            try {
-                const endpoint = trendingType === "movie" ? "movies" : "tv";
-                const res = await fetch(`/api/${endpoint}/trending`);
-                const data = await res.json();
-                const items = (data.results || []).map((m: any) => ({ ...m, media_type: m.media_type || trendingType }));
-                setTrending(items);
-            } catch {}
-        };
-        fetchTrending();
-    }, [trendingType]);
 
     // ── Hero Decision ──
     useEffect(() => {
@@ -218,7 +201,7 @@ export default function Home() {
     const toggleWatchlist = async (movie: Movie) => {
         const watchlistId = getWatchlistId(movie);
         if (!watchlistId) return;
-        const isQueued = watchlist.some((item) => item.tmdbId === watchlistId);
+        const isQueued = (watchlist as any[]).some((item) => item.tmdbId === watchlistId);
         try {
             if (isQueued) {
                 await fetch(`/api/watchlist/${watchlistId}`, { method: "DELETE" });
@@ -359,11 +342,19 @@ export default function Home() {
         fetchUserLists();
     };
 
-    const handleCWResume = (item: any, src: string, parsedMovieId: number, fs: number, fe: number, mt: string) => {
+    const handleCWResume = useCallback((item: any, src: string, parsedMovieId: number, fs: number, fe: number, mt: string) => {
         if (src) setSelectedSource(src);
         const cwMovie = { ...(item.movieDetails || {}), id: parsedMovieId, media_type: mt };
         playMovie(cwMovie, item.timestamp, fs, fe, src);
-    };
+    }, [playMovie, setSelectedSource]);
+
+    const handleSettingsOpen = useCallback(() => setShowSettings(true), [setShowSettings]);
+    const handleSettingsClose = useCallback(() => setShowSettings(false), [setShowSettings]);
+
+    const handleWatchlistCardClick = useCallback((item: any) => {
+        const mt = item.mediaType || item.movieDetails?.media_type || "movie";
+        handleCardClick({ ...(item.movieDetails || {}), media_type: mt });
+    }, [handleCardClick]);
 
     // ── Render ──
 
@@ -372,7 +363,7 @@ export default function Home() {
 
             {/* ── STICKY TOP AREA ── */}
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-0">
-                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/">
+                <Navbar onSettingsClick={handleSettingsOpen} currentPath="/">
                     <SearchInput
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
@@ -432,86 +423,30 @@ export default function Home() {
                             watchlist={watchlist}
                             watchlistFilter={watchlistFilter}
                             onFilterChange={setWatchlistFilter}
-                            onCardClick={(item) => {
-                                const mt = item.mediaType || item.movieDetails?.media_type || "movie";
-                                handleCardClick({ ...(item.movieDetails || {}), media_type: mt });
-                            }}
+                            onCardClick={handleWatchlistCardClick}
                         />
                     </div>
                 </div>
             </div>
 
             {/* ── VIDEO PLAYER MODAL ── */}
-            <AnimatePresence>
-                {activeStream && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 backdrop-blur-3xl overflow-y-auto w-full h-full"
-                    >
-                        <div className="w-full max-w-7xl flex items-center justify-between mb-4">
-                            <div>
-                                <h2 className="text-base md:text-lg font-light tracking-wide text-white/95 flex items-center gap-2">
-                                    <ScrambledText text={activeStream.title} />
-                                </h2>
-                            </div>
-                            <div>
-                                <button
-                                    onClick={closePlayer}
-                                    className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 duration-200 cursor-pointer"
-                                >
-                                    <X className="w-4.5 h-4.5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
-
-                            <div ref={playerContainerRef} className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl">
-                                {activeStream?.embedUrl && (
-                                    <iframe
-                                        ref={playerRef}
-                                        src={activeStream.embedUrl}
-                                        className="w-full h-full"
-                                        allow="autoplay; fullscreen"
-                                        allowFullScreen
-                                    />
-                                )}
-                                {playerError && (
-                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center gap-4 bg-black/80">
-                                        <div className="flex flex-col items-center gap-3 text-rose-500">
-                                            <AlertCircle className="w-10 h-10 stroke-[1.5]" />
-                                            <div className="text-white/90 font-light tracking-wider text-sm">Playback Error</div>
-                                            <div className="text-xs text-white/50 max-w-md font-light">{playerError}</div>
-                                            <button
-                                                onClick={closePlayer}
-                                                className="px-5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white/95 rounded-full mt-2 text-xs font-medium active:scale-95 transition-all cursor-pointer"
-                                            >
-                                                Go Back
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <PlayerSidebar
-                                selectedSource={effectiveSource}
-                                effectiveEnabledSources={effectiveEnabledSources}
-                                selectedShowDetails={selectedShowDetails}
-                                selectedSeason={selectedSeason}
-                                selectedEpisode={selectedEpisode}
-                                episodesList={episodesList}
-                                ratings={ratings}
-                                activeStreamDetails={activeStream.details}
-                                onSourceChange={handleSourceChange}
-                                onRate={handleRate}
-                                onChangeEpisode={changeEpisode}
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <PlayerModal
+                activeStream={activeStream}
+                playerError={playerError}
+                playerContainerRef={playerContainerRef}
+                playerRef={playerRef}
+                effectiveSource={effectiveSource}
+                effectiveEnabledSources={effectiveEnabledSources}
+                selectedShowDetails={selectedShowDetails}
+                selectedSeason={selectedSeason}
+                selectedEpisode={selectedEpisode}
+                episodesList={episodesList}
+                ratings={ratings}
+                onClose={closePlayer}
+                onSourceChange={handleSourceChange}
+                onRate={handleRate}
+                onChangeEpisode={changeEpisode}
+            />
 
             <MobileBottomNav
                 activeStream={activeStream}
@@ -528,7 +463,7 @@ export default function Home() {
                 onCardClick={handleCardClick}
             />
 
-            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
+            <SettingsOverlay isOpen={showSettings} onClose={handleSettingsClose} onSourcesChange={onSourcesChange} />
 
         </div>
     );

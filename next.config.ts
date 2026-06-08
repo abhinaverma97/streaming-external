@@ -1,27 +1,32 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+    enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  reactStrictMode: false,
-  reactCompiler: true,
+    output: "standalone",
+    reactStrictMode: false,
+    reactCompiler: true,
 
-  images: {
-    unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'image.tmdb.org',
-        port: '',
-        pathname: '/t/p/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'via.placeholder.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
+    images: {
+        unoptimized: true,
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "image.tmdb.org",
+                port: "",
+                pathname: "/t/p/**",
+            },
+            {
+                protocol: "https",
+                hostname: "via.placeholder.com",
+                port: "",
+                pathname: "/**",
+            },
+        ],
+    },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

@@ -17,7 +17,7 @@ function buildUrl(path, params = {}) {
 async function tmdbGet(path, params, noCache = false) {
     const url = buildUrl(path, params);
     if (!noCache) {
-        const cached = getCached(tmdbCacheDir, url, tmdbCacheTtlMs);
+        const cached = await getCached(tmdbCacheDir, url, tmdbCacheTtlMs);
         if (cached) return cached;
     }
 
@@ -28,7 +28,7 @@ async function tmdbGet(path, params, noCache = false) {
     }
 
     const data = await response.json();
-    if (!noCache) setCached(tmdbCacheDir, url, data, tmdbCacheTtlMs);
+    if (!noCache) await setCached(tmdbCacheDir, url, data, tmdbCacheTtlMs);
     return data;
 }
 

@@ -1,46 +1,52 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+
+const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*%";
+const CHARS_LEN = CHARS.length;
 
 interface ScrambledTextProps {
-  text: string;
-  speed?: number;
+    text: string;
+    speed?: number;
 }
 
 export default function ScrambledText({ text, speed = 35 }: ScrambledTextProps) {
-  const [displayedText, setDisplayedText] = useState(text);
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$*%";
+    const [displayedText, setDisplayedText] = useState(text);
+    const iterationRef = useRef(0);
+    const intervalRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    let iteration = 0;
-    const interval = setInterval(() => {
-      if (!active) return;
-      
-      setDisplayedText(() =>
-        text
-          .split("")
-          .map((char, index) => {
-            if (char === " ") return " ";
-            if (index < iteration) {
-              return text[index];
+    useEffect(() => {
+        if (!text) {
+            setDisplayedText("");
+            return;
+        }
+
+        iterationRef.current = 0;
+        setDisplayedText(text);
+
+        intervalRef.current = window.setInterval(() => {
+            if (iterationRef.current >= text.length) {
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                return;
             }
-            return chars[Math.floor(Math.random() * chars.length)];
-          })
-          .join("")
-      );
 
-      if (iteration >= text.length) {
-        clearInterval(interval);
-      }
-      iteration += 1 / 2.5;
-    }, speed);
+            setDisplayedText(prev => {
+                const chars = prev.split("");
+                const newChars = text.split("").map((targetChar, index) => {
+                    if (targetChar === " ") return " ";
+                    if (index < iterationRef.current) return targetChar;
+                    return CHARS[Math.floor(Math.random() * CHARS_LEN)];
+                });
+                return newChars.join("");
+            });
 
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
-  }, [text, speed]);
+            iterationRef.current += 1 / 2.5;
+        }, speed);
 
-  return <span>{displayedText}</span>;
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, [text, speed]);
+
+    return <span>{displayedText}</span>;
 }

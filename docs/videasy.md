@@ -1,18 +1,13 @@
-# VIDEASY
-
-## Welcome to VIDEASY documentation. Our player can be easily integrated into any website using simple iframe embeds. Follow the guide below to get started.
-
-## Quick Start
+Welcome to VIDEASY documentation. Our player can be easily integrated into any website using simple iframe embeds. Follow the guide below to get started.
+Quick Start
 
 Get started with VIDEASY in less than 5 minutes
-
-### 1. Add the Player
+1
+Add the Player
 
 Copy and paste this code into your HTML where you want the player to appear:
+Basic Implementation
 
-**Basic Implementation**
-
-```html
 <iframe
   src="https://player.videasy.net/movie/299534"
   width="100%"
@@ -21,15 +16,13 @@ Copy and paste this code into your HTML where you want the player to appear:
   allowfullscreen
   allow="encrypted-media"
 ></iframe>
-```
 
-### 2. Make it Responsive
+2
+Make it Responsive
 
 Wrap the iframe in this container to maintain the correct aspect ratio:
+Responsive Container
 
-**Responsive Container**
-
-```html
 <!-- 16:9 Aspect Ratio Container -->
 <div style="position: relative; padding-bottom: 56.25%; height: 0;">
   <iframe
@@ -39,151 +32,96 @@ Wrap the iframe in this container to maintain the correct aspect ratio:
     allowfullscreen
   ></iframe>
 </div>
-```
 
----
-
-## URL Structure
+URL Structure
 
 Understanding how to construct the player URL
-
-### Movies
-
-```
+Movies
 https://player.videasy.net/movie/movie_id
-```
+Movie Example
 
-**Movie Example**
-
-```html
 <!-- Avengers: Endgame -->
 <iframe src="https://player.videasy.net/movie/299534"></iframe>
-```
 
-### TV Shows
-
-```
+TV Shows
 https://player.videasy.net/tv/show_id/season/episode
-```
+TV Show Example
 
-**TV Show Example**
-
-```html
 <!-- Game of Thrones S01E01 -->
 <iframe src="https://player.videasy.net/tv/1399/1/1"></iframe>
-```
 
-### Anime
-
-**Shows**
-
-```
+Anime
+Shows
 https://player.videasy.net/anime/anilist_id/episode
-```
+Anime Show Example
 
-**Anime Show Example**
-
-```html
 <!-- One Piece Episode 1 -->
 <iframe src="https://player.videasy.net/anime/21/1"></iframe>
-```
 
-**Movies**
-
-```
+Movies
 https://player.videasy.net/anime/anilist_id
-```
+Anime Movie Example
 
-**Anime Movie Example**
-
-```html
 <!-- THE FIRST SLAM DUNK -->
 <iframe src="https://player.videasy.net/anime/145139"></iframe>
-```
 
 The player automatically provides both subbed and dubbed versions when available. For shows, include the episode number. For movies, only the AniList ID is needed.
-
----
-
-## Customization
+Customization
 
 Customize the player to match your website's design and behavior
-
-### Color Theme
+Color Theme
 
 Customize the player's accent color by adding the color parameter:
+Purple Theme
 
-**Purple Theme**
-
-```html
 <iframe src="https://player.videasy.net/movie/299534?color=8B5CF6"></iframe>
-```
 
-**Blue Theme**
+Blue Theme
 
-```html
 <iframe src="https://player.videasy.net/movie/299534?color=3B82F6"></iframe>
-```
 
 Use hex color codes without the # symbol (e.g., 8B5CF6 for purple)
-
----
-
-## Player Features
+Player Features
 
 Enable additional features and control playback with these parameters:
+Start Time
 
-### Start Time
-
-```html
 <iframe src="https://player.videasy.net/movie/299534?progress=120"></iframe>
-```
 
-### Next Episode Button
+Next Episode Button
 
-```html
 <iframe src="https://player.videasy.net/tv/1399/1/1?nextEpisode=true"></iframe>
-```
 
-### Episode Selector
+Episode Selector
 
-```html
 <iframe src="https://player.videasy.net/tv/1399/1/1?episodeSelector=true"></iframe>
-```
 
-### Autoplay Next Episode
+Autoplay Next Episode
 
-```html
 <iframe src="https://player.videasy.net/tv/1399/1/1?autoplayNextEpisode=true"></iframe>
-```
 
-### Netflix-style Overlay
+Netflix-style Overlay
 
-```html
 <iframe src="https://player.videasy.net/movie/299534?overlay=true"></iframe>
-```
 
-### All Features Combined
+All Features Combined
 
-```html
 <iframe src="https://player.videasy.net/tv/1399/1/1?nextEpisode=true&autoplayNextEpisode=true&episodeSelector=true&overlay=true&color=8B5CF6"></iframe>
-```
 
-- **progress**: Sets the start time in seconds (e.g., progress=120 starts at 2 minutes)
-- **nextEpisode**: Shows the next episode button in the player controls
-- **episodeSelector**: Enables the built-in season/episode selector in the player
-- **autoplayNextEpisode**: Automatically plays the next episode when current one ends
-- **overlay**: Enables Netflix-style overlay that appears when paused without interaction for 5 seconds
+progress: Sets the start time in seconds (e.g., progress=120 starts at 2 minutes)
 
----
+nextEpisode: Shows the next episode button in the player controls
 
-## Watch Progress Tracking
+episodeSelector: Enables the built-in season/episode selector in the player
+
+autoplayNextEpisode: Automatically plays the next episode when current one ends
+
+overlay: Enables Netflix-style overlay that appears when paused without interaction for 5 seconds
+Watch Progress Tracking
 
 The player can send watch progress events to the parent window. You can save this progress to localStorage or your own backend. Here's a complete example:
+Progress Tracking Script
 
-**Progress Tracking Script**
-
-```js
 // Add this script to your website
 window.addEventListener("message", function (event) {
   // console.log("event: ", event);
@@ -193,35 +131,30 @@ window.addEventListener("message", function (event) {
     messageArea.innerText = event.data;
   }
 });
-```
 
 The player sends progress updates containing:
 
-- **id**: Content ID
-- **type**: Content type (movie/tv/anime)
-- **progress**: Watch progress percentage
-- **timestamp**: Current playback position in seconds
-- **duration**: Total duration in seconds
-- **season**: Season number (for TV shows)
-- **episode**: Episode number (for TV/Anime shows)
-
----
-
-## Finding Content IDs
+    id: Content ID
+    type: Content type (movie/tv/anime)
+    progress: Watch progress percentage
+    timestamp: Current playback position in seconds
+    duration: Total duration in seconds
+    season: Season number (for TV shows)
+    episode: Episode number (for TV/Anime shows)
+Finding Content IDs
 
 How to find IDs for movies, TV shows, and anime
-
-### TMDB IDs
+TMDB IDs
 
 Movie and TV show IDs can be found with TMDB API (developer.themoviedb.org) or in the URL when visiting themoviedb.org:
 
-- **Movies**: themoviedb.org/movie/299534
-- **TV Shows**: themoviedb.org/tv/1399
+    •Movies: themoviedb.org/movie/299534
+    •TV Shows: themoviedb.org/tv/1399
 
-### Anilist IDs
+Anilist IDs
 
 Anime IDs can be found with Anilist API (docs.anilist.co) or in the URL when visiting Anilist:
 
-- **Anime**: anilist.co/anime/21
+    •Anime: anilist.co/anime/21
 
 The number after "/anime/" in the URL is the ID you need to use in the player.

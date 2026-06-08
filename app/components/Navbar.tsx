@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 
 interface NavbarProps {
@@ -8,7 +9,7 @@ interface NavbarProps {
   children?: React.ReactNode;
 }
 
-export default function Navbar({ onSettingsClick, currentPath, children }: NavbarProps) {
+function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
   return (
     <>
       {/* Desktop Navbar */}
@@ -48,3 +49,5 @@ export default function Navbar({ onSettingsClick, currentPath, children }: Navba
     </>
   );
 }
+
+export const Navbar = memo(NavbarInner);

@@ -22,7 +22,7 @@ export const SOURCES: SourceConfig[] = [
   {
     id: "videasy",
     name: "VIDEASY",
-    origins: ["https://player.videasy.net"],
+    origins: ["https://player.videasy.net", "https://player.videasy.to"],
     buildMovieUrl: (id, st) => {
       let u = `https://player.videasy.net/movie/${id}?color=${M}`;
       if (st && st > 0) u += `&progress=${Math.floor(st)}`;
@@ -88,26 +88,10 @@ export const SOURCES: SourceConfig[] = [
     },
     buildTvUrl: (id, s, e, st) => {
       let u = `https://vidnest.fun/tv/${id}/${s}/${e}?servericon=false`;
-      if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
+      if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
     supports: { autoPlay: false, serverSelection: true, subtitles: false, colorTheme: false, startTime: true, progress: true },
-  },
-  {
-    id: "vidking",
-    name: "VidKing",
-    origins: ["https://www.vidking.net"],
-    buildMovieUrl: (id, st) => {
-      let u = `https://www.vidking.net/embed/movie/${id}?color=${M}&autoPlay=true`;
-      if (st && st > 0) u += `&progress=${Math.floor(st)}`;
-      return u;
-    },
-    buildTvUrl: (id, s, e, st) => {
-      let u = `https://www.vidking.net/embed/tv/${id}/${s}/${e}?color=${M}&autoPlay=true&episodeSelector=true`;
-      if (st && st > 0) u += `&progress=${Math.floor(st)}`;
-      return u;
-    },
-    supports: { autoPlay: true, serverSelection: false, subtitles: false, colorTheme: true, startTime: true, progress: true },
   },
   {
     id: "vidrock",
@@ -118,14 +102,6 @@ export const SOURCES: SourceConfig[] = [
     buildTvUrl: (id, s, e) =>
       `https://vidrock.ru/tv/${id}/${s}/${e}?autoplay=true&theme=${M}&download=false&nextbutton=false&episodeselector=false`,
     supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: false, progress: true },
-  },
-  {
-    id: "111movies",
-    name: "111Movies",
-    origins: ["https://111movies.net"],
-    buildMovieUrl: (id) => `https://111movies.net/movie/${id}`,
-    buildTvUrl: (id, s, e) => `https://111movies.net/tv/${id}/${s}/${e}`,
-    supports: { autoPlay: false, serverSelection: false, subtitles: false, colorTheme: false, startTime: false, progress: false },
   },
 ];
 

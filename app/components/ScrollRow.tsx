@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 
 interface ScrollRowProps {
     children: React.ReactNode;
@@ -9,19 +9,19 @@ interface ScrollRowProps {
 export default function ScrollRow({ children }: ScrollRowProps) {
     const rowRef = useRef<HTMLDivElement>(null);
 
-    const scroll = (direction: 'left' | 'right') => {
+    const scroll = useCallback((direction: 'left' | 'right') => {
         if (rowRef.current) {
             const { clientWidth } = rowRef.current;
             const scrollAmount = direction === 'left' ? -clientWidth * 0.7 : clientWidth * 0.7;
             rowRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
-    };
+    }, []);
 
     return (
         <div className="relative w-full group/row">
-            <button 
-                onClick={(e) => { e.stopPropagation(); scroll('left'); }} 
-                className="absolute left-0 top-0 bottom-0 w-12 sm:w-16 z-20 cursor-pointer bg-transparent"
+            <button
+                onClick={(e) => { e.stopPropagation(); scroll('left'); }}
+                className="absolute left-0 top-0 bottom-0 w-12 sm:w-16 z-20 cursor-pointer"
                 aria-label="Scroll Left"
             />
             
@@ -29,9 +29,9 @@ export default function ScrollRow({ children }: ScrollRowProps) {
                 {children}
             </div>
 
-            <button 
-                onClick={(e) => { e.stopPropagation(); scroll('right'); }} 
-                className="absolute right-0 top-0 bottom-0 w-12 sm:w-16 z-20 cursor-pointer bg-transparent"
+            <button
+                onClick={(e) => { e.stopPropagation(); scroll('right'); }}
+                className="absolute right-0 top-0 bottom-0 w-12 sm:w-16 z-20 cursor-pointer"
                 aria-label="Scroll Right"
             />
         </div>

@@ -17,9 +17,8 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const { request } = e;
 
-  // Only cache GET requests (POST, PUT, DELETE pass through)
+  // Only cache GET requests (POST, PUT, DELETE pass through unhandled)
   if (request.method !== "GET") {
-    e.respondWith(fetch(request));
     return;
   }
 
