@@ -24,6 +24,8 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
 
   const [aiSettings, setAiSettings] = useState({ apiKey: "", model: "openai/gpt-oss-120b:free" });
   const [logTokens, setLogTokens] = useState<number | null>(null);
+  const [aiPayload, setAiPayload] = useState<string>("");
+  const [copiedPayload, setCopiedPayload] = useState(false);
   const [modelSelectOpen, setModelSelectOpen] = useState(false);
   const modelSelectRef = useRef<HTMLDivElement>(null);
   const [aiModels, setAiModels] = useState<{ id: string; name: string; context: string }[]>([
@@ -96,10 +98,12 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
         })
         .catch(() => {});
 
-      fetch("/api/ratings")
-        .then(r => r.json())
-        .then(data => {
-            const entries = Object.entries(data).filter(([, v]: any) => v && v.movieDetails);
+      Promise.all([
+        fetch("/api/ratings").then(r => r.json()),
+        fetch("/api/watchlist").then(r => r.json())
+      ])
+        .then(([ratingsData, watchlistData]) => {
+            const entries = Object.entries(ratingsData).filter(([, v]: any) => v && v.movieDetails);
             const formatted = entries.map(([tmdbId, item]: any, i) => {
                 const d = item.movieDetails;
                 const title = d.title || d.name || "Unknown";
@@ -118,9 +122,12 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                 return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5${thoughts}\n   TMDB Rating: ${tmdbRating}/10\n   Director: ${director}\n   Synopsis: ${synopsis}`;
             }).join("\n\n");
             
-            const promptTemplateLength = 800;
-            const totalChars = formatted.length + promptTemplateLength;
-            setLogTokens(Math.ceil(totalChars / 4));
+            const formattedWatchlist = (watchlistData || []).map((w: any) => `- "${w.movieDetails?.title || w.movieDetails?.name || "Unknown"}" (${(w.movieDetails?.release_date || w.movieDetails?.first_air_date || "").slice(0, 4) || "Unknown"}) - ${w.mediaType}`).join("\n");
+
+            const fullPrompt = `You are a movie and TV show recommendation engine.\n\nAnalyze this user's complete set of rated content as a whole. Identify patterns in\ngenres, themes, directors, tone, and era preferences. Then recommend movies and TV\nshows the user would likely enjoy.\n\nUSER'S RATED CONTENT:\n${formatted || "None"}\n\nUSER'S WATCHLIST:\n${formattedWatchlist || "None"}\n\nBased on ALL items above, return a JSON object with:\n\n{\n  "recommendedMovies": [\n    { "title": "Inception", "year": 2010, "reason": "You enjoy Christopher Nolan's complex storytelling" }\n  ],\n  "recommendedTvShows": [\n    { "title": "Better Call Saul", "year": 2015, "reason": "You enjoy Vince Gilligan's character-driven crime dramas" }\n  ]\n}\n\nIMPORTANT:\n- The "year" field must be the release year of the recommended title (used to look it up on TMDB)\n- Recommend AT LEAST 18 movies and 18 TV shows.\n- DO NOT recommend anything already in the user's rated content list OR their watchlist above.\n- Provide a brief 1-sentence reason for each recommendation based on their ratings.\n- ONLY output the raw JSON object. No markdown, no introduction, no codeblocks.`;
+            
+            setAiPayload(fullPrompt);
+            setLogTokens(Math.ceil(fullPrompt.length / 4));
         })
         .catch(() => {});
 
@@ -257,7 +264,21 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
               <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.05]">
                 <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400 flex items-center justify-between">
                     <span>AI Configuration</span>
-                    {logTokens !== null && <span className="text-[9px] text-white/30 tracking-widest normal-case">Log size: ~{logTokens.toLocaleString()} tokens</span>}
+                    <div className="flex items-center gap-3">
+                      {logTokens !== null && <span className="text-[9px] text-white/30 tracking-widest normal-case">Log size: ~{logTokens.toLocaleString()} tokens</span>}
+                      {aiPayload && (
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(aiPayload);
+                            setCopiedPayload(true);
+                            setTimeout(() => setCopiedPayload(false), 2000);
+                          }}
+                          className="text-[9px] px-2 py-0.5 rounded border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors"
+                        >
+                          {copiedPayload ? "Copied!" : "Copy Payload"}
+                        </button>
+                      )}
+                    </div>
                 </h3>
                 
                 <div className="flex flex-col gap-1.5">

@@ -43,20 +43,20 @@ export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalPr
     const bgImage = movieDetails.backdrop_path ? getBackdropUrl(movieDetails.backdrop_path) : (movieDetails.poster_path ? getPosterUrl(movieDetails.poster_path) : null);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-            <div className="relative w-full max-w-lg bg-slate-950 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xl">
+            <div className="relative w-full max-w-lg bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 
                 {/* Banner Header */}
-                <div className="relative w-full h-40 md:h-56 bg-slate-900 shrink-0">
+                <div className="relative w-full h-40 md:h-56 bg-transparent shrink-0">
                     {bgImage && (
                         <Image
                             src={bgImage}
                             alt={movieDetails.title || movieDetails.name || "Banner"}
                             fill
-                            className="object-cover opacity-60"
+                            className="object-cover opacity-60 mix-blend-overlay"
                         />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/90 via-[#090b14]/40 to-transparent" />
                     
                     <button
                         onClick={onClose}
