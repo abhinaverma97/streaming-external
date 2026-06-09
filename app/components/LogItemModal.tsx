@@ -43,8 +43,8 @@ export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalPr
     const bgImage = movieDetails.backdrop_path ? getBackdropUrl(movieDetails.backdrop_path) : (movieDetails.poster_path ? getPosterUrl(movieDetails.poster_path) : null);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xl">
-            <div className="relative w-full max-w-lg bg-[#090b14]/70 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+            <div className="relative w-full max-w-lg bg-[#090b14]/40 backdrop-blur-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 
                 {/* Banner Header */}
                 <div className="relative w-full h-40 md:h-56 bg-transparent shrink-0">
@@ -53,10 +53,10 @@ export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalPr
                             src={bgImage}
                             alt={movieDetails.title || movieDetails.name || "Banner"}
                             fill
-                            className="object-cover opacity-60 mix-blend-overlay"
+                            className="object-cover opacity-50 mix-blend-overlay"
                         />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/90 via-[#090b14]/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/80 via-transparent to-transparent" />
                     
                     <button
                         onClick={onClose}
@@ -102,7 +102,7 @@ export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalPr
                 </div>
 
                 {/* Footer Controls */}
-                <div className="p-4 bg-white/[0.02] border-t border-white/[0.05] flex items-center justify-between shrink-0">
+                <div className="p-4 bg-white/[0.03] border-t border-white/[0.08] flex items-center justify-between shrink-0">
                     <button
                         onClick={handleDelete}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-500/80 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
