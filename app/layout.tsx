@@ -24,6 +24,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/nob.ico" sizes="any" />
         <link rel="icon" href="/nob.png" type="image/png" sizes="192x192" />
+        <link rel="preconnect" href="https://image.tmdb.org" />
       </head>
       <body
         className={`${outfit.className} min-h-full bg-black text-slate-100 antialiased overflow-x-hidden selection:bg-white/20 selection:text-white`}

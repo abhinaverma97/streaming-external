@@ -27,7 +27,7 @@ export function useSearch() {
         abortControllerRef.current = controller;
 
         try {
-            let res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=1070730380f5fee0d87cf0382670b255&query=${encodeURIComponent(query)}&include_adult=false`, {
+            let res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`, {
                 signal: controller.signal
             });
 

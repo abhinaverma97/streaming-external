@@ -41,7 +41,7 @@ async function searchTv(query, page) {
 }
 
 async function searchMulti(query, page) {
-    return tmdbGet("/search/multi", { query, page }, true);
+    return tmdbGet("/search/multi", { query, page }, false);
 }
 
 async function movieDetails(tmdbId) {

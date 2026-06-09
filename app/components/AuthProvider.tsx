@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { mutate } from "swr";
 
 type AuthContextType = {
     user: string | null;
@@ -18,16 +19,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         let ignore = false;
-        fetch("/api/auth/me")
+        fetch("/api/user/bootstrap")
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
                 if (!ignore) {
-                    setUser(data?.username || null);
+                    if (data && data.username) {
+                        setUser(data.username);
+                        // Seed the SWR cache with user watchlists, ratings, settings, and histories
+                        mutate("/api/user/bootstrap", data, false);
+                    } else {
+                        setUser(null);
+                    }
                     setLoading(false);
                 }
             })
             .catch((err) => {
-                console.error("Auth check error:", err);
+                console.error("Auth / Bootstrap check error:", err);
                 if (!ignore) setLoading(false);
             });
         return () => { ignore = true; };

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import useSWR from "swr";
 import { Star, Film, Plus, Check, Play, RotateCw, RefreshCw, X } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
@@ -15,12 +16,12 @@ import { useUserLists } from "../hooks/useUserListsSWR";
 import { usePlayerProgress } from "../hooks/usePlayerProgress";
 import { useSearch } from "../hooks/useSearch";
 
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 export default function RecommendPage() {
-    const [recommendations, setRecommendations] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
     const [showSettings, setShowSettings] = useState(false);
     const [activeStream, setActiveStream] = useState<{
         tmdbId: string; title: string; details: any; embedUrl: string;
@@ -62,48 +63,42 @@ export default function RecommendPage() {
     usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef, fetchUserLists);
     useEffect(() => { fetchUserLists(); }, []);
 
-    const fetchRecommendations = useCallback(async (force = false) => {
-        if (force) setRefreshing(true);
+    // SWR fetch with dynamic polling if recommendations are currently generating
+    const { data: recommendations, mutate: mutateRecs, isLoading: loading } = useSWR(
+        "/api/recommend",
+        fetcher,
+        {
+            refreshInterval: (data) => (data?.isGenerating ? 10000 : 0)
+        }
+    );
+
+    const isRefreshingOrGenerating = refreshing || !!recommendations?.isGenerating;
+    const displayError = recommendations?.error || error;
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        setError(null);
         try {
-            const res = await fetch(force ? "/api/recommend" : "/api/recommend", { method: force ? "POST" : "GET" });
-            const data = await res.json();
+            const res = await fetch("/api/recommend", { method: "POST" });
             if (res.ok) {
-                setRecommendations(data);
-                if (data.error) setError(data.error);
-                if (data.isGenerating) {
-                    setRefreshing(true);
-                } else {
-                    setRefreshing(false);
-                }
+                mutateRecs((prev: any) => ({ ...prev, isGenerating: true }), { revalidate: true });
             } else {
-                setError(data.error || "Failed to load recommendations");
-                setRefreshing(false);
+                const data = await res.json();
+                setError(data.error || "Failed to trigger generation");
             }
         } catch (err: any) {
-            setError(err.message);
-            setRefreshing(false);
+            setError(err.message || "Failed to trigger generation");
         } finally {
-            setLoading(false);
+            setRefreshing(false);
         }
-    }, []);
+    };
 
     const cancelGeneration = async () => {
         try {
             await fetch("/api/recommend/cancel", { method: "POST" });
-            setRefreshing(false);
-            fetchRecommendations(false);
+            mutateRecs((prev: any) => ({ ...prev, isGenerating: false }), { revalidate: true });
         } catch {}
     };
-
-    useEffect(() => { fetchRecommendations(); }, [fetchRecommendations]);
-
-    useEffect(() => {
-        if (!refreshing) return;
-        const interval = setInterval(() => {
-            fetchRecommendations(false);
-        }, 15000);
-        return () => clearInterval(interval);
-    }, [refreshing, fetchRecommendations]);
 
     const items = (() => {
         if (!recommendations) return [];
@@ -202,12 +197,12 @@ export default function RecommendPage() {
                     <button onClick={() => setFilter("tv")}
                         className={`transition-colors duration-200 cursor-pointer ${filter === "tv" ? "text-white" : "text-slate-500 hover:text-white"}`}>Series</button>
                     <span className="text-white/20 font-light">|</span>
-                    <button onClick={() => fetchRecommendations(true)} disabled={refreshing}
-                        className={`transition-colors duration-200 flex items-center gap-1.5 ${refreshing ? "text-slate-500" : "text-slate-500 hover:text-white cursor-pointer"}`}>
-                        <RotateCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-                        {refreshing ? "Generating..." : "Refresh"}
+                    <button onClick={handleRefresh} disabled={isRefreshingOrGenerating}
+                        className={`transition-colors duration-200 flex items-center gap-1.5 ${isRefreshingOrGenerating ? "text-slate-500" : "text-slate-500 hover:text-white cursor-pointer"}`}>
+                        <RotateCw className={`w-3 h-3 ${isRefreshingOrGenerating ? "animate-spin" : ""}`} />
+                        {isRefreshingOrGenerating ? "Generating..." : "Refresh"}
                     </button>
-                    {refreshing && (
+                    {isRefreshingOrGenerating && (
                         <button onClick={cancelGeneration}
                             className="transition-colors duration-200 flex items-center justify-center p-1 rounded-full text-rose-500/70 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                             title="Cancel Generation">
@@ -220,8 +215,8 @@ export default function RecommendPage() {
                     <div className="text-center mb-6 text-[10px] text-slate-600 tracking-wide">Last updated {formattedDate}</div>
                 )}
 
-                {error && (
-                    <div className="text-xs text-rose-400 mb-6 max-w-md mx-auto bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-3 text-center">{error}</div>
+                {displayError && (
+                    <div className="text-xs text-rose-400 mb-6 max-w-md mx-auto bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-3 text-center">{displayError}</div>
                 )}
 
                 {/* Content */}
@@ -235,7 +230,7 @@ export default function RecommendPage() {
                             <Film className="w-6 h-6 text-white/20" />
                         </div>
                         <div className="text-[11px] text-white/40 uppercase tracking-widest font-light">No recommendations yet. Rate some movies and TV shows to get started.</div>
-                        <button onClick={() => fetchRecommendations(true)}
+                        <button onClick={handleRefresh}
                             className="flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all active:scale-95 cursor-pointer">
                             <RefreshCw className="w-3.5 h-3.5" /> Generate Now
                         </button>
