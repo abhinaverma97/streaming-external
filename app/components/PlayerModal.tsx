@@ -24,7 +24,7 @@ interface PlayerModalProps {
     ratings: Record<string, any>;
     onClose: () => void;
     onSourceChange: (source: string) => void;
-    onRate: (movie: any, rating: number) => void;
+    onRate: (movie: any, rating: number, thoughts?: string) => void;
     onChangeEpisode: (season: number, episode: number) => void;
 }
 

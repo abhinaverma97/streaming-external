@@ -87,4 +87,11 @@ db.exec(`
     );
 `);
 
+// Migrations
+try {
+    db.exec(`ALTER TABLE ratings ADD COLUMN thoughts TEXT;`);
+} catch (e) {
+    // Ignore error if column already exists
+}
+
 export default db;

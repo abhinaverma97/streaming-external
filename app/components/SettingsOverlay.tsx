@@ -114,7 +114,8 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
                     if (dir) director = dir.name;
                 }
                 const synopsis = d.overview || "N/A";
-                return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5\n   TMDB Rating: ${tmdbRating}/10\n   Director: ${director}\n   Synopsis: ${synopsis}`;
+                const thoughts = item.thoughts ? `\n   User Thoughts: ${item.thoughts}` : "";
+                return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5${thoughts}\n   TMDB Rating: ${tmdbRating}/10\n   Director: ${director}\n   Synopsis: ${synopsis}`;
             }).join("\n\n");
             
             const promptTemplateLength = 800;

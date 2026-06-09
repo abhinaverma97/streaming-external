@@ -14,7 +14,7 @@ export function useUserLists() {
         await mutateData();
     };
 
-    const handleRate = async (movie: any, rating: number) => {
+    const handleRate = async (movie: any, rating: number, thoughts?: string) => {
         if (!movie || !movie.id) return;
         const prevRating = data?.ratings?.[movie.id];
         const director = movie.credits?.crew?.find((c: any) => c.job === "Director")?.name;
@@ -24,7 +24,7 @@ export function useUserLists() {
             ...prev,
             ratings: {
                 ...(prev?.ratings || {}),
-                [movie.id]: { rating, movieDetails: enrichedMovie, ratedAt: Date.now() }
+                [movie.id]: { rating, movieDetails: enrichedMovie, ratedAt: Date.now(), thoughts: thoughts || "" }
             }
         }), { revalidate: false });
         
@@ -32,13 +32,34 @@ export function useUserLists() {
             await fetch(`/api/ratings/${movie.id}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ rating, movieDetails: enrichedMovie })
+                body: JSON.stringify({ rating, movieDetails: enrichedMovie, thoughts: thoughts || "" })
             });
         } catch {
             mutateData((prevState: any) => {
                 const nextRatings = { ...(prevState?.ratings || {}) };
                 if (prevRating) nextRatings[movie.id] = prevRating;
                 else delete nextRatings[movie.id];
+                return { ...prevState, ratings: nextRatings };
+            }, { revalidate: false });
+        }
+    };
+
+    const handleDeleteRating = async (movieId: string | number) => {
+        if (!movieId) return;
+        const prevRating = data?.ratings?.[movieId];
+        
+        mutateData((prev: any) => {
+            const nextRatings = { ...(prev?.ratings || {}) };
+            delete nextRatings[movieId];
+            return { ...prev, ratings: nextRatings };
+        }, { revalidate: false });
+        
+        try {
+            await fetch(`/api/ratings/${movieId}`, { method: "DELETE" });
+        } catch {
+            mutateData((prevState: any) => {
+                const nextRatings = { ...(prevState?.ratings || {}) };
+                if (prevRating) nextRatings[movieId] = prevRating;
                 return { ...prevState, ratings: nextRatings };
             }, { revalidate: false });
         }
@@ -105,6 +126,7 @@ export function useUserLists() {
         ratings: data?.ratings || {},
         fetchUserLists,
         handleRate,
+        handleDeleteRating,
         handleToggleWatchlist,
         isLoading,
     };

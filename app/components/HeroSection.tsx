@@ -20,7 +20,7 @@ interface HeroSectionProps {
     activeStream: any;
     onPlay: (movie: Movie, startTime: number, season?: number, episode?: number, source?: string) => void;
     onToggleWatchlist: (movie: Movie) => void;
-    onRate: (movie: Movie, rating: number) => void;
+    onRate: (movie: Movie, rating: number, thoughts?: string) => void;
     getWatchlistId: (movie: Movie) => string;
 }
 

@@ -105,15 +105,20 @@ export async function getRatings(username) {
     ratings[r.tmdbId] = {
       rating: r.rating,
       movieDetails: JSON.parse(r.movieDetails),
-      ratedAt: r.ratedAt
+      ratedAt: r.ratedAt,
+      thoughts: r.thoughts || ""
     };
   }
   return ratings;
 }
 
-export async function saveRating(username, tmdbId, rating, movieDetails) {
-  db.prepare("INSERT OR REPLACE INTO ratings (username, tmdbId, rating, movieDetails, ratedAt) VALUES (?, ?, ?, ?, ?)")
-    .run(username, tmdbId, rating, JSON.stringify(movieDetails), Date.now());
+export async function saveRating(username, tmdbId, rating, movieDetails, thoughts) {
+  db.prepare("INSERT OR REPLACE INTO ratings (username, tmdbId, rating, movieDetails, ratedAt, thoughts) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(username, tmdbId, rating, JSON.stringify(movieDetails), Date.now(), thoughts || "");
+}
+
+export async function deleteRating(username, tmdbId) {
+  db.prepare("DELETE FROM ratings WHERE username = ? AND tmdbId = ?").run(username, tmdbId);
 }
 
 // ── Settings (Source & AI) ──────────────────────────────────────────────

@@ -8,7 +8,7 @@ import {
     getWatchlist, addToWatchlist, removeFromWatchlist,
     getProgress, saveProgress,
     getHistory, addToHistory, removeFromHistory,
-    getRatings, saveRating,
+    getRatings, saveRating, deleteRating,
     getSourcePrefs, saveSourcePrefs,
     getAiSettings, saveAiSettings
 } from "../_lib/user-db.js";
@@ -165,7 +165,11 @@ async function handle(req: NextRequest, segments: string[], username: string | n
                 if (typeof body.rating !== "number" || body.rating < 1 || body.rating > 5) {
                     return error("Invalid rating", 400);
                 }
-                await saveRating(username, s1, body.rating, body.movieDetails);
+                await saveRating(username, s1, body.rating, body.movieDetails, body.thoughts);
+                return json({ ok: true });
+            }
+            if (method === "DELETE" && s1) {
+                await deleteRating(username, s1);
                 return json({ ok: true });
             }
         }

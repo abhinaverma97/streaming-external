@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import GlassSurface from "./GlassSurface";
 import { CustomSelect } from "./CustomSelect";
@@ -17,7 +17,7 @@ interface PlayerSidebarProps {
     ratings: Record<string, any>;
     activeStreamDetails: any;
     onSourceChange: (src: string) => void;
-    onRate: (movie: any, rating: number) => void;
+    onRate: (movie: any, rating: number, thoughts?: string) => void;
     onChangeEpisode: (season: number, episode: number) => void;
 }
 
@@ -34,6 +34,25 @@ function PlayerSidebarInner({
     onRate,
     onChangeEpisode,
 }: PlayerSidebarProps) {
+    const currentRating = ratings[activeStreamDetails?.id]?.rating || 0;
+    const [thoughts, setThoughts] = useState("");
+    const [isEditingThoughts, setIsEditingThoughts] = useState(false);
+
+    useEffect(() => {
+        if (!isEditingThoughts && activeStreamDetails?.id) {
+            setThoughts(ratings[activeStreamDetails.id]?.thoughts || "");
+        }
+    }, [activeStreamDetails?.id, ratings, isEditingThoughts]);
+
+    const handleThoughtsBlur = () => {
+        setIsEditingThoughts(false);
+        if (activeStreamDetails && currentRating > 0) {
+            if (thoughts !== (ratings[activeStreamDetails.id]?.thoughts || "")) {
+                onRate(activeStreamDetails, currentRating, thoughts);
+            }
+        }
+    };
+
     const handleSeasonChangeInPlayer = (seasonNum: number) => {
         const seasonObj = selectedShowDetails?.seasons?.find((s: any) => s.season_number === seasonNum);
         const epCount = seasonObj ? seasonObj.episode_count : 1;
@@ -72,9 +91,21 @@ function PlayerSidebarInner({
                     Rate Title
                 </span>
                 <StarRating
-                    value={ratings[activeStreamDetails?.id]?.rating || 0}
-                    onChange={(val) => activeStreamDetails && onRate(activeStreamDetails, val)}
+                    value={currentRating}
+                    onChange={(val) => activeStreamDetails && onRate(activeStreamDetails, val, thoughts)}
                 />
+                <div className="flex flex-col gap-1 mt-2">
+                    <span className="text-[8px] font-medium uppercase tracking-[0.15em] text-white/30 mb-0.5">Thoughts</span>
+                    <textarea
+                        value={thoughts}
+                        onChange={(e) => setThoughts(e.target.value)}
+                        onFocus={() => setIsEditingThoughts(true)}
+                        onBlur={handleThoughtsBlur}
+                        disabled={currentRating === 0}
+                        placeholder={currentRating === 0 ? "Rate first to add thoughts..." : "What did you think?"}
+                        className="w-full h-24 px-3 py-2 text-xs text-white/80 bg-white/[0.02] border border-white/[0.05] hover:border-white/10 focus:border-white/20 rounded-xl resize-none outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors placeholder:text-white/20"
+                    />
+                </div>
             </div>
 
             {/* TV Season/Episode Selector */}

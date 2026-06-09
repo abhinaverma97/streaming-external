@@ -41,8 +41,9 @@ function formatRatedItems(ratings) {
       const tmdbRating = d.vote_average ?? "N/A";
       const director = getDirector(d);
       const synopsis = d.overview || "N/A";
+      const thoughts = item.thoughts ? `\n   User Thoughts: ${item.thoughts}` : "";
       return `${i + 1}. "${title}" (${year}) - ${mediaType}
-   User Rating: ${userRating}/5
+   User Rating: ${userRating}/5${thoughts}
    TMDB Rating: ${tmdbRating}/10
    Director: ${director}
    Synopsis: ${synopsis}`;
