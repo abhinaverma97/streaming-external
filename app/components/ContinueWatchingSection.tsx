@@ -3,6 +3,7 @@
 import { memo } from "react";
 import ScrollRow from "./ScrollRow";
 import { MovieCard } from "./MovieCard";
+import { CardSkeleton } from "./CardSkeleton";
 import { getSource } from "../lib/sources-config";
 
 interface ContinueWatchingSectionProps {
@@ -11,17 +12,21 @@ interface ContinueWatchingSectionProps {
     effectiveSource: string;
     onResume: (item: any, src: string, parsedMovieId: number, fs: number, fe: number, mt: string) => void;
     DEBUG?: boolean;
+    isLoading?: boolean;
 }
 
-function ContinueWatchingSectionInner({ continueWatching, effectiveEnabledSources, effectiveSource, onResume, DEBUG }: ContinueWatchingSectionProps) {
-    if (continueWatching.length === 0) return null;
+function ContinueWatchingSectionInner({ continueWatching, effectiveEnabledSources, effectiveSource, onResume, DEBUG, isLoading }: ContinueWatchingSectionProps) {
+    if (!isLoading && continueWatching.length === 0) return null;
 
     return (
         <div className="snap-start snap-always scroll-mt-0 py-8">
             <h3 className="text-[10px] font-semibold mb-5 tracking-[0.28em] uppercase text-slate-300">
                 Continue Watching
             </h3>
-            <ScrollRow>
+            {isLoading ? (
+                <CardSkeleton layout="row" />
+            ) : (
+                <ScrollRow>
                 {continueWatching.map((item: any) => {
                     const percent = Math.min(100, Math.round((item.timestamp / item.duration) * 100));
                     let label: React.ReactNode = null;
@@ -75,6 +80,7 @@ function ContinueWatchingSectionInner({ continueWatching, effectiveEnabledSource
                     );
                 })}
             </ScrollRow>
+            )}
         </div>
     );
 }

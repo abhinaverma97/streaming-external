@@ -10,6 +10,7 @@ import { MobileBottomNav } from "../components/MobileBottomNav";
 import { getBackdropUrl, getPosterUrl } from "../lib/tmdb-utils";
 import { useUserLists } from "../hooks/useUserListsSWR";
 import { useSearch } from "../hooks/useSearch";
+import { CardSkeleton } from "../components/CardSkeleton";
 
 export default function LogPage() {
     const [sortBy, setSortBy] = useState<"rating" | "time" | "release">("time");
@@ -109,9 +110,7 @@ export default function LogPage() {
 
                 {/* Grid */}
                 {isLoading && ratings.length === 0 ? (
-                    <div className="flex justify-center py-32">
-                        <div className="w-6 h-6 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
-                    </div>
+                    <CardSkeleton layout="grid" count={12} />
                 ) : sortedRatings.length === 0 ? (
                     <div className="text-center py-32 flex flex-col items-center gap-4">
                         <div className="w-16 h-16 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center">

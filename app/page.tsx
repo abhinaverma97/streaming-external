@@ -53,10 +53,11 @@ export default function Home() {
     const {
         watchlist, continueWatching, history, ratings,
         fetchUserLists, handleRate, handleToggleWatchlist: toggleWatchlist,
+        isLoading: userListsLoading,
     } = useUserLists();
 
     // ── Movie Categories ──
-    const { trending, trendingType, setTrendingType } = useTrending("movie");
+    const { trending, trendingType, setTrendingType, loading: trendingLoading } = useTrending("movie");
     const [watchlistFilter, setWatchlistFilter] = useState<"all" | "movie" | "tv">("all");
 
     // ── Selected Movie for Hero ──
@@ -408,6 +409,7 @@ export default function Home() {
                             selectedMovieId={selectedMovie?.id}
                             onTrendingTypeChange={setTrendingType}
                             onCardClick={handleCardClick}
+                            loading={trendingLoading}
                         />
 
                         <ContinueWatchingSection
@@ -416,6 +418,7 @@ export default function Home() {
                             effectiveSource={effectiveSource}
                             onResume={handleCWResume}
                             DEBUG={DEBUG}
+                            isLoading={userListsLoading}
                         />
 
                         <WatchlistSection
@@ -423,6 +426,7 @@ export default function Home() {
                             watchlistFilter={watchlistFilter}
                             onFilterChange={setWatchlistFilter}
                             onCardClick={handleWatchlistCardClick}
+                            isLoading={userListsLoading}
                         />
                     </div>
                 </div>

@@ -15,6 +15,7 @@ import { useSourcePrefs } from "../hooks/useSourcePrefs";
 import { useUserLists } from "../hooks/useUserListsSWR";
 import { usePlayerProgress } from "../hooks/usePlayerProgress";
 import { useSearch } from "../hooks/useSearch";
+import { CardSkeleton } from "../components/CardSkeleton";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -221,9 +222,7 @@ export default function RecommendPage() {
 
                 {/* Content */}
                 {loading ? (
-                    <div className="flex justify-center py-32">
-                        <div className="w-6 h-6 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
-                    </div>
+                    <CardSkeleton layout="grid" count={12} />
                 ) : !recommendations || totalCount === 0 ? (
                     <div className="text-center py-32 flex flex-col items-center gap-4">
                         <div className="w-16 h-16 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center">

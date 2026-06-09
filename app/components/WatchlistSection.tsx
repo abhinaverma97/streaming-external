@@ -3,20 +3,22 @@
 import { memo } from "react";
 import ScrollRow from "./ScrollRow";
 import { MovieCard } from "./MovieCard";
+import { CardSkeleton } from "./CardSkeleton";
 
 interface WatchlistSectionProps {
     watchlist: any[];
     watchlistFilter: "all" | "movie" | "tv";
     onFilterChange: (filter: "all" | "movie" | "tv") => void;
     onCardClick: (item: any) => void;
+    isLoading?: boolean;
 }
 
-function WatchlistSectionInner({ watchlist, watchlistFilter, onFilterChange, onCardClick }: WatchlistSectionProps) {
+function WatchlistSectionInner({ watchlist, watchlistFilter, onFilterChange, onCardClick, isLoading }: WatchlistSectionProps) {
     const filteredWatchlist = watchlist.filter((item: any) =>
         watchlistFilter === "all" || item.mediaType === watchlistFilter
     );
 
-    if (filteredWatchlist.length === 0) return null;
+    if (!isLoading && filteredWatchlist.length === 0) return null;
 
     return (
         <div className="snap-start snap-always scroll-mt-0 py-8">
@@ -47,15 +49,19 @@ function WatchlistSectionInner({ watchlist, watchlistFilter, onFilterChange, onC
                     </button>
                 </div>
             </div>
-            <ScrollRow>
-                {filteredWatchlist.map((item: any) => (
-                    <MovieCard
-                        key={item.tmdbId}
-                        item={item}
-                        onClick={() => onCardClick(item)}
-                    />
-                ))}
-            </ScrollRow>
+            {isLoading ? (
+                <CardSkeleton layout="row" />
+            ) : (
+                <ScrollRow>
+                    {filteredWatchlist.map((item: any) => (
+                        <MovieCard
+                            key={item.tmdbId}
+                            item={item}
+                            onClick={() => onCardClick(item)}
+                        />
+                    ))}
+                </ScrollRow>
+            )}
         </div>
     );
 }

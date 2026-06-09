@@ -3,6 +3,7 @@
 import { memo } from "react";
 import ScrollRow from "./ScrollRow";
 import { MovieCard } from "./MovieCard";
+import { CardSkeleton } from "./CardSkeleton";
 import { Movie } from "../lib/types";
 
 interface TrendingSectionProps {
@@ -11,9 +12,10 @@ interface TrendingSectionProps {
     selectedMovieId: number | undefined;
     onTrendingTypeChange: (type: "movie" | "tv") => void;
     onCardClick: (movie: Movie) => void;
+    loading?: boolean;
 }
 
-function TrendingSectionInner({ trending, trendingType, selectedMovieId, onTrendingTypeChange, onCardClick }: TrendingSectionProps) {
+function TrendingSectionInner({ trending, trendingType, selectedMovieId, onTrendingTypeChange, onCardClick, loading }: TrendingSectionProps) {
     return (
         <div className="snap-start snap-always scroll-mt-0 py-8">
             <div className="flex items-center gap-6 mb-5">
@@ -37,7 +39,9 @@ function TrendingSectionInner({ trending, trendingType, selectedMovieId, onTrend
                 </div>
             </div>
 
-            {trending.length > 0 ? (
+            {loading ? (
+                <CardSkeleton layout="row" />
+            ) : trending.length > 0 ? (
                 <ScrollRow>
                     {trending.map((movie, index) => (
                         <MovieCard
