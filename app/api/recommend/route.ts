@@ -10,6 +10,15 @@ export async function GET(req: NextRequest) {
 
     const cached = await getRecommendations(username);
 
+    const isCheckOnly = req.nextUrl.searchParams.get("checkOnly") === "true";
+    if (isCheckOnly) {
+      if (!cached || (isStale(cached) && !cached.error && !cached.isGenerating)) {
+        startBackgroundGeneration(username);
+        return NextResponse.json({ generating: true });
+      }
+      return NextResponse.json({ generating: cached?.isGenerating || false });
+    }
+
     if (cached?.isGenerating) {
       return NextResponse.json(cached);
     }
@@ -75,6 +84,6 @@ function extractUsername(req: NextRequest): string | null {
 
 function isStale(recs: any): boolean {
   if (!recs.generatedAt) return true;
-  const twelveHours = 12 * 60 * 60 * 1000;
-  return Date.now() - recs.generatedAt > twelveHours;
+  const twoHours = 2 * 60 * 60 * 1000;
+  return Date.now() - recs.generatedAt > twoHours;
 }

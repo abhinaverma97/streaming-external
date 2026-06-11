@@ -262,24 +262,29 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
 
               {/* AI Settings */}
               <div className="flex flex-col gap-3 pt-4 border-t border-white/[0.05]">
-                <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400 flex items-center justify-between">
-                    <span>AI Configuration</span>
-                    <div className="flex items-center gap-3">
-                      {logTokens !== null && <span className="text-[9px] text-white/30 tracking-widest normal-case">Log size: ~{logTokens.toLocaleString()} tokens</span>}
-                      {aiPayload && (
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(aiPayload);
-                            setCopiedPayload(true);
-                            setTimeout(() => setCopiedPayload(false), 2000);
-                          }}
-                          className="text-[9px] px-2 py-0.5 rounded border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors"
-                        >
-                          {copiedPayload ? "Copied!" : "Copy Payload"}
-                        </button>
-                      )}
-                    </div>
-                </h3>
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400 flex items-center justify-between">
+                      <span>AI Configuration</span>
+                      <div className="flex items-center gap-3">
+                        {logTokens !== null && <span className="text-[9px] text-white/30 tracking-widest normal-case">Log size: ~{logTokens.toLocaleString()} tokens</span>}
+                        {aiPayload && (
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(aiPayload);
+                              setCopiedPayload(true);
+                              setTimeout(() => setCopiedPayload(false), 2000);
+                            }}
+                            className="text-[9px] px-2 py-0.5 rounded border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/60 hover:text-white transition-colors"
+                          >
+                            {copiedPayload ? "Copied!" : "Copy Payload"}
+                          </button>
+                        )}
+                      </div>
+                  </h3>
+                  <div className="text-[9px] text-slate-500 tracking-[0.15em] uppercase">
+                    Auto-generates every 2 hours (~12 requests/day)
+                  </div>
+                </div>
                 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[9px] text-slate-500 uppercase tracking-widest pl-1">OpenRouter API Key</label>

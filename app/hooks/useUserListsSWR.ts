@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import useSWR from "swr";
 import { getWatchlistId } from "../lib/watchlist";
 
@@ -13,6 +14,13 @@ export function useUserLists() {
     const fetchUserLists = async () => {
         await mutateData();
     };
+
+    useEffect(() => {
+        const checkRecs = () => fetch("/api/recommend?checkOnly=true").catch(() => {});
+        checkRecs();
+        const interval = setInterval(checkRecs, 30 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleRate = async (movie: any, rating: number, thoughts?: string) => {
         if (!movie || !movie.id) return;
