@@ -15,13 +15,6 @@ export function useUserLists() {
         await mutateData();
     };
 
-    useEffect(() => {
-        const checkRecs = () => fetch("/api/recommend?checkOnly=true").catch(() => {});
-        checkRecs();
-        const interval = setInterval(checkRecs, 30 * 60 * 1000);
-        return () => clearInterval(interval);
-    }, []);
-
     const handleRate = async (movie: any, rating: number, thoughts?: string) => {
         if (!movie || !movie.id) return;
         const prevRating = data?.ratings?.[movie.id];

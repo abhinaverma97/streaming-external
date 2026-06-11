@@ -1,5 +1,12 @@
 import db from "./db";
 
+// ── Users ──────────────────────────────────────────────────────────────
+
+export async function getAllUsers() {
+  const rows = db.prepare("SELECT username FROM users").all();
+  return rows.map(r => r.username);
+}
+
 // ── Watchlist ──────────────────────────────────────────────────────────
 
 export async function getWatchlist(username) {

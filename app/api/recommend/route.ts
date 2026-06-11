@@ -10,15 +10,6 @@ export async function GET(req: NextRequest) {
 
     const cached = await getRecommendations(username);
 
-    const isCheckOnly = req.nextUrl.searchParams.get("checkOnly") === "true";
-    if (isCheckOnly) {
-      if (!cached || (isStale(cached) && !cached.error && !cached.isGenerating)) {
-        startBackgroundGeneration(username);
-        return NextResponse.json({ generating: true });
-      }
-      return NextResponse.json({ generating: cached?.isGenerating || false });
-    }
-
     if (cached?.isGenerating) {
       return NextResponse.json(cached);
     }
