@@ -20,8 +20,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full scroll-smooth" data-scroll-behavior="smooth">
+    <html lang="en" className="h-full scroll-smooth bg-black" data-scroll-behavior="smooth">
       <head>
+        <meta name="color-scheme" content="dark" />
+        {/* Critical inline CSS: guarantees black bg before external stylesheet loads (fixes Firefox FOUC) */}
+        <style dangerouslySetInnerHTML={{ __html: `html,body{background:#000;color:#f8fafc}` }} />
         <link rel="icon" href="/nob.ico" sizes="any" />
         <link rel="icon" href="/nob.png" type="image/png" sizes="192x192" />
         <link rel="preconnect" href="https://image.tmdb.org" />

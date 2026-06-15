@@ -68,6 +68,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         onSourcesChange,
     } = useSourcePrefs(defaultSource, enabledSources);
 
+    // Tracks which source is active in the current player session only.
+    const [playerSource, setPlayerSource] = useState<string | null>(null);
+
     const selectedSourceRef = useRef(selectedSource);
     useEffect(() => { selectedSourceRef.current = selectedSource; }, [selectedSource]);
 
@@ -193,11 +196,13 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         }
         setPlayerError(null);
         const embedUrl = buildEmbedUrl(effectiveSource, item.id, isTv ? "tv" : "movie", isTv ? 1 : undefined, isTv ? 1 : undefined, 0);
+        setPlayerSource(effectiveSource);
         setActiveStream({ tmdbId, title: resolvedTitle, details: item, embedUrl });
     };
 
     const handleSourceChange = (newSource: string) => {
-        setSelectedSource(newSource);
+        // Only update the active player session — do NOT mutate the user's default.
+        setPlayerSource(newSource);
         if (!activeStream) return;
         const isTv = activeStream.details?.media_type === "tv" || activeStream.details?.mediaType === "tv";
         const startAt = lastProgressRef.current > 0 ? Math.floor(lastProgressRef.current) : undefined;
@@ -205,7 +210,12 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         setActiveStream({ ...activeStream, embedUrl: newUrl });
     };
 
-    const closePlayer = () => { setActiveStream(null); setPlayerError(null); refreshContinueWatching(); };
+    const closePlayer = () => {
+        setActiveStream(null);
+        setPlayerError(null);
+        setPlayerSource(null); // Reset ephemeral source
+        refreshContinueWatching();
+    };
 
     const changeEpisode = (season: number, episode: number) => {
         if (!activeStream) return;
@@ -221,7 +231,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+            {/* Gradient overlay removed — it created a visible white tint on the top section */}
 
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/recommend">
@@ -365,7 +375,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
             </div>
 
             <PlayerModal activeStream={activeStream} playerError={playerError} playerContainerRef={playerContainerRef} playerRef={playerRef}
-                effectiveSource={effectiveSource} effectiveEnabledSources={effectiveEnabledSources}
+                effectiveSource={playerSource || effectiveSource} effectiveEnabledSources={effectiveEnabledSources}
                 selectedShowDetails={selectedShowDetails} selectedSeason={selectedSeason} selectedEpisode={selectedEpisode}
                 episodesList={episodesList} ratings={ratings} onClose={closePlayer} onSourceChange={handleSourceChange}
                 onRate={handleRate} onChangeEpisode={changeEpisode} />

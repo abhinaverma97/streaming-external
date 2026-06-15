@@ -76,7 +76,7 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
-            <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+            {/* Gradient overlay removed — it created a visible white tint on the top section */}
 
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/log">

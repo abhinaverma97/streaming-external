@@ -52,6 +52,10 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
         onSourcesChange,
     } = useSourcePrefs(defaultSource, enabledSources);
 
+    // Tracks which source is active inside the current player session only.
+    // Intentionally separate from effectiveSource (user's configured default).
+    const [playerSource, setPlayerSource] = useState<string | null>(null);
+
     const {
         watchlist, continueWatching, ratings,
         handleRate, handleToggleWatchlist,
@@ -99,6 +103,12 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     useEffect(() => { selectedSourceRef.current = selectedSource; }, [selectedSource]);
 
     usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef, refreshContinueWatching);
+
+    // Bug 1 fix: re-sync CW from the API on every mount.
+    // Server component data may come from a stale RSC module instance;
+    // the API route is always authoritative.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { refreshContinueWatching(); }, []);
 
     useEffect(() => {
         if (isSearching && !searchLoading && searchResults.length > 0 && !hasScrolledToSearch.current) {
@@ -288,22 +298,27 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
 
         setPlayerError(null);
 
-        const effectiveSource = sourceOverride || selectedSource;
-        if (effectiveSource !== selectedSource) setSelectedSource(effectiveSource);
-        const embedUrl = buildEmbedUrl(effectiveSource, movie.id, isTv ? "tv" : "movie", targetSeason, targetEpisode, startTime);
+        // Always use the user's configured default (effectiveSource) for new plays.
+        // sourceOverride is only for CW resumes with a saved source.
+        const sourceToUse = sourceOverride || effectiveSource;
+        setPlayerSource(sourceToUse);
+        const embedUrl = buildEmbedUrl(sourceToUse, movie.id, isTv ? "tv" : "movie", targetSeason, targetEpisode, startTime);
 
         setActiveStream({ tmdbId, title: resolvedTitle, details: movie, embedUrl });
-    }, [selectedSeason, selectedEpisode, selectedShowDetails, selectedSource]);
+    }, [selectedSeason, selectedEpisode, selectedShowDetails, effectiveSource]);
 
     const changeEpisode = (season: number, episode: number) => {
         if (!activeStream) return;
         setSelectedSeason(season);
         setSelectedEpisode(episode);
-        playMovie(activeStream.details, 0, season, episode);
+        // Preserve whichever source is currently active in the player
+        playMovie(activeStream.details, 0, season, episode, playerSource || effectiveSource);
     };
 
     const handleSourceChange = (newSource: string) => {
-        setSelectedSource(newSource);
+        // Only update the active player session's source — do NOT mutate
+        // selectedSource / the user's configured default.
+        setPlayerSource(newSource);
         if (!activeStream) return;
         const isTv = activeStream.details?.media_type === "tv" || activeStream.details?.mediaType === "tv";
         const startAt = lastProgressRef.current > 0 ? Math.floor(lastProgressRef.current) : undefined;
@@ -314,14 +329,16 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     const closePlayer = () => {
         setActiveStream(null);
         setPlayerError(null);
+        setPlayerSource(null); // Reset ephemeral player source; future plays use the default
         refreshContinueWatching();
     };
 
     const handleCWResume = useCallback((item: any, src: string, parsedMovieId: number, fs: number, fe: number, mt: string) => {
-        if (src) setSelectedSource(src);
+        // CW items use their saved source as an override only for this play.
+        // Do NOT mutate selectedSource / the user's default.
         const cwMovie = { ...(item.movieDetails || {}), id: parsedMovieId, media_type: mt };
-        playMovie(cwMovie, item.timestamp, fs, fe, src);
-    }, [playMovie, setSelectedSource]);
+        playMovie(cwMovie, item.timestamp, fs, fe, src || effectiveSource);
+    }, [playMovie, effectiveSource]);
 
     const handleSettingsOpen = useCallback(() => setShowSettings(true), [setShowSettings]);
     const handleSettingsClose = useCallback(() => setShowSettings(false), [setShowSettings]);
@@ -333,7 +350,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
 
     return (
         <div className="relative h-screen flex flex-col overflow-hidden bg-black select-none text-slate-100">
-            <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+            {/* Gradient overlay removed — it created a visible white tint on the top section */}
 
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 <Navbar onSettingsClick={handleSettingsOpen} currentPath="/">
@@ -411,7 +428,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                 playerError={playerError}
                 playerContainerRef={playerContainerRef}
                 playerRef={playerRef}
-                effectiveSource={effectiveSource}
+                effectiveSource={playerSource || effectiveSource}
                 effectiveEnabledSources={effectiveEnabledSources}
                 selectedShowDetails={selectedShowDetails}
                 selectedSeason={selectedSeason}

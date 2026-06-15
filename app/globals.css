@@ -143,20 +143,23 @@
   will-change: transform, opacity;
 }
 
-@starting-style {
-  .modal-panel {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-
 .modal-backdrop {
   transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   opacity: 1;
 }
 
-@starting-style {
-  .modal-backdrop {
-    opacity: 0;
+/* Firefox-safe @starting-style: scoped to browsers that support it (Chrome/Safari) */
+@supports (selector(:has(*))) {
+  @starting-style {
+    .modal-panel {
+      opacity: 0;
+      transform: translateY(6px);
+    }
   }
-}
+
+  @starting-style {
+    .modal-backdrop {
+      opacity: 0;
+    }
+  }
+}

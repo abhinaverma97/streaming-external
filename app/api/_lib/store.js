@@ -66,7 +66,16 @@ function persist() {
 
 load();
 
+function ensureLoaded() {
+    // Guard against RSC/API route module instance divergence in Next.js:
+    // If all Maps are empty, re-read from disk to ensure fresh data.
+    if (store.progress.size === 0 && store.watchlist.size === 0 && store.history.length === 0 && store.ratings.size === 0) {
+        load();
+    }
+}
+
 export async function getWatchlist() {
+  ensureLoaded();
   return [...store.watchlist.values()]
     .map(r => ({
       tmdbId: r.tmdbId,
@@ -88,6 +97,7 @@ export async function removeFromWatchlist(tmdbId) {
 }
 
 export async function getProgress() {
+  ensureLoaded();
   const items = [...store.progress.values()].map(r => ({
     tmdbId: r.tmdbId,
     timestamp: r.timestamp,
@@ -134,6 +144,7 @@ export async function saveProgress(tmdbId, timestamp, duration, movieDetails, me
 }
 
 export async function getHistory() {
+  ensureLoaded();
   return store.history
     .map(r => ({ tmdbId: r.tmdbId, movieDetails: r.movieDetails, watchedAt: r.watchedAt }))
     .sort((a, b) => b.watchedAt - a.watchedAt)
@@ -154,6 +165,7 @@ export async function removeFromHistory(tmdbId) {
 }
 
 export async function getRatings() {
+  ensureLoaded();
   const ratings = {};
   for (const [tmdbId, r] of store.ratings) {
     ratings[tmdbId] = {
@@ -177,6 +189,7 @@ export async function deleteRating(tmdbId) {
 }
 
 export async function getSourcePrefs() {
+  ensureLoaded();
   return {
     enabled: store.settings.enabledSources,
     defaultSource: store.settings.defaultSource || "videasy",

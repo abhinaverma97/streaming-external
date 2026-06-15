@@ -56,7 +56,9 @@ export function useSearch() {
         } finally {
             if (abortControllerRef.current === controller) {
                 setSearchLoading(false);
-                setIsSearching(false);
+                // NOTE: do NOT set isSearching(false) here — that would
+                // unmount the SearchResultsSection immediately after results arrive.
+                // isSearching is only reset when the query is cleared.
             }
         }
     }, []);
