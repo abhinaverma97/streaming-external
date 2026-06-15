@@ -33,17 +33,40 @@ export default function RootLayout({
         {/* Critical inline CSS: guarantees black bg before external stylesheet loads (fixes Firefox FOUC) */}
         <style dangerouslySetInnerHTML={{ __html: `html,body{background:#000;color:#f8fafc}` }} />
           {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+        {process.env.NODE_ENV === "production" ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js");
   });
 }
 `,
-          }}
-        />
+            }}
+          />
+        ) : (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (let r of registrations) {
+      r.unregister().then(() => console.log("[Dev] Unregistered service worker"));
+    }
+  });
+}
+if ("caches" in window) {
+  caches.keys().then((keys) => {
+    for (let key of keys) {
+      caches.delete(key).then(() => console.log("[Dev] Cleared cache:", key));
+    }
+  });
+}
+`,
+            }}
+          />
+        )}
       </body>
     </html>
   );
