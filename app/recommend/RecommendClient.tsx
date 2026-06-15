@@ -63,7 +63,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     useEffect(() => { activeStreamRef.current = activeStream; }, [activeStream]);
 
     const {
-        selectedSource, setSelectedSource,
+        defaultSource: currentDefaultSource,
         effectiveEnabledSources, effectiveSource,
         onSourcesChange,
     } = useSourcePrefs(defaultSource, enabledSources);
@@ -71,8 +71,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     // Tracks which source is active in the current player session only.
     const [playerSource, setPlayerSource] = useState<string | null>(null);
 
-    const selectedSourceRef = useRef(selectedSource);
-    useEffect(() => { selectedSourceRef.current = selectedSource; }, [selectedSource]);
+    const currentActiveSource = playerSource || effectiveSource;
+    const activeSourceRef = useRef(currentActiveSource);
+    useEffect(() => { activeSourceRef.current = currentActiveSource; }, [currentActiveSource]);
 
     const {
         watchlist, ratings,
@@ -80,7 +81,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         refreshContinueWatching,
     } = useUserLists({ watchlist: wl, ratings: rt });
 
-    usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef, refreshContinueWatching);
+    usePlayerProgress(activeStreamRef, activeSourceRef, lastProgressRef, refreshContinueWatching);
 
     const [recommendations, setRecommendations] = useState<any>(null);
     const [loading, setLoading] = useState(true);

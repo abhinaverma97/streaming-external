@@ -16,7 +16,6 @@ interface HeroSectionProps {
     ratings: Record<string, any>;
     defaultSource: string;
     effectiveEnabledSources: string[];
-    selectedSource: string;
     activeStream: any;
     onPlay: (movie: Movie, startTime: number, season?: number, episode?: number, source?: string) => void;
     onToggleWatchlist: (movie: Movie) => void;
@@ -32,7 +31,6 @@ function HeroSectionInner({
     ratings,
     defaultSource,
     effectiveEnabledSources,
-    selectedSource,
     activeStream,
     onPlay,
     onToggleWatchlist,

@@ -47,7 +47,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     } = useSearch();
 
     const {
-        selectedSource, setSelectedSource,
+        defaultSource: currentDefaultSource,
         effectiveEnabledSources, effectiveSource,
         onSourcesChange,
     } = useSourcePrefs(defaultSource, enabledSources);
@@ -99,10 +99,11 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
 
     const activeStreamRef = useRef(activeStream);
     useEffect(() => { activeStreamRef.current = activeStream; }, [activeStream]);
-    const selectedSourceRef = useRef(selectedSource);
-    useEffect(() => { selectedSourceRef.current = selectedSource; }, [selectedSource]);
+    const currentActiveSource = playerSource || effectiveSource;
+    const activeSourceRef = useRef(currentActiveSource);
+    useEffect(() => { activeSourceRef.current = currentActiveSource; }, [currentActiveSource]);
 
-    usePlayerProgress(activeStreamRef, selectedSourceRef, lastProgressRef, refreshContinueWatching);
+    usePlayerProgress(activeStreamRef, activeSourceRef, lastProgressRef, refreshContinueWatching);
 
     // Bug 1 fix: re-sync CW from the API on every mount.
     // Server component data may come from a stale RSC module instance;
@@ -369,9 +370,8 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                         cwPlayContext={cwPlayContext}
                         watchlist={watchlist}
                         ratings={ratings}
-                        defaultSource={defaultSource}
+                        defaultSource={currentDefaultSource}
                         effectiveEnabledSources={effectiveEnabledSources}
-                        selectedSource={selectedSource}
                         activeStream={activeStream}
                         onPlay={playMovie}
                         onToggleWatchlist={handleToggleWatchlist}

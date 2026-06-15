@@ -17,33 +17,8 @@ export function ViewTransitionLink({
   onClick,
   ...props
 }: ViewTransitionLinkProps) {
-  const router = useRouter();
-
-  const handleTransition = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (onClick) {
-      onClick(e);
-      if (e.defaultPrevented) return;
-    }
-
-    e.preventDefault();
-    
-    // If browser doesn't support view transitions or it's an external link, standard navigation
-    if (
-      !("startViewTransition" in document) ||
-      typeof href !== "string" ||
-      href.startsWith("http")
-    ) {
-      router.push(href.toString());
-      return;
-    }
-
-    (document as any).startViewTransition(() => {
-      router.push(href.toString());
-    });
-  };
-
   return (
-    <Link href={href} className={className} onClick={handleTransition} {...props}>
+    <Link href={href} className={className} onClick={onClick} {...props}>
       {children}
     </Link>
   );
