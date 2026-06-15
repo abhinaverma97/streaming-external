@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, ChevronDown } from "lucide-react";
 import { SOURCES } from "../lib/sources-config";
+import { formatRatedItems, formatWatchlistItems } from "../lib/format-ratings";
 
 interface SettingsOverlayProps {
   isOpen: boolean;
@@ -79,26 +80,8 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
         fetch("/api/watchlist").then(r => r.json())
       ])
         .then(([ratingsData, watchlistData]) => {
-            const entries = Object.entries(ratingsData).filter(([, v]: any) => v && v.movieDetails);
-            const formatted = entries.map(([tmdbId, item]: any, i) => {
-                const d = item.movieDetails;
-                const title = d.title || d.name || "Unknown";
-                const year = (d.release_date || d.first_air_date || "").slice(0, 4) || "Unknown";
-                const mediaType = tmdbId.startsWith("tv-") ? "TV Show" : "Movie";
-                const userRating = item.rating ?? "?";
-                const tmdbRating = d.vote_average ?? "N/A";
-                let director = "Unknown";
-                if (d.director) director = d.director;
-                else if (d.credits?.crew) {
-                    const dir = d.credits.crew.find((c: any) => c.job === "Director");
-                    if (dir) director = dir.name;
-                }
-                const synopsis = d.overview || "N/A";
-                const thoughts = item.thoughts ? `\n   User Thoughts: ${item.thoughts}` : "";
-                return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5${thoughts}\n   TMDB Rating: ${tmdbRating}/10\n   Director: ${director}\n   Synopsis: ${synopsis}`;
-            }).join("\n\n");
-            
-            const formattedWatchlist = (watchlistData || []).map((w: any) => `- "${w.movieDetails?.title || w.movieDetails?.name || "Unknown"}" (${(w.movieDetails?.release_date || w.movieDetails?.first_air_date || "").slice(0, 4) || "Unknown"}) - ${w.mediaType}`).join("\n");
+            const formatted = formatRatedItems(ratingsData);
+            const formattedWatchlist = formatWatchlistItems(watchlistData);
 
             const fullPrompt = `You are a movie and TV show recommendation engine.\n\nAnalyze this user's complete set of rated content as a whole. Identify patterns in\ngenres, themes, directors, tone, and era preferences. Then recommend movies and TV\nshows the user would likely enjoy.\n\nUSER'S RATED CONTENT:\n${formatted || "None"}\n\nUSER'S WATCHLIST:\n${formattedWatchlist || "None"}\n\nBased on ALL items above, return a JSON object with:\n\n{\n  "recommendedMovies": [\n    { "title": "Inception", "year": 2010, "reason": "You enjoy Christopher Nolan's complex storytelling" }\n  ],\n  "recommendedTvShows": [\n    { "title": "Better Call Saul", "year": 2015, "reason": "You enjoy Vince Gilligan's character-driven crime dramas" }\n  ]\n}\n\nIMPORTANT:\n- The "year" field must be the release year of the recommended title (used to look it up on TMDB)\n- Recommend AT LEAST 18 movies and 18 TV shows.\n- DO NOT recommend anything already in the user's rated content list OR their watchlist above.\n- Provide a brief 1-sentence reason for each recommendation based on their ratings.\n- ONLY output the raw JSON object. No markdown, no introduction, no codeblocks.`;
             

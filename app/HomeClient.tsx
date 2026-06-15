@@ -56,7 +56,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
         watchlist, continueWatching, ratings,
         handleRate, handleToggleWatchlist,
         refreshContinueWatching,
-    } = useUserLists({ watchlist: wl, continueWatching: cw, history, ratings: rt });
+    } = useUserLists({ watchlist: wl, continueWatching: cw, ratings: rt });
 
     const [trendingType, setTrendingType] = useState<"movie" | "tv">("movie");
     const trending = trendingType === "movie" ? trendingMovies : trendingTv;
@@ -333,8 +333,9 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
 
     return (
         <div className="relative h-screen flex flex-col overflow-hidden bg-black select-none text-slate-100">
+            <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
 
-            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-0">
+            <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 <Navbar onSettingsClick={handleSettingsOpen} currentPath="/">
                     <SearchInput
                         searchQuery={searchQuery}
@@ -375,7 +376,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                         />
                     </div>
 
-                    <div className="flex flex-col gap-0 pb-28 md:pb-12">
+                    <div className="flex flex-col gap-0 pb-20">
                         <TrendingSection
                             trending={filteredTrending}
                             trendingType={trendingType}

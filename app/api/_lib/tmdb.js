@@ -40,15 +40,11 @@ async function tmdbGet(path, params, noCache = false) {
 }
 
 async function searchMovies(query, page) {
-    return tmdbGet("/search/movie", { query, page });
+    return tmdbGet("/search/movie", { query, page }, true);
 }
 
 async function searchTv(query, page) {
-    return tmdbGet("/search/tv", { query, page });
-}
-
-async function searchMulti(query, page) {
-    return tmdbGet("/search/multi", { query, page }, false);
+    return tmdbGet("/search/tv", { query, page }, true);
 }
 
 async function movieDetails(tmdbId) {
@@ -79,4 +75,4 @@ async function getTvByGenre(genreId, page = 1) {
     return tmdbGet("/discover/tv", { with_genres: genreId, page, sort_by: "popularity.desc" });
 }
 
-export { searchMovies, searchTv, searchMulti, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre, getTvByGenre };
+export { searchMovies, searchTv, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre, getTvByGenre };

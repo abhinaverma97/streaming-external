@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import {
-    searchMovies, searchTv, searchMulti, movieDetails, tvDetails,
+    movieDetails, tvDetails,
     getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre, getTvByGenre
 } from "../_lib/tmdb.js";
 import {
@@ -12,21 +12,10 @@ import {
     getSourcePrefs, saveSourcePrefs,
     getAiSettings, saveAiSettings
 } from "../_lib/store.js";
-import { getSourceUrl } from "../_lib/sources.js";
-
 type RouteHandler = (req: NextRequest, segments: string[]) => Promise<NextResponse>;
 
 function json(data: any, status = 200) {
     return NextResponse.json(data, { status });
-}
-
-function cachedJson(data: any, ttlSeconds: number) {
-    return NextResponse.json(data, {
-        status: 200,
-        headers: {
-            "Cache-Control": `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds}, stale-while-revalidate=${Math.floor(ttlSeconds / 2)}`
-        }
-    });
 }
 
 function error(msg: string, status = 500) {
@@ -43,57 +32,20 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             return json({ ok: true });
         }
 
-        // ── Search ─────────────────────────────────────────────────────
-        if (s0 === "search") {
-            const query = req.nextUrl.searchParams.get("q");
-            if (!query) return error("Missing q", 400);
-            const page = Number(req.nextUrl.searchParams.get("page") || 1);
-            const type = req.nextUrl.searchParams.get("type") || "movie";
-            let data;
-            if (type === "tv") data = await searchTv(query, page);
-            else if (type === "multi") data = await searchMulti(query, page);
-            else data = await searchMovies(query, page);
-            return NextResponse.json(data, {
-                headers: {
-                    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-                    Pragma: "no-cache",
-                    Expires: "0",
-                },
-            });
-        }
-
         // ── Movie / TV Details ─────────────────────────────────────────
         const pageNum = (p: string | null) => p ? Number(p) : 1;
 
         if ((s0 === "movie" || s0 === "movies") && s1 && method === "GET") {
-            if (s1 === "trending") return cachedJson(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))), 3600);
-            if (s1 === "top-rated") return cachedJson(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))), 86400);
-            if (s1 === "genre" && s2) return cachedJson(await getMoviesByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))), 86400);
-            if (s2 === "trending") return cachedJson(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))), 3600);
-            if (s2 === "top-rated") return cachedJson(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))), 86400);
-            return cachedJson({ tmdb: await movieDetails(s1) }, 86400);
+            if (s1 === "trending") return json(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))));
+            if (s1 === "top-rated") return json(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))));
+            if (s1 === "genre" && s2) return json(await getMoviesByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))));
+            return json({ tmdb: await movieDetails(s1) });
         }
 
         if (s0 === "tv" && s1 && method === "GET") {
-            if (s1 === "trending") return cachedJson(await getTrendingTv(pageNum(req.nextUrl.searchParams.get("page"))), 3600);
-            if (s1 === "genre" && s2) return cachedJson(await getTvByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))), 86400);
-            return cachedJson({ tmdb: await tvDetails(s1) }, 86400);
-        }
-
-        // ── Sources ────────────────────────────────────────────────────
-        if (s0 === "sources") {
-            const tmdbId = req.nextUrl.searchParams.get("tmdbId");
-            if (!tmdbId) return error("Missing tmdbId", 400);
-            const mediaType = req.nextUrl.searchParams.get("mediaType") || "movie";
-            const season = req.nextUrl.searchParams.get("season");
-            const episode = req.nextUrl.searchParams.get("episode");
-            const url = getSourceUrl(
-                tmdbId,
-                mediaType,
-                season ? Number(season) : undefined,
-                episode ? Number(episode) : undefined
-            );
-            return json({ url });
+            if (s1 === "trending") return json(await getTrendingTv(pageNum(req.nextUrl.searchParams.get("page"))));
+            if (s1 === "genre" && s2) return json(await getTvByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))));
+            return json({ tmdb: await tvDetails(s1) });
         }
 
         // ── Watchlist ──────────────────────────────────────────────────

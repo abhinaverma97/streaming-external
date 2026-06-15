@@ -77,7 +77,13 @@ function HeroSectionInner({
                                     ref={heroIframeRef}
                                     width="100%"
                                     height="100%"
-                                    src={`https://www.youtube.com/embed/${new URL(heroTrailerUrl).searchParams.get("v")}?autoplay=1&mute=1&controls=0&disablekb=1&modestbranding=1&enablejsapi=1&loop=1&playlist=${new URL(heroTrailerUrl).searchParams.get("v")}`}
+                                    src={(() => {
+                                        try {
+                                            const url = new URL(heroTrailerUrl);
+                                            const v = url.searchParams.get("v");
+                                            return v ? `https://www.youtube.com/embed/${v}?autoplay=1&mute=1&controls=0&disablekb=1&modestbranding=1&enablejsapi=1&loop=1&playlist=${v}` : "";
+                                        } catch { return ""; }
+                                    })()}
                                     allow="autoplay; encrypted-media"
                                     frameBorder="0"
                                     className="w-full h-full pointer-events-none"

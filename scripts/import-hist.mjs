@@ -221,8 +221,31 @@ function loadExistingData() {
   }
 }
 
+const CONCURRENCY = 5;
+
+async function enrichBatch(items, resolverFn) {
+  const results = [];
+  for (let i = 0; i < items.length; i += CONCURRENCY) {
+    const batch = items.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.allSettled(
+      batch.map(item => resolverFn(item))
+    );
+    for (const r of batchResults) {
+      results.push(r.status === "fulfilled" ? r.value : null);
+    }
+  }
+  return results;
+}
+
 async function main() {
   console.log("=== Import hist.txt ===\n");
+
+  const existing = loadExistingData();
+
+  if (existing.ratings && existing.ratings.length > 0) {
+    console.log(`Already imported (${existing.ratings.length} ratings found). Skipping.`);
+    return;
+  }
 
   if (!fs.existsSync(HIST_FILE)) {
     console.error("hist.txt not found at", HIST_FILE);
@@ -234,24 +257,24 @@ async function main() {
 
   console.log(`Parsed ${rated.length} rated entries, ${watchlist.length} watchlist entries\n`);
 
-  const existing = loadExistingData();
   const existingRatings = new Map(existing.ratings || []);
   const existingWatchlist = new Map(existing.watchlist || []);
 
   console.log("--- Resolving rated entries via TMDB ---");
-  let ratedAdded = 0;
-  let ratedFailed = 0;
-
-  for (const entry of rated) {
+  const ratedResults = await enrichBatch(rated, async (entry) => {
     process.stdout.write(`  #${entry.num} "${entry.title}" (${entry.year})... `);
     const resolved = await resolveEntry(entry);
     if (!resolved) {
       console.log("FAILED");
-      ratedFailed++;
-      await sleep(300);
-      continue;
+      return null;
     }
+    console.log(`✓ → tmdbId=${resolved.tmdbId} type=${resolved.mediaType} rating=${resolved.rating}/5`);
+    return resolved;
+  });
 
+  let ratedAdded = 0, ratedFailed = 0;
+  for (const resolved of ratedResults) {
+    if (!resolved) { ratedFailed++; continue; }
     existingRatings.set(resolved.tmdbId, {
       tmdbId: resolved.tmdbId,
       rating: resolved.rating,
@@ -259,25 +282,24 @@ async function main() {
       ratedAt: Date.now(),
       thoughts: resolved.thoughts,
     });
-    console.log(`✓ → tmdbId=${resolved.tmdbId} type=${resolved.mediaType} rating=${resolved.rating}/5`);
     ratedAdded++;
-    await sleep(300);
   }
 
   console.log("\n--- Resolving watchlist entries via TMDB ---");
-  let wlAdded = 0;
-  let wlFailed = 0;
-
-  for (const item of watchlist) {
+  const wlResults = await enrichBatch(watchlist, async (item) => {
     process.stdout.write(`  "${item.title}" (${item.year})... `);
     const resolved = await resolveWatchlistItem(item);
     if (!resolved) {
       console.log("FAILED");
-      wlFailed++;
-      await sleep(300);
-      continue;
+      return null;
     }
+    console.log(`✓ → tmdbId=${resolved.tmdbId} type=${resolved.mediaType}`);
+    return resolved;
+  });
 
+  let wlAdded = 0, wlFailed = 0;
+  for (const resolved of wlResults) {
+    if (!resolved) { wlFailed++; continue; }
     if (!existingWatchlist.has(resolved.tmdbId)) {
       existingWatchlist.set(resolved.tmdbId, {
         tmdbId: resolved.tmdbId,
@@ -286,9 +308,7 @@ async function main() {
         addedAt: Date.now(),
       });
     }
-    console.log(`✓ → tmdbId=${resolved.tmdbId} type=${resolved.mediaType}`);
     wlAdded++;
-    await sleep(300);
   }
 
   console.log("\n--- Writing user-data.json ---");

@@ -62,7 +62,7 @@ export function PlayerModal({
                         onClick={onClose}
                         className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 duration-200 cursor-pointer"
                     >
-                        <X className="w-4.5 h-4.5" />
+                        <X className="w-[18px] h-[18px]" />
                     </button>
                 </div>
             </div>

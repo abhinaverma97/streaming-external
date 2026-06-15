@@ -12,6 +12,7 @@ import { LogItemModal } from "../components/LogItemModal";
 import { getBackdropUrl, getPosterUrl } from "../lib/tmdb-utils";
 import { useUserLists } from "../hooks/useUserLists";
 import { useSearch } from "../hooks/useSearch";
+import { useSourcePrefs } from "../hooks/useSourcePrefs";
 
 interface LogClientProps {
     ratings: Record<string, any>;
@@ -36,6 +37,8 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
 
     const { ratings: ratingsMap, handleRate, handleDeleteRating } = useUserLists({ ratings: initialRatings });
 
+    const { onSourcesChange } = useSourcePrefs();
+
     const ratings = useMemo(() => {
         return Object.values(ratingsMap).filter((item: any) => item && item.movieDetails);
     }, [ratingsMap]);
@@ -43,7 +46,7 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
     const handleDesktopSearch = (e: any) => {
         e.preventDefault();
         if (searchQuery) {
-            router.push(`/?q=${encodeURIComponent(searchQuery)}`);
+            router.push("/");
         }
     };
 
@@ -51,21 +54,25 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
     const totalTv = ratings.filter((r: any) => r.movieDetails?.media_type === "tv").length;
     const isTv = (r: any) => r.movieDetails?.media_type === "tv";
 
-    const filteredRatings = mediaFilter === "all" ? ratings : ratings.filter((r: any) => mediaFilter === "tv" ? isTv(r) : !isTv(r));
+    const filteredRatings = useMemo(() => {
+        return mediaFilter === "all" ? ratings : ratings.filter((r: any) => mediaFilter === "tv" ? isTv(r) : !isTv(r));
+    }, [ratings, mediaFilter]);
 
-    const sortedRatings = [...filteredRatings].sort((a: any, b: any) => {
-        let result = 0;
-        if (sortBy === "rating") {
-            result = b.rating - a.rating;
-        } else if (sortBy === "release") {
-            const dateA = new Date(a.movieDetails.release_date || a.movieDetails.first_air_date || 0).getTime();
-            const dateB = new Date(b.movieDetails.release_date || b.movieDetails.first_air_date || 0).getTime();
-            result = dateB - dateA;
-        } else {
-            result = (b.ratedAt || 0) - (a.ratedAt || 0);
-        }
-        return sortOrder === "asc" ? -result : result;
-    });
+    const sortedRatings = useMemo(() => {
+        return [...filteredRatings].sort((a: any, b: any) => {
+            let result = 0;
+            if (sortBy === "rating") {
+                result = b.rating - a.rating;
+            } else if (sortBy === "release") {
+                const dateA = new Date(a.movieDetails.release_date || a.movieDetails.first_air_date || 0).getTime();
+                const dateB = new Date(b.movieDetails.release_date || b.movieDetails.first_air_date || 0).getTime();
+                result = dateB - dateA;
+            } else {
+                result = (b.ratedAt || 0) - (a.ratedAt || 0);
+            }
+            return sortOrder === "asc" ? -result : result;
+        });
+    }, [filteredRatings, sortBy, sortOrder]);
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
@@ -183,9 +190,7 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
                 currentPath="/log"
             />
 
-            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={(enabled, defaultSource) => {
-                fetch("/api/source-prefs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled, defaultSource }) }).catch(() => {});
-            }} />
+            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
         </main>
     );
 }

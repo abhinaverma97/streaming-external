@@ -8,12 +8,15 @@ import SettingsOverlay from "../components/SettingsOverlay";
 import { PlayerModal } from "../components/PlayerModal";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { buildEmbedUrl } from "../lib/sources-config";
-import { getBackdropUrl } from "../lib/tmdb-utils";
+import { getBackdropUrl, extractTrailerUrl } from "../lib/tmdb-utils";
+import TrailerModal from "../components/TrailerModal";
 import { getWatchlistId } from "../lib/watchlist";
 import { useSourcePrefs } from "../hooks/useSourcePrefs";
 import { useUserLists } from "../hooks/useUserLists";
 import { usePlayerProgress } from "../hooks/usePlayerProgress";
 import { useSearch } from "../hooks/useSearch";
+import { SearchInput } from "../components/SearchInput";
+import { useRouter } from "next/navigation";
 import { CardSkeleton } from "../components/CardSkeleton";
 
 interface RecommendClientProps {
@@ -44,6 +47,14 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         isMobileSearchOpen, setIsMobileSearchOpen,
         handleSearch
     } = useSearch();
+
+    const router = useRouter();
+    const handleDesktopSearch = (e: any) => {
+        e.preventDefault();
+        if (searchQuery) {
+            router.push(`/?q=${encodeURIComponent(searchQuery)}`);
+        }
+    };
 
     const lastProgressRef = useRef(0);
     const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -135,6 +146,26 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         return item._type === filter;
     });
 
+    const [trailerModal, setTrailerModal] = useState<{ videoKey: string; title: string } | null>(null);
+    const [noTrailerIds, setNoTrailerIds] = useState<string[]>([]);
+
+    const openTrailer = useCallback(async (item: any) => {
+        const id = String(item.id);
+        try {
+            const isTv = item.media_type === "tv" || item._type === "tv";
+            const res = await fetch(isTv ? `/api/tv/${item.id}` : `/api/movie/${item.id}`);
+            const data = await res.json();
+            const videoKey = extractTrailerUrl(data.tmdb?.videos);
+            if (videoKey) {
+                setTrailerModal({ videoKey, title: item.title || item.name || "Trailer" });
+            } else {
+                setNoTrailerIds(prev => [...prev, id]);
+            }
+        } catch {
+            setNoTrailerIds(prev => [...prev, id]);
+        }
+    }, []);
+
     const isInWatchlist = (item: any) => {
         if (!item.id) return false;
         const wlId = getWatchlistId(item);
@@ -193,7 +224,13 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
             <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
 
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
-                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/recommend" />
+                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/recommend">
+                    <SearchInput
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        handleSearch={handleDesktopSearch}
+                    />
+                </Navbar>
             </div>
 
             <div className="content-transition w-full flex-1 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pb-12">
@@ -284,6 +321,12 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                                             </div>
                                         </div>
 
+                                        {!noTrailerIds.includes(String(item.id)) && (
+                                            <button onClick={(e) => { e.stopPropagation(); openTrailer(item); }}
+                                                className="hidden md:flex absolute top-2.5 right-10 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100">
+                                                <Play className="w-3 h-3 fill-white pl-0.5" />
+                                            </button>
+                                        )}
                                         <button onClick={(e) => { e.stopPropagation(); handleToggleWatchlist(item); }}
                                             className="hidden md:flex absolute top-2.5 right-2.5 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100">
                                             {inWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
@@ -301,10 +344,18 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                                                 <span>{item.media_type === "tv" ? "Series" : "Movie"}</span>
                                             </div>
                                         </div>
-                                        <button onClick={(e) => { e.stopPropagation(); handleToggleWatchlist(item); }}
-                                            className="md:hidden shrink-0 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/80 active:scale-95 transition-transform">
-                                            {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                        </button>
+                                        <div className="md:hidden flex items-center gap-1.5 shrink-0">
+                                            {!noTrailerIds.includes(String(item.id)) && (
+                                                <button onClick={(e) => { e.stopPropagation(); openTrailer(item); }}
+                                                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/80 active:scale-95 transition-transform">
+                                                    <Play className="w-4 h-4 fill-white pl-0.5" />
+                                                </button>
+                                            )}
+                                            <button onClick={(e) => { e.stopPropagation(); handleToggleWatchlist(item); }}
+                                                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/80 active:scale-95 transition-transform">
+                                                {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -338,6 +389,10 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
             />
 
             <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
+
+            {trailerModal && (
+                <TrailerModal videoKey={trailerModal.videoKey} title={trailerModal.title} onClose={() => setTrailerModal(null)} />
+            )}
         </main>
     );
 }

@@ -43,7 +43,6 @@ export default function () {
       '/api/tv/trending',
       '/api/movie/27205',
       '/api/tv/1396',
-      '/api/search?q=batman&type=multi',
     ];
     for (const ep of eps) {
       const r = http.get(`${BASE}${ep}`);

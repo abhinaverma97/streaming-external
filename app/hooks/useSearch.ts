@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+const TMDB_BASE = "https://api.themoviedb.org/3";
+const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "1070730380f5fee0d87cf0382670b255";
 
 export function useSearch() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -17,8 +19,8 @@ export function useSearch() {
             setSearchLoading(false);
             return;
         }
-        setIsSearching(true);
         setSearchLoading(true);
+        setIsSearching(true);
 
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -27,9 +29,8 @@ export function useSearch() {
         abortControllerRef.current = controller;
 
         try {
-            let res = await fetch(`/api/search?q=${encodeURIComponent(query)}&type=multi`, {
-                signal: controller.signal
-            });
+            const url = `${TMDB_BASE}/search/multi?query=${encodeURIComponent(query)}&api_key=${TMDB_KEY}`;
+            const res = await fetch(url, { signal: controller.signal });
 
             if (!res.ok) {
                 if (abortControllerRef.current === controller) {
@@ -55,6 +56,7 @@ export function useSearch() {
         } finally {
             if (abortControllerRef.current === controller) {
                 setSearchLoading(false);
+                setIsSearching(false);
             }
         }
     }, []);

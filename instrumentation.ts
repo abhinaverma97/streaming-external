@@ -38,7 +38,12 @@ async function runDaemon() {
 
         const isStale = !cached || !cached.generatedAt || (Date.now() - cached.generatedAt > 2 * 60 * 60 * 1000);
 
-        if (isStale && !cached?.isGenerating && !cached?.error) {
+        if (isStale && !cached?.isGenerating) {
+            if (cached?.error) {
+                console.log("[Daemon] Previous error detected, clearing and retrying:", cached.error);
+                const { setGenerationStatus } = await import("./app/api/_lib/store.js");
+                await setGenerationStatus(false);
+            }
             console.log("[Daemon] Triggering background generation");
             await generateAndSaveAsync();
         }

@@ -26,7 +26,9 @@ export function useSourcePrefs(initialSource?: string, initialEnabled?: string[]
     }, [initialEnabled]);
 
     const effectiveEnabledSources = enabledSources.length > 0 ? enabledSources : ALL_SOURCES;
-    const effectiveSource = effectiveEnabledSources.includes(selectedSource) ? selectedSource : (effectiveEnabledSources[0] || "videasy");
+    const effectiveSource = effectiveEnabledSources.includes(selectedSource)
+        ? selectedSource
+        : (effectiveEnabledSources.includes(defaultSource) ? defaultSource : (effectiveEnabledSources[0] || "videasy"));
 
     const onSourcesChange = useCallback((enabled: string[], defaultSourceVal: string) => {
         setEnabledSources(enabled);
@@ -46,7 +48,6 @@ export function useSourcePrefs(initialSource?: string, initialEnabled?: string[]
     return {
         selectedSource,
         setSelectedSource,
-        defaultSource,
         enabledSources,
         effectiveEnabledSources,
         effectiveSource,

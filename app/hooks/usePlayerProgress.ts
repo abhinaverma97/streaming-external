@@ -27,8 +27,7 @@ function ensureMessageHandler() {
                 if (!msg) return;
 
                 if (msg.timestamp !== undefined && msg.duration) {
-                    const isVideasy = event.origin === "https://player.videasy.net" || event.origin === "https://player.videasy.to";
-                    if (DEBUG) console.log(`[${isVideasy ? "VIDEASY" : event.origin}] Flat message: ${JSON.stringify(msg)}`);
+                    if (DEBUG) console.log(`[${event.origin}] Flat message: ${JSON.stringify(msg)}`);
                     const mediaId = msg.id || msg.tmdbId;
                     if (mediaId && String(mediaId) === String(stream.details?.id)) {
                         if (DEBUG) console.log(`[${event.origin}] timeupdate: ${msg.timestamp}/${msg.duration}`);
@@ -101,6 +100,8 @@ function ensureMessageHandler() {
 }
 
 let currentProgressAbort: AbortController | null = null;
+let lastReportTime = 0;
+const THROTTLE_MS = 5000;
 
 async function reportProgress(
     stream: any,
@@ -112,6 +113,10 @@ async function reportProgress(
 ) {
     if (!stream || !duration || currentTime < 2) return;
     lastProgressRef.current = currentTime;
+
+    const now = Date.now();
+    if (now - lastReportTime < THROTTLE_MS) return;
+    lastReportTime = now;
 
     try {
         const resolvedMediaType = stream.details.media_type || stream.details.mediaType || (stream.tmdbId.startsWith("tv-") ? "tv" : "movie");
@@ -152,12 +157,6 @@ export function usePlayerProgress(
     onProgressSaved?: () => void,
 ) {
     ensureMessageHandler();
-
-    const listenerKeyRef = useRef({ activeStreamRef, selectedSourceRef, lastProgressRef, onProgressSaved });
-
-    useEffect(() => {
-        listenerKeyRef.current = { activeStreamRef, selectedSourceRef, lastProgressRef, onProgressSaved };
-    });
 
     useEffect(() => {
         const key = { activeStreamRef, selectedSourceRef, lastProgressRef, onProgressSaved };

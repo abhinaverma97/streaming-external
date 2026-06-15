@@ -22,9 +22,4 @@ export interface CwPlayContext {
     isTv: boolean;
 }
 
-export interface ActiveStream {
-    tmdbId: string;
-    title: string;
-    details: any;
-    embedUrl: string;
-}
+

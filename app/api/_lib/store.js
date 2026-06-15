@@ -124,13 +124,13 @@ export async function saveProgress(tmdbId, timestamp, duration, movieDetails, me
   const percentage = timestamp / duration;
   if (percentage > 0.95) {
     store.progress.delete(tmdbId);
-    await addToHistory(tmdbId, movieDetails);
+    addToHistory(tmdbId, movieDetails);
   } else {
     store.progress.set(tmdbId, {
       tmdbId, timestamp, duration, movieDetails, mediaType, source: source || null, updatedAt: Date.now(),
     });
+    persist();
   }
-  persist();
 }
 
 export async function getHistory() {

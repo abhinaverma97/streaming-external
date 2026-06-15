@@ -54,8 +54,6 @@ function PlayerSidebarInner({
     };
 
     const handleSeasonChangeInPlayer = (seasonNum: number) => {
-        const seasonObj = selectedShowDetails?.seasons?.find((s: any) => s.season_number === seasonNum);
-        const epCount = seasonObj ? seasonObj.episode_count : 1;
         onChangeEpisode(seasonNum, 1);
     };
 

@@ -3,10 +3,7 @@ import path from "path";
 import crypto from "crypto";
 
 const memory = new Map();
-
-async function ensureDir(dirPath) {
-    await fs.mkdir(dirPath, { recursive: true });
-}
+const LRU_MAX = 1000;
 
 function hashKey(key) {
     return crypto.createHash("sha1").update(key).digest("hex");
@@ -27,6 +24,10 @@ function getFromMemory(key) {
 }
 
 function setInMemory(key, value, ttlMs) {
+    if (memory.size >= LRU_MAX) {
+        const oldest = memory.keys().next().value;
+        if (oldest) memory.delete(oldest);
+    }
     memory.set(key, {
         value,
         expiresAt: ttlMs ? Date.now() + ttlMs : null
@@ -49,12 +50,13 @@ async function getFromDisk(cacheDir, key, ttlMs) {
         }
         return data.value;
     } catch {
+        try { await fs.unlink(cachePath); } catch {}
         return null;
     }
 }
 
 async function setToDisk(cacheDir, key, value) {
-    await ensureDir(cacheDir);
+    try { await fs.mkdir(cacheDir, { recursive: true }); } catch {}
     const cachePath = getCachePath(cacheDir, key);
     const payload = {
         savedAt: Date.now(),
@@ -77,5 +79,3 @@ export async function setCached(cacheDir, key, value, ttlMs) {
     setInMemory(key, value, ttlMs);
     await setToDisk(cacheDir, key, value);
 }
-
-export { ensureDir };

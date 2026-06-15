@@ -6,19 +6,15 @@ import { getWatchlistId } from "../lib/watchlist";
 export function useUserLists(initialData?: {
     watchlist?: any[];
     continueWatching?: any[];
-    history?: any[];
     ratings?: Record<string, any>;
 }) {
     const [watchlist, setWatchlist] = useState<any[]>(initialData?.watchlist || []);
     const [continueWatching, setContinueWatching] = useState<any[]>(initialData?.continueWatching || []);
-    const [history, setHistory] = useState<any[]>(initialData?.history || []);
     const [ratings, setRatings] = useState<Record<string, any>>(initialData?.ratings || {});
     const ratingsRef = useRef(ratings);
     useEffect(() => { ratingsRef.current = ratings; }, [ratings]);
     const watchlistRef = useRef(watchlist);
     useEffect(() => { watchlistRef.current = watchlist; }, [watchlist]);
-
-    const [isLoading, setIsLoading] = useState(false);
 
     const handleRate = useCallback(async (movie: any, rating: number, thoughts?: string) => {
         if (!movie || !movie.id) return;
@@ -130,12 +126,10 @@ export function useUserLists(initialData?: {
     return {
         watchlist,
         continueWatching,
-        history,
         ratings,
         handleRate,
         handleDeleteRating,
         handleToggleWatchlist,
-        isLoading,
         refreshContinueWatching,
     };
 }

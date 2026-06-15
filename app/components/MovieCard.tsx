@@ -88,7 +88,7 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                         )}
 
                         {progressPercent !== undefined && (
-                            <div className="absolute bottom-0 inset-x-0 h-1 bg-slate-850">
+                            <div className="absolute bottom-0 inset-x-0 h-1 bg-slate-800">
                                 <div className="h-full bg-white" style={{ width: `${progressPercent}%` }} />
                             </div>
                         )}

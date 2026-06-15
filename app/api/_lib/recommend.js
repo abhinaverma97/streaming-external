@@ -11,41 +11,7 @@ export function cancelGeneration() {
   return false;
 }
 
-const API_KEY = () => process.env.OPENROUTER_API_KEY;
-
-const RECOMMENDATION_COUNT = 15;
-
-function getDirector(details) {
-  if (details.director) return details.director;
-  const crew = details.credits?.crew;
-  if (crew) {
-    const dir = crew.find((c) => c.job === "Director");
-    if (dir) return dir.name;
-  }
-  return "Unknown";
-}
-
-function formatRatedItems(ratings) {
-  const entries = Object.entries(ratings).filter(([, v]) => v?.movieDetails);
-  return entries
-    .map(([tmdbId, item], i) => {
-      const d = item.movieDetails;
-      const title = d.title || d.name || "Unknown";
-      const year = (d.release_date || d.first_air_date || "").slice(0, 4) || "Unknown";
-      const mediaType = tmdbId.startsWith("tv-") ? "TV Show" : "Movie";
-      const userRating = item.rating ?? "?";
-      const tmdbRating = d.vote_average ?? "N/A";
-      const director = getDirector(d);
-      const synopsis = d.overview || "N/A";
-      const thoughts = item.thoughts ? `\n   User Thoughts: ${item.thoughts}` : "";
-      return `${i + 1}. "${title}" (${year}) - ${mediaType}
-   User Rating: ${userRating}/5${thoughts}
-   TMDB Rating: ${tmdbRating}/10
-   Director: ${director}
-   Synopsis: ${synopsis}`;
-    })
-    .join("\n\n");
-}
+import { formatRatedItems, formatWatchlistItems } from "../../lib/format-ratings";
 
 function buildPrompt(formatted, formattedWatchlist) {
   return `You are a movie and TV show recommendation engine.
@@ -81,7 +47,7 @@ IMPORTANT:
 
 export function buildRecommendationPrompt(ratings, watchlist) {
   const formatted = formatRatedItems(ratings);
-  const formattedWatchlist = (watchlist || []).map(w => `- "${w.movieDetails?.title || w.movieDetails?.name || "Unknown"}" (${(w.movieDetails?.release_date || w.movieDetails?.first_air_date || "").slice(0, 4) || "Unknown"}) - ${w.mediaType}`).join("\n");
+  const formattedWatchlist = formatWatchlistItems(watchlist);
   return buildPrompt(formatted, formattedWatchlist);
 }
 
@@ -177,79 +143,65 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
     recommendedTvShows: parsed.recommendedTvShows || [],
   };
 }
+async function enrichItem(item, searchFn, mediaType) {
+  try {
+    const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
+    let data = await searchFn(searchTitle);
+    let result = findBestMatch(data.results || [], searchTitle, item.year);
+
+    if (!result && data.results?.length > 0) {
+      result = data.results[0];
+    }
+
+    if (result) {
+      const isTv = mediaType === "tv";
+      return {
+        ...item,
+        id: result.id,
+        title: isTv ? result.name : result.title,
+        poster_path: result.poster_path,
+        backdrop_path: result.backdrop_path,
+        overview: result.overview,
+        vote_average: result.vote_average,
+        ...(isTv ? { first_air_date: result.first_air_date } : { release_date: result.release_date }),
+        media_type: mediaType,
+      };
+    }
+    return { ...item, id: null, media_type: mediaType };
+  } catch (err) {
+    console.error(`[Recommend] Failed to enrich ${mediaType} "${item.title}": ${err}`);
+    return { ...item, id: null, media_type: mediaType };
+  }
+}
+
+const CONCURRENCY = 5;
+
+async function enrichBatch(items, searchFn, mediaType) {
+  const results = [];
+  for (let i = 0; i < items.length; i += CONCURRENCY) {
+    const batch = items.slice(i, i + CONCURRENCY);
+    const batchResults = await Promise.allSettled(
+      batch.map(item => enrichItem(item, searchFn, mediaType))
+    );
+    for (const r of batchResults) {
+      results.push(r.status === "fulfilled" ? r.value : { ...batch[results.length - batch.length + batchResults.indexOf(r)], id: null, media_type: mediaType });
+    }
+  }
+  return results;
+}
+
 export async function enrichWithTmdb(recommendations) {
   const t0 = Date.now();
-  console.log(`[Recommend] Enriching ${recommendations.recommendedMovies.length} movies and ${recommendations.recommendedTvShows.length} TV shows with TMDB data`);
+  console.log(`[Recommend] Enriching ${recommendations.recommendedMovies.length} movies and ${recommendations.recommendedTvShows.length} TV shows with TMDB data (concurrency ${CONCURRENCY})`);
 
-  const enriched = { recommendedMovies: [], recommendedTvShows: [] };
+  const [enrichedMovies, enrichedTvShows] = await Promise.all([
+    enrichBatch(recommendations.recommendedMovies || [], searchMovies, "movie"),
+    enrichBatch(recommendations.recommendedTvShows || [], searchTv, "tv"),
+  ]);
 
-  for (const item of recommendations.recommendedMovies || []) {
-    try {
-      const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
-      let data = await searchMovies(searchTitle);
-      let result = findBestMatch(data.results || [], searchTitle, item.year);
-      
-      // Fallback search without exact year match filter
-      if (!result && data.results?.length > 0) {
-          result = data.results[0];
-      }
-      
-      if (result) {
-        enriched.recommendedMovies.push({
-          ...item,
-          id: result.id,
-          title: result.title,
-          poster_path: result.poster_path,
-          backdrop_path: result.backdrop_path,
-          overview: result.overview,
-          vote_average: result.vote_average,
-          release_date: result.release_date,
-          media_type: "movie",
-        });
-      } else {
-        enriched.recommendedMovies.push({ ...item, id: null, media_type: "movie" });
-      }
-    } catch (err) {
-      console.error(`[Recommend] Failed to enrich movie "${item.title}": ${err}`);
-      enriched.recommendedMovies.push({ ...item, id: null, media_type: "movie" });
-    }
-  }
+  console.log(`[Recommend] Enrichment complete in ${Date.now() - t0}ms. Final: ${enrichedMovies.length} movies, ${enrichedTvShows.length} TV shows`);
 
-  for (const item of recommendations.recommendedTvShows || []) {
-    try {
-      const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
-      let data = await searchTv(searchTitle);
-      let result = findBestMatch(data.results || [], searchTitle, item.year);
-
-      // Fallback search
-      if (!result && data.results?.length > 0) {
-          result = data.results[0];
-      }
-
-      if (result) {
-        enriched.recommendedTvShows.push({
-          ...item,
-          id: result.id,
-          title: result.name,
-          poster_path: result.poster_path,
-          backdrop_path: result.backdrop_path,
-          overview: result.overview,
-          vote_average: result.vote_average,
-          first_air_date: result.first_air_date,
-          media_type: "tv",
-        });
-      } else {
-        enriched.recommendedTvShows.push({ ...item, id: null, media_type: "tv" });
-      }
-    } catch (err) {
-      console.error(`[Recommend] Failed to enrich TV show "${item.title}": ${err}`);
-      enriched.recommendedTvShows.push({ ...item, id: null, media_type: "tv" });
-    }
-  }
-
-  console.log(`[Recommend] Enrichment complete in ${Date.now() - t0}ms. Final: ${enriched.recommendedMovies.length} movies, ${enriched.recommendedTvShows.length} TV shows`);
-
-  return enriched;
+  return { recommendedMovies: enrichedMovies, recommendedTvShows: enrichedTvShows };
 }
 
 function findBestMatch(results, title, year) {

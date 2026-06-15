@@ -12,7 +12,7 @@ export function getPosterUrl(path: string): string {
 }
 
 export function getBackdropUrl(path: string): string {
-    return path ? `https://image.tmdb.org/t/p/w1280${path}` : "";
+    return path ? `https://image.tmdb.org/t/p/w1280${path}` : "https://via.placeholder.com/1280x720?text=No+Backdrop";
 }
 
 export function getCardBackdropUrl(path: string): string {
