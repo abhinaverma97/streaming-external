@@ -23,8 +23,6 @@ export default function RootLayout({
     <html lang="en" className="h-full scroll-smooth bg-black" data-scroll-behavior="smooth">
       <head>
         <meta name="color-scheme" content="dark" />
-        {/* Critical inline CSS: guarantees black bg before external stylesheet loads (fixes Firefox FOUC) */}
-        <style dangerouslySetInnerHTML={{ __html: `html,body{background:#000;color:#f8fafc}` }} />
         <link rel="icon" href="/nob.ico" sizes="any" />
         <link rel="icon" href="/nob.png" type="image/png" sizes="192x192" />
         <link rel="preconnect" href="https://image.tmdb.org" />
@@ -32,6 +30,8 @@ export default function RootLayout({
       <body
         className={`${outfit.className} min-h-full bg-black text-slate-100 antialiased overflow-x-hidden selection:bg-white/20 selection:text-white`}
       >
+        {/* Critical inline CSS: guarantees black bg before external stylesheet loads (fixes Firefox FOUC) */}
+        <style dangerouslySetInnerHTML={{ __html: `html,body{background:#000;color:#f8fafc}` }} />
           {children}
         <script
           dangerouslySetInnerHTML={{
