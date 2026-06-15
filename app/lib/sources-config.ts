@@ -67,12 +67,12 @@ export const SOURCES: SourceConfig[] = [
     origins: ["https://vidlink.pro"],
     buildMovieUrl: (id, st) => {
       let u = `https://vidlink.pro/movie/${id}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
-      if (st && st > 0) u += `&startAt=${st}`;
+      if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
       return u;
     },
     buildTvUrl: (id, s, e, st) => {
       let u = `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
-      if (st && st > 0) u += `&startAt=${st}`;
+      if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
       return u;
     },
     supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: true, progress: true },
@@ -88,7 +88,7 @@ export const SOURCES: SourceConfig[] = [
     },
     buildTvUrl: (id, s, e, st) => {
       let u = `https://vidnest.fun/tv/${id}/${s}/${e}?servericon=false`;
-      if (st && st > 0) u += `&progress=${Math.floor(st)}`;
+      if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
       return u;
     },
     supports: { autoPlay: false, serverSelection: true, subtitles: false, colorTheme: false, startTime: true, progress: true },

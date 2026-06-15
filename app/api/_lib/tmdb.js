@@ -21,7 +21,14 @@ async function tmdbGet(path, params, noCache = false) {
         if (cached) return cached;
     }
 
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(new Error("TMDB timeout after 10s")), 10000);
+    let response;
+    try {
+        response = await fetch(url, { signal: controller.signal });
+    } finally {
+        clearTimeout(timeoutId);
+    }
     if (!response.ok) {
         const text = await response.text();
         throw new Error(`TMDB error ${response.status}: ${text}`);
@@ -68,4 +75,8 @@ async function getMoviesByGenre(genreId, page = 1) {
     return tmdbGet("/discover/movie", { with_genres: genreId, page, sort_by: "popularity.desc" });
 }
 
-export { searchMovies, searchTv, searchMulti, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre };
+async function getTvByGenre(genreId, page = 1) {
+    return tmdbGet("/discover/tv", { with_genres: genreId, page, sort_by: "popularity.desc" });
+}
+
+export { searchMovies, searchTv, searchMulti, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre, getTvByGenre };

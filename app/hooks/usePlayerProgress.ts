@@ -12,13 +12,6 @@ let listeners: Set<{
     lastProgressRef: React.MutableRefObject<number>;
     onProgressSaved?: () => void;
 }> = new Set();
-let progressTimeouts: Map<any, NodeJS.Timeout> = new Map();
-
-function extractNumericId(prefixedId: string): string {
-    const match = prefixedId.match(/\d+$/);
-    return match ? match[0] : prefixedId;
-}
-
 function ensureMessageHandler() {
     if (typeof window === "undefined" || messageHandler) return;
 
@@ -50,7 +43,7 @@ function ensureMessageHandler() {
                 const d = msg.data;
 
                 const sourceName = (() => { const s = SOURCES.find((x) => x.origins.includes(event.origin)); return s ? s.name : event.origin; })();
-                if (DEBUG) console.log(`[${sourceName}] Event: ${dtype}${dtype === "PLAYER_EVENT" || dtype === "WATCH_PROGRESS" ? ` (${d.event || d.eventType})` : ""}`);
+                if (DEBUG) console.log(`[${sourceName}] Event: ${dtype}${dtype === "PLAYER_EVENT" ? ` (${d.event})` : ""}`);
 
                 let evt: string | undefined;
                 let currentTime: number | undefined;
@@ -62,17 +55,6 @@ function ensureMessageHandler() {
                     currentTime = d.currentTime;
                     duration = d.duration;
                     mediaId = d.tmdbId ?? d.mtmdbId ?? d.id;
-                    if (mediaId === undefined) {
-                        mediaId = stream.details?.id;
-                    }
-                } else if (dtype === "WATCH_PROGRESS") {
-                    evt = d.eventType || "timeupdate";
-                    currentTime = d.currentTime;
-                    duration = d.duration;
-                    mediaId = d.mediaId;
-                    if (mediaId && typeof mediaId === "string" && /^\D/.test(mediaId)) {
-                        mediaId = extractNumericId(mediaId);
-                    }
                     if (mediaId === undefined) {
                         mediaId = stream.details?.id;
                     }
@@ -106,7 +88,7 @@ function ensureMessageHandler() {
                     reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSaved);
                 } else if (evt === "ended") {
                     reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime || duration, duration, onProgressSaved);
-                } else if (evt === "play" && currentTime >= 5 && duration > 0) {
+                } else if (evt === "play" && currentTime >= 2 && duration > 0) {
                     reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSaved);
                 }
             } catch {
@@ -118,6 +100,8 @@ function ensureMessageHandler() {
     window.addEventListener("message", messageHandler);
 }
 
+let currentProgressAbort: AbortController | null = null;
+
 async function reportProgress(
     stream: any,
     source: string,
@@ -126,13 +110,16 @@ async function reportProgress(
     duration: number,
     onProgressSaved?: () => void
 ) {
-    if (!stream || !duration || currentTime < 5) return;
+    if (!stream || !duration || currentTime < 2) return;
     lastProgressRef.current = currentTime;
 
     try {
         const resolvedMediaType = stream.details.media_type || stream.details.mediaType || (stream.tmdbId.startsWith("tv-") ? "tv" : "movie");
         if (DEBUG) console.log(`[${getSource(source).name}] Progress: ${Math.round(currentTime)}s / ${Math.round(duration)}s (${Math.round((currentTime / duration) * 100)}%)`);
+        if (currentProgressAbort) currentProgressAbort.abort();
+        currentProgressAbort = new AbortController();
         const res = await fetch(`/api/progress`, {
+            signal: currentProgressAbort.signal,
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -153,8 +140,8 @@ async function reportProgress(
             })
         });
         if (res.ok) onProgressSaved?.();
-    } catch {
-        // ignore
+    } catch (err) {
+        if (DEBUG) console.log(`[Progress] Report failed: ${err}`);
     }
 }
 
@@ -177,6 +164,15 @@ export function usePlayerProgress(
         listeners.add(key);
         return () => {
             listeners.delete(key);
+        };
+    }, [onProgressSaved]);
+
+    useEffect(() => {
+        return () => {
+            if (messageHandler) {
+                window.removeEventListener("message", messageHandler);
+                messageHandler = null;
+            }
         };
     }, []);
 }

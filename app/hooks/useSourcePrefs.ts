@@ -3,21 +3,29 @@
 import { useState, useCallback, useEffect } from "react";
 import { SOURCES } from "../lib/sources-config";
 
-export function useSourcePrefs() {
-    const [selectedSource, setSelectedSource] = useState<string>("videasy");
-    const [defaultSource, setDefaultSource] = useState<string>("videasy");
-    const [enabledSources, setEnabledSources] = useState<string[]>(() => {
+const ALL_SOURCES = SOURCES.map((s) => s.id);
+
+export function useSourcePrefs(initialSource?: string, initialEnabled?: string[]) {
+    const [selectedSource, setSelectedSource] = useState<string>(initialSource || "videasy");
+    const [defaultSource, setDefaultSource] = useState<string>(initialSource || "videasy");
+    const [enabledSources, setEnabledSources] = useState<string[]>(() =>
+        initialEnabled?.length ? initialEnabled : ALL_SOURCES
+    );
+
+    useEffect(() => {
+        if (initialEnabled?.length) return;
         try {
             const raw = localStorage.getItem("spicy-enabled-sources");
             if (raw) {
                 const p = JSON.parse(raw);
-                if (Array.isArray(p) && p.length > 0) return p;
+                if (Array.isArray(p) && p.length > 0) {
+                    setEnabledSources(p);
+                }
             }
-        } catch {}
-        return SOURCES.map((s) => s.id);
-    });
+        } catch { /* localStorage unavailable */ }
+    }, [initialEnabled]);
 
-    const effectiveEnabledSources = enabledSources.length > 0 ? enabledSources : SOURCES.map((s) => s.id);
+    const effectiveEnabledSources = enabledSources.length > 0 ? enabledSources : ALL_SOURCES;
     const effectiveSource = effectiveEnabledSources.includes(selectedSource) ? selectedSource : (effectiveEnabledSources[0] || "videasy");
 
     const onSourcesChange = useCallback((enabled: string[], defaultSourceVal: string) => {
@@ -34,27 +42,6 @@ export function useSourcePrefs() {
             body: JSON.stringify({ enabled, defaultSource: defaultSourceVal })
         }).catch(() => {});
     }, []);
-
-    const fetchSourcePrefs = useCallback(async () => {
-        try {
-            const res = await fetch("/api/user/bootstrap");
-            if (!res.ok) return;
-            const data = await res.json();
-            const prefs = data.sourcePrefs || {};
-            if (prefs.enabled && Array.isArray(prefs.enabled) && prefs.enabled.length > 0) {
-                setEnabledSources(prefs.enabled);
-                localStorage.setItem("spicy-enabled-sources", JSON.stringify(prefs.enabled));
-            }
-            if (prefs.defaultSource && SOURCES.some((s) => s.id === prefs.defaultSource)) {
-                setSelectedSource(prefs.defaultSource);
-                setDefaultSource(prefs.defaultSource);
-            }
-        } catch {}
-    }, []);
-
-    useEffect(() => {
-        fetchSourcePrefs();
-    }, [fetchSourcePrefs]);
 
     return {
         selectedSource,

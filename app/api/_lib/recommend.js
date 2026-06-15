@@ -1,15 +1,11 @@
 import { searchMovies, searchTv } from "./tmdb.js";
 
-if (!global.activeGenerations) {
-  global.activeGenerations = new Map();
-}
-const activeGenerations = global.activeGenerations;
+let activeController = null;
 
-export function cancelGeneration(username) {
-  const controller = activeGenerations.get(username);
-  if (controller) {
-    controller.abort(new Error("User cancelled generation"));
-    activeGenerations.delete(username);
+export function cancelGeneration() {
+  if (activeController) {
+    activeController.abort(new Error("User cancelled generation"));
+    activeController = null;
     return true;
   }
   return false;
@@ -89,7 +85,7 @@ export function buildRecommendationPrompt(ratings, watchlist) {
   return buildPrompt(formatted, formattedWatchlist);
 }
 
-export async function generateRecommendations(username, ratings, watchlist, aiSettings) {
+export async function generateRecommendations(ratings, watchlist, aiSettings) {
   const apiKey = aiSettings?.apiKey;
   if (!apiKey) {
     throw new Error("API Key required. Please enter your OpenRouter API key in Settings.");
@@ -102,9 +98,10 @@ export async function generateRecommendations(username, ratings, watchlist, aiSe
   console.log(`[Recommend] Prompt length: ${prompt.length} chars`);
 
   const controller = new AbortController();
-  activeGenerations.set(username, controller);
+  activeController = controller;
 
   const timeout = setTimeout(() => {
+    if (activeController !== controller) return;
     console.log(`[Recommend] OpenRouter fetch timed out after 1 hour`);
     controller.abort(new Error("Timeout"));
   }, 3600000);
@@ -129,8 +126,13 @@ export async function generateRecommendations(username, ratings, watchlist, aiSe
       }),
     });
   } finally {
-    activeGenerations.delete(username);
+    activeController = null;
     clearTimeout(timeout);
+  }
+
+  if (!res) {
+    console.log(`[Recommend] OpenRouter fetch failed — no response (likely aborted)`);
+    throw new Error("OpenRouter fetch failed");
   }
 
   console.log(`[Recommend] OpenRouter responded in ${Date.now() - t0}ms with status ${res.status}`);
@@ -207,7 +209,8 @@ export async function enrichWithTmdb(recommendations) {
       } else {
         enriched.recommendedMovies.push({ ...item, id: null, media_type: "movie" });
       }
-    } catch {
+    } catch (err) {
+      console.error(`[Recommend] Failed to enrich movie "${item.title}": ${err}`);
       enriched.recommendedMovies.push({ ...item, id: null, media_type: "movie" });
     }
   }
@@ -238,7 +241,8 @@ export async function enrichWithTmdb(recommendations) {
       } else {
         enriched.recommendedTvShows.push({ ...item, id: null, media_type: "tv" });
       }
-    } catch {
+    } catch (err) {
+      console.error(`[Recommend] Failed to enrich TV show "${item.title}": ${err}`);
       enriched.recommendedTvShows.push({ ...item, id: null, media_type: "tv" });
     }
   }

@@ -1,10 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-# Install dependencies for native modules (better-sqlite3)
-RUN apk add --no-cache python3 make g++ 
 COPY package*.json ./
 RUN npm ci
 COPY . .
+RUN node scripts/import-hist.mjs
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -13,6 +12,6 @@ ENV NODE_ENV=production
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/.cache ./.cache
 EXPOSE 3000
-CMD ["sh", "-c", "node scripts/migrate-to-sqlite.js && node server.js"]
+CMD ["node", "server.js"]

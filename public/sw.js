@@ -32,7 +32,7 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // Never cache API responses (auth state, user data)
+  // Never cache API responses
   if (url.pathname.startsWith("/api/")) {
     e.respondWith(fetch(request));
     return;

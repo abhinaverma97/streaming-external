@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
-import { AuthProvider } from "./components/AuthProvider";
+
 import "./globals.css";
 
 const outfit = Outfit({
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className="h-full scroll-smooth" data-scroll-behavior="smooth">
       <head>
         <link rel="icon" href="/nob.ico" sizes="any" />
         <link rel="icon" href="/nob.png" type="image/png" sizes="192x192" />
@@ -28,11 +28,8 @@ export default function RootLayout({
       </head>
       <body
         className={`${outfit.className} min-h-full bg-black text-slate-100 antialiased overflow-x-hidden selection:bg-white/20 selection:text-white`}
-        suppressHydrationWarning
       >
-        <AuthProvider>
           {children}
-        </AuthProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

@@ -7,8 +7,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const nextConfig: NextConfig = {
     output: "standalone",
-    reactStrictMode: false,
-    reactCompiler: true,
 
     images: {
         unoptimized: true,

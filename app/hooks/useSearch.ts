@@ -59,6 +59,15 @@ export function useSearch() {
         }
     }, []);
 
+    useEffect(() => {
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+            }
+        };
+    }, []);
+
     const searchTimerRef = useRef<any>(null);
 
     useEffect(() => {
