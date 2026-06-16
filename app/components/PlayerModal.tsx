@@ -59,6 +59,8 @@ export function PlayerModal({
     const [selectedSimilarIdx, setSelectedSimilarIdx] = useState(0);
     const [selectedSimilarDetails, setSelectedSimilarDetails] = useState<any | null>(null);
     const [similarTrailerUrl, setSimilarTrailerUrl] = useState<string | null>(null);
+    const [similarDetailLoading, setSimilarDetailLoading] = useState(false);
+    const similarDetailCache = useRef<Map<number, { details: any; trailerUrl: string | null }>>(new Map());
 
     const [detailsFullData, setDetailsFullData] = useState<any | null>(null);
     const [detailsTrailerKey, setDetailsTrailerKey] = useState<string | null>(null);
@@ -80,6 +82,7 @@ export function PlayerModal({
         setSelectedSimilarIdx(0);
         setSelectedSimilarDetails(null);
         setSimilarTrailerUrl(null);
+        similarDetailCache.current.clear();
 
         fetch("/api/similar", {
             method: "POST",
@@ -110,29 +113,50 @@ export function PlayerModal({
         if (!item || !item.id) {
             setSelectedSimilarDetails(null);
             setSimilarTrailerUrl(null);
+            setSimilarDetailLoading(false);
             return;
         }
+
+        const cached = similarDetailCache.current.get(item.id);
+        if (cached) {
+            setSelectedSimilarDetails(cached.details);
+            setSimilarTrailerUrl(cached.trailerUrl);
+            setSimilarDetailLoading(false);
+            return;
+        }
+
+        setSimilarDetailLoading(true);
 
         const mt = item.media_type || "movie";
 
         fetch(`/api/${mt}/${item.id}`)
             .then((r) => r.json())
             .then((data) => {
+                const currentItem = similarItems[selectedSimilarIdx];
+                if (currentItem?.id !== item.id) return;
+
                 if (data.tmdb) {
-                    setSelectedSimilarDetails(data.tmdb);
                     const videos = data.tmdb.videos?.results;
+                    let trailerUrl: string | null = null;
                     if (videos) {
                         const trailer = videos.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || videos.find((v: any) => v.site === "YouTube");
-                        setSimilarTrailerUrl(trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&enablejsapi=1` : null);
-                    } else {
-                        setSimilarTrailerUrl(null);
+                        trailerUrl = trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&enablejsapi=1` : null;
                     }
+                    setSelectedSimilarDetails(data.tmdb);
+                    setSimilarTrailerUrl(trailerUrl);
+                    similarDetailCache.current.set(item.id, { details: data.tmdb, trailerUrl });
+                } else {
+                    setSelectedSimilarDetails(null);
+                    setSimilarTrailerUrl(null);
                 }
             })
             .catch(() => {
+                const currentItem = similarItems[selectedSimilarIdx];
+                if (currentItem?.id !== item.id) return;
                 setSelectedSimilarDetails(null);
                 setSimilarTrailerUrl(null);
-            });
+            })
+            .finally(() => setSimilarDetailLoading(false));
     }, [selectedSimilarIdx, similarItems]);
 
     useEffect(() => {
@@ -330,7 +354,11 @@ export function PlayerModal({
                                 </div>
                             ) : (
                                 <div className="w-full h-full relative">
-                                    {similarTrailerUrl ? (
+                                    {similarDetailLoading ? (
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
+                                        </div>
+                                    ) : similarTrailerUrl ? (
                                         <>
                                             <div className="w-full h-full overflow-hidden">
                                                 <iframe
