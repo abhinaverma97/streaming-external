@@ -72,7 +72,7 @@ function PlayerSidebarInner({
     };
 
     return (
-        <GlassSurface className="w-full lg:w-80 xl:w-96 p-5 flex flex-col gap-6 !border-white/[0.03] !bg-transparent !backdrop-blur-none h-auto max-h-[70vh] lg:max-h-full overflow-y-auto no-scrollbar rounded-2xl !shadow-none">
+        <GlassSurface className="w-full lg:w-80 xl:w-96 p-5 flex flex-col gap-6 !border-white/[0.03] !bg-transparent !backdrop-blur-none h-auto lg:max-h-full overflow-y-visible lg:overflow-y-auto no-scrollbar rounded-2xl !shadow-none">
             {/* Source Selector */}
             <div className="flex flex-col gap-2 pb-4 border-b border-white/[0.05]">
                 <span className="text-[9px] uppercase tracking-[0.25em] text-white/40 mb-1">Source</span>
@@ -137,7 +137,7 @@ function PlayerSidebarInner({
                         <button
                             onClick={goToPrevEpisode}
                             disabled={selectedEpisode <= 1 && !selectedShowDetails?.seasons?.filter((s: any) => s.season_number > 0).some((s: any) => s.season_number === selectedSeason - 1)}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 disabled:opacity-25 disabled:cursor-not-allowed text-white/70 hover:text-white text-xs transition-all active:scale-95"
+                            className="flex items-center gap-1 px-3 py-2.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 disabled:opacity-25 disabled:cursor-not-allowed text-white/70 hover:text-white text-xs transition-all active:scale-95"
                         >
                             <ChevronLeft className="w-3.5 h-3.5" /> Prev
                         </button>
@@ -147,7 +147,7 @@ function PlayerSidebarInner({
                         <button
                             onClick={goToNextEpisode}
                             disabled={selectedEpisode >= (selectedShowDetails?.seasons?.find((s: any) => s.season_number === selectedSeason)?.episode_count || 1) && (!selectedShowDetails?.seasons?.some((s: any) => s.season_number === selectedSeason + 1))}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 disabled:opacity-25 disabled:cursor-not-allowed text-white/70 hover:text-white text-xs transition-all active:scale-95"
+                            className="flex items-center gap-1 px-3 py-2.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 disabled:opacity-25 disabled:cursor-not-allowed text-white/70 hover:text-white text-xs transition-all active:scale-95"
                         >
                             Next <ChevronRight className="w-3.5 h-3.5" />
                         </button>
