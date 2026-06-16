@@ -24,14 +24,33 @@ async function tmdbGet(path, params, noCache = false) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(new Error("TMDB timeout after 10s")), 10000);
     let response;
-    try {
-        response = await fetch(url, { signal: controller.signal });
-    } finally {
-        clearTimeout(timeoutId);
-    }
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`TMDB error ${response.status}: ${text}`);
+    let retries = 3;
+    let attempt = 0;
+
+    while (attempt < retries) {
+        attempt++;
+        try {
+            response = await fetch(url, { signal: controller.signal });
+            if (response.status === 429) {
+                console.warn(`[TMDB] 429 Rate limit hit for ${path}. Retrying in ${attempt * 1000}ms...`);
+                await new Promise(r => setTimeout(r, attempt * 1000));
+                continue;
+            }
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`TMDB error ${response.status}: ${text}`);
+            }
+            break; // Success
+        } catch (e) {
+            if (e.name === 'AbortError') throw e;
+            if (attempt === retries) throw e;
+            console.warn(`[TMDB] Network error for ${path}: ${e.message}. Retrying in ${attempt * 1000}ms...`);
+            await new Promise(r => setTimeout(r, attempt * 1000));
+        } finally {
+            if (attempt === retries || (response && response.ok)) {
+                clearTimeout(timeoutId);
+            }
+        }
     }
 
     const data = await response.json();
