@@ -7,44 +7,9 @@ const DATA_FILE = path.join(DATA_DIR, "user-data.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const store = {
-  watchlist: new Map(),
-  progress: new Map(),
-  history: [],
-  ratings: new Map(),
-  settings: {
-    enabledSources: [],
-    defaultSource: "videasy",
-    aiApiKey: "",
-    aiModel: defaultAiModel,
-  },
-  recommendations: {
-    recommendedMovies: [],
-    recommendedTvShows: [],
-    isGenerating: false,
-    error: null,
-    generatedAt: null,
-  },
-  _saveTimeout: null,
-};
-
-function load() {
-  try {
-    if (!fs.existsSync(DATA_FILE)) return;
-    const raw = fs.readFileSync(DATA_FILE, "utf-8");
-    const data = JSON.parse(raw);
-    store.watchlist = new Map(data.watchlist || []);
-    store.progress = new Map(data.progress || []);
-    store.history = data.history || [];
-    store.ratings = new Map(data.ratings || []);
-    if (data.settings) Object.assign(store.settings, data.settings);
-    if (data.recommendations) Object.assign(store.recommendations, data.recommendations);
-  } catch (e) {
-    console.error("[Store] Failed to load:", e.message, "DATA_DIR:", DATA_DIR);
-  }
-}
-
 function persist() {
+  const store = globalThis.__app_store;
+  if (!store) return;
   if (store._saveTimeout) clearTimeout(store._saveTimeout);
   store._saveTimeout = setTimeout(async () => {
     try {
@@ -65,8 +30,9 @@ function persist() {
   }, 500);
 }
 
-// Synchronous flush used on process exit so a pending debounced write is not lost.
 function persistSync() {
+  const store = globalThis.__app_store;
+  if (!store) return;
   if (store._saveTimeout) {
     clearTimeout(store._saveTimeout);
     store._saveTimeout = null;
@@ -88,33 +54,73 @@ function persistSync() {
   }
 }
 
-load();
+// Bootstrap: runs only once across all Webpack layers
+if (!globalThis.__app_store) {
+  globalThis.__app_store = {
+    watchlist: new Map(),
+    progress: new Map(),
+    history: [],
+    ratings: new Map(),
+    settings: {
+      enabledSources: [],
+      defaultSource: "videasy",
+      aiApiKey: "",
+      aiModel: defaultAiModel,
+    },
+    recommendations: {
+      recommendedMovies: [],
+      recommendedTvShows: [],
+      isGenerating: false,
+      error: null,
+      generatedAt: null,
+    },
+    _saveTimeout: null,
+  };
 
-// Seed from data/seed.json on first boot (empty volume).
-// Pure JSON read — no network calls, no async, ~0ms.
-function seedIfEmpty() {
-  if (store.ratings.size > 0) return; // already has data
-  const seedFile = path.join(process.cwd(), "data", "seed.json");
-  if (!fs.existsSync(seedFile)) return;
-  try {
-    const seed = JSON.parse(fs.readFileSync(seedFile, "utf-8"));
-    store.ratings = new Map(seed.ratings || []);
-    store.watchlist = new Map(seed.watchlist || []);
-    persistSync(); // write to volume immediately so next boot skips this
-    console.log(`[Store] Seeded ${store.ratings.size} ratings + ${store.watchlist.size} watchlist from data/seed.json`);
-  } catch (e) {
-    console.error("[Store] Failed to seed:", e.message, "DATA_DIR:", DATA_DIR);
+  function load() {
+    try {
+      if (!fs.existsSync(DATA_FILE)) return;
+      const raw = fs.readFileSync(DATA_FILE, "utf-8");
+      const data = JSON.parse(raw);
+      const s = globalThis.__app_store;
+      s.watchlist = new Map(data.watchlist || []);
+      s.progress = new Map(data.progress || []);
+      s.history = data.history || [];
+      s.ratings = new Map(data.ratings || []);
+      if (data.settings) Object.assign(s.settings, data.settings);
+      if (data.recommendations) Object.assign(s.recommendations, data.recommendations);
+    } catch (e) {
+      console.error("[Store] Failed to load:", e.message, "DATA_DIR:", DATA_DIR);
+    }
   }
+
+  function seedIfEmpty() {
+    const s = globalThis.__app_store;
+    if (s.ratings.size > 0) return;
+    const seedFile = path.join(process.cwd(), "data", "seed.json");
+    if (!fs.existsSync(seedFile)) return;
+    try {
+      const seed = JSON.parse(fs.readFileSync(seedFile, "utf-8"));
+      s.ratings = new Map(seed.ratings || []);
+      s.watchlist = new Map(seed.watchlist || []);
+      persistSync();
+      console.log(`[Store] Seeded ${s.ratings.size} ratings + ${s.watchlist.size} watchlist from data/seed.json`);
+    } catch (e) {
+      console.error("[Store] Failed to seed:", e.message, "DATA_DIR:", DATA_DIR);
+    }
+  }
+
+  load();
+  seedIfEmpty();
+
+  process.on("exit", persistSync);
+  process.on("SIGTERM", () => { persistSync(); });
+  process.on("SIGINT", () => { persistSync(); process.exit(0); });
 }
 
-seedIfEmpty();
-
-process.on("exit", persistSync);
-process.on("SIGTERM", () => { persistSync(); process.exit(0); });
-process.on("SIGINT", () => { persistSync(); process.exit(0); });
-
 export async function getWatchlist() {
-  return [...store.watchlist.values()]
+  const s = globalThis.__app_store;
+  return [...s.watchlist.values()]
     .map(r => ({
       tmdbId: r.tmdbId,
       mediaType: r.mediaType,
@@ -125,17 +131,20 @@ export async function getWatchlist() {
 }
 
 export async function addToWatchlist(tmdbId, movieDetails, mediaType) {
-  store.watchlist.set(tmdbId, { tmdbId, mediaType, movieDetails, addedAt: Date.now() });
+  const s = globalThis.__app_store;
+  s.watchlist.set(tmdbId, { tmdbId, mediaType, movieDetails, addedAt: Date.now() });
   persist();
 }
 
 export async function removeFromWatchlist(tmdbId) {
-  store.watchlist.delete(tmdbId);
+  const s = globalThis.__app_store;
+  s.watchlist.delete(tmdbId);
   persist();
 }
 
 export async function getProgress() {
-  const items = [...store.progress.values()].map(r => ({
+  const s = globalThis.__app_store;
+  const items = [...s.progress.values()].map(r => ({
     tmdbId: r.tmdbId,
     timestamp: r.timestamp,
     duration: r.duration,
@@ -167,13 +176,14 @@ export async function getProgress() {
 }
 
 export async function saveProgress(tmdbId, timestamp, duration, movieDetails, mediaType, source) {
+  const s = globalThis.__app_store;
   if (!duration || duration <= 0) return;
   const percentage = timestamp / duration;
   if (percentage > 0.95) {
-    store.progress.delete(tmdbId);
+    s.progress.delete(tmdbId);
     await addToHistory(tmdbId, movieDetails);
   } else {
-    store.progress.set(tmdbId, {
+    s.progress.set(tmdbId, {
       tmdbId, timestamp, duration, movieDetails, mediaType, source: source || null, updatedAt: Date.now(),
     });
     persist();
@@ -181,28 +191,31 @@ export async function saveProgress(tmdbId, timestamp, duration, movieDetails, me
 }
 
 export async function getHistory() {
-  return store.history
+  const s = globalThis.__app_store;
+  return s.history
     .map(r => ({ tmdbId: r.tmdbId, movieDetails: r.movieDetails, watchedAt: r.watchedAt }))
     .sort((a, b) => b.watchedAt - a.watchedAt)
     .slice(0, 50);
 }
 
 export async function addToHistory(tmdbId, movieDetails) {
-  store.history = store.history.filter(h => h.tmdbId !== tmdbId);
-  store.history.push({ tmdbId, movieDetails, watchedAt: Date.now() });
-  store.history.sort((a, b) => b.watchedAt - a.watchedAt);
-  if (store.history.length > 50) store.history = store.history.slice(0, 50);
+  const s = globalThis.__app_store;
+  s.history = s.history.filter(h => h.tmdbId !== tmdbId);
+  s.history.push({ tmdbId, movieDetails, watchedAt: Date.now() });
+  s.history.sort((a, b) => b.watchedAt - a.watchedAt);
+  if (s.history.length > 50) s.history = s.history.slice(0, 50);
   persist();
 }
 
 export async function removeFromHistory(tmdbId) {
-  store.history = store.history.filter(h => h.tmdbId !== tmdbId);
+  const s = globalThis.__app_store;
+  s.history = s.history.filter(h => h.tmdbId !== tmdbId);
   persist();
 }
 
 export async function getRatings() {
   const ratings = {};
-  for (const [tmdbId, r] of store.ratings) {
+  for (const [tmdbId, r] of globalThis.__app_store.ratings) {
     ratings[tmdbId] = {
       rating: r.rating,
       movieDetails: r.movieDetails,
@@ -214,43 +227,50 @@ export async function getRatings() {
 }
 
 export async function saveRating(tmdbId, rating, movieDetails, thoughts) {
-  store.ratings.set(tmdbId, { tmdbId, rating, movieDetails, ratedAt: Date.now(), thoughts: thoughts || "" });
+  const s = globalThis.__app_store;
+  s.ratings.set(tmdbId, { tmdbId, rating, movieDetails, ratedAt: Date.now(), thoughts: thoughts || "" });
   persist();
 }
 
 export async function deleteRating(tmdbId) {
-  store.ratings.delete(tmdbId);
+  const s = globalThis.__app_store;
+  s.ratings.delete(tmdbId);
   persist();
 }
 
 export async function getSourcePrefs() {
+  const s = globalThis.__app_store;
   return {
-    enabled: store.settings.enabledSources,
-    defaultSource: store.settings.defaultSource || "videasy",
+    enabled: s.settings.enabledSources,
+    defaultSource: s.settings.defaultSource || "videasy",
   };
 }
 
 export async function saveSourcePrefs(enabledSources, defaultSource) {
-  store.settings.enabledSources = enabledSources;
-  store.settings.defaultSource = defaultSource;
+  const s = globalThis.__app_store;
+  s.settings.enabledSources = enabledSources;
+  s.settings.defaultSource = defaultSource;
   persist();
 }
 
 export async function getAiSettings() {
+  const s = globalThis.__app_store;
   return {
-    apiKey: store.settings.aiApiKey || "",
-    model: store.settings.aiModel || defaultAiModel,
+    apiKey: s.settings.aiApiKey || "",
+    model: s.settings.aiModel || defaultAiModel,
   };
 }
 
 export async function saveAiSettings(settings) {
-  store.settings.aiApiKey = settings.apiKey || "";
-  store.settings.aiModel = settings.model || defaultAiModel;
+  const s = globalThis.__app_store;
+  s.settings.aiApiKey = settings.apiKey || "";
+  s.settings.aiModel = settings.model || defaultAiModel;
   persist();
 }
 
 export async function getRecommendations() {
-  const r = store.recommendations;
+  const s = globalThis.__app_store;
+  const r = s.recommendations;
   if (!r.generatedAt && !r.isGenerating && !r.error) return null;
   return {
     recommendedMovies: r.recommendedMovies || [],
@@ -262,25 +282,28 @@ export async function getRecommendations() {
 }
 
 export async function setGenerationStatus(isGenerating) {
+  const s = globalThis.__app_store;
   if (isGenerating) {
-    store.recommendations.isGenerating = true;
-    store.recommendations.error = null;
+    s.recommendations.isGenerating = true;
+    s.recommendations.error = null;
   } else {
-    store.recommendations.isGenerating = false;
+    s.recommendations.isGenerating = false;
   }
   persist();
 }
 
 export async function setGenerationError(errorMsg) {
-  store.recommendations.isGenerating = false;
-  store.recommendations.error = errorMsg;
+  const s = globalThis.__app_store;
+  s.recommendations.isGenerating = false;
+  s.recommendations.error = errorMsg;
   persist();
 }
 
 export async function saveRecommendations(recs) {
-  store.recommendations.recommendedMovies = recs.recommendedMovies || [];
-  store.recommendations.recommendedTvShows = recs.recommendedTvShows || [];
-  store.recommendations.isGenerating = false;
-  store.recommendations.generatedAt = Date.now();
+  const s = globalThis.__app_store;
+  s.recommendations.recommendedMovies = recs.recommendedMovies || [];
+  s.recommendations.recommendedTvShows = recs.recommendedTvShows || [];
+  s.recommendations.isGenerating = false;
+  s.recommendations.generatedAt = Date.now();
   persist();
 }
