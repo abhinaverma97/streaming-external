@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { defaultAiModel } from "./config.js";
 
-const DATA_DIR = path.join(process.cwd(), ".cache");
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), ".cache");
 const DATA_FILE = path.join(DATA_DIR, "user-data.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -40,7 +40,7 @@ function load() {
     if (data.settings) Object.assign(store.settings, data.settings);
     if (data.recommendations) Object.assign(store.recommendations, data.recommendations);
   } catch (e) {
-    console.error("[Store] Failed to load:", e.message);
+    console.error("[Store] Failed to load:", e.message, "DATA_DIR:", DATA_DIR);
   }
 }
 
@@ -60,7 +60,7 @@ function persist() {
         })
       );
     } catch (e) {
-      console.error("[Store] Failed to persist:", e.message);
+      console.error("[Store] Failed to persist:", e.message, "DATA_DIR:", DATA_DIR);
     }
   }, 500);
 }
@@ -84,7 +84,7 @@ function persistSync() {
       })
     );
   } catch (e) {
-    console.error("[Store] Failed to persist on exit:", e.message);
+    console.error("[Store] Failed to persist on exit:", e.message, "DATA_DIR:", DATA_DIR);
   }
 }
 
@@ -103,7 +103,7 @@ function seedIfEmpty() {
     persistSync(); // write to volume immediately so next boot skips this
     console.log(`[Store] Seeded ${store.ratings.size} ratings + ${store.watchlist.size} watchlist from data/seed.json`);
   } catch (e) {
-    console.error("[Store] Failed to seed:", e.message);
+    console.error("[Store] Failed to seed:", e.message, "DATA_DIR:", DATA_DIR);
   }
 }
 
