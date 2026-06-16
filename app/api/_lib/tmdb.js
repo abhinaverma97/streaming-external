@@ -66,5 +66,9 @@ async function getTrendingMovies(page = 1) {
 async function getTrendingTv(page = 1) {
     return tmdbGet("/trending/tv/week", { page });
 }
+async function searchMulti(query, page = 1) {
+    const params = { query, page };
+    return tmdbGet("/search/multi", params, true);
+}
 
-export { searchMovies, searchTv, movieDetails, tvDetails, getTrendingMovies, getTrendingTv };
+export { searchMovies, searchTv, searchMulti, movieDetails, tvDetails, getTrendingMovies, getTrendingTv };

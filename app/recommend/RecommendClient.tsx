@@ -264,12 +264,30 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                     <div className="text-center mb-6 text-[10px] text-slate-600 tracking-wide">Last updated {formattedDate}</div>
                 )}
 
-                {displayError && (
+                {displayError && (recommendations && totalCount > 0) && (
                     <div className="text-xs text-rose-400 mb-6 max-w-md mx-auto bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-3 text-center">{displayError}</div>
                 )}
 
                 {loading ? (
                     <CardSkeleton layout="grid" count={12} />
+                ) : (!recommendations || totalCount === 0) && displayError ? (
+                    <div className="text-center py-32 flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.15)]">
+                            <X className="w-6 h-6 text-rose-500" />
+                        </div>
+                        <div className="text-[11px] text-rose-400/80 uppercase tracking-widest font-light max-w-md mx-auto px-4 leading-relaxed mt-2">{displayError}</div>
+                        {displayError.toLowerCase().includes("api key") ? (
+                            <button onClick={() => setShowSettings(true)}
+                                className="mt-2 flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all active:scale-95 cursor-pointer">
+                                Configure Settings
+                            </button>
+                        ) : (
+                            <button onClick={handleRefresh} disabled={isRefreshingOrGenerating}
+                                className="mt-2 flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all active:scale-95 cursor-pointer disabled:opacity-50">
+                                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingOrGenerating ? "animate-spin" : ""}`} /> Try Again
+                            </button>
+                        )}
+                    </div>
                 ) : !recommendations || totalCount === 0 ? (
                     <div className="text-center py-32 flex flex-col items-center gap-4">
                         <div className="w-16 h-16 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center">

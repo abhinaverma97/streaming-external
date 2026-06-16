@@ -1,4 +1,4 @@
-import { searchMovies, searchTv } from "./tmdb.js";
+import { searchMulti } from "./tmdb.js";
 import { buildRecommendationPrompt } from "../../lib/format-ratings";
 
 let activeController = null;
@@ -14,9 +14,6 @@ export function cancelGeneration() {
 
 export async function generateRecommendations(ratings, watchlist, aiSettings) {
   if (activeController) {
-    // Another generation is already running (e.g. daemon + page-load race).
-    // Return null instead of throwing so the caller exits cleanly without
-    // recording a spurious error.
     console.log("[Recommend] Generation already in progress, skipping.");
     return null;
   }
@@ -35,18 +32,18 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
   const controller = new AbortController();
   activeController = controller;
 
-  const timeout = setTimeout(() => {
-    if (activeController !== controller) return;
-    console.log(`[Recommend] OpenRouter fetch timed out after 1 hour`);
-    controller.abort(new Error("Timeout"));
-  }, 3600000);
-
-  const t0 = Date.now();
-  console.log(`[Recommend] Calling OpenRouter with model ${model}...`);
-
-  let res;
+  let timeout;
   try {
-    res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    timeout = setTimeout(() => {
+      if (activeController !== controller) return;
+      console.log(`[Recommend] OpenRouter fetch timed out after 1 hour`);
+      controller.abort(new Error("Timeout"));
+    }, 3600000);
+
+    const t0 = Date.now();
+    console.log(`[Recommend] Calling OpenRouter with model ${model}...`);
+
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       signal: controller.signal,
       method: "POST",
       headers: {
@@ -60,85 +57,76 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
         temperature: 0.7,
       }),
     });
+
+    if (!res) {
+      console.log(`[Recommend] OpenRouter fetch failed — no response (likely aborted)`);
+      throw new Error("OpenRouter fetch failed");
+    }
+
+    console.log(`[Recommend] OpenRouter responded in ${Date.now() - t0}ms with status ${res.status}`);
+
+    if (res.status === 429) {
+      throw new Error("Rate Limit Reached. Please try again later or check your OpenRouter account.");
+    }
+
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`[Recommend] OpenRouter error (${res.status}): ${body}`);
+      throw new Error(`OpenRouter API error (${res.status}): ${body}`);
+    }
+
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error("Empty response from OpenRouter");
+    console.log(`[Recommend] Response content length: ${content.length} chars`);
+
+    let parsed;
+    const tryParse = (s) => { try { return JSON.parse(s) } catch { return null } };
+
+    parsed = tryParse(content);
+    if (!parsed) {
+      const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      parsed = tryParse(cleaned);
+    }
+    if (!parsed) {
+      const match = content.match(/\{[\s\S]*\}/) || content.match(/\[[\s\S]*\]/);
+      if (match) parsed = tryParse(match[0]);
+    }
+    if (!parsed) {
+      throw new Error("Could not parse OpenRouter response as JSON:\n" + content);
+    }
+
+    if (Array.isArray(parsed)) {
+      console.log("[Recommend] LLM returned an array, restructuring to object.");
+      const movies = parsed.filter(i => !i.type || i.type === "movie" || i.isMovie);
+      const shows = parsed.filter(i => i.type === "tv" || i.isTv);
+      parsed = { recommendedMovies: movies, recommendedTvShows: shows };
+    }
+
+    const movieCount = (parsed.recommendedMovies || []).length;
+    const tvCount = (parsed.recommendedTvShows || []).length;
+    console.log(`[Recommend] Parsed ${movieCount} movies, ${tvCount} TV shows`);
+
+    return {
+      recommendedMovies: parsed.recommendedMovies || [],
+      recommendedTvShows: parsed.recommendedTvShows || [],
+    };
   } finally {
     activeController = null;
     clearTimeout(timeout);
   }
-
-  if (!res) {
-    console.log(`[Recommend] OpenRouter fetch failed — no response (likely aborted)`);
-    throw new Error("OpenRouter fetch failed");
-  }
-
-  console.log(`[Recommend] OpenRouter responded in ${Date.now() - t0}ms with status ${res.status}`);
-
-  if (res.status === 429) {
-    throw new Error("Rate Limit Reached. Please try again later or check your OpenRouter account.");
-  }
-
-  if (!res.ok) {
-    const body = await res.text();
-    console.error(`[Recommend] OpenRouter error (${res.status}): ${body}`);
-    throw new Error(`OpenRouter API error (${res.status}): ${body}`);
-  }
-
-  const data = await res.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Empty response from OpenRouter");
-  console.log(`[Recommend] Response content length: ${content.length} chars`);
-
-  let parsed;
-  const tryParse = (s) => { try { return JSON.parse(s) } catch { return null } };
-
-  parsed = tryParse(content);
-  if (!parsed) {
-    const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-    parsed = tryParse(cleaned);
-  }
-  if (!parsed) {
-    const match = content.match(/\{[\s\S]*\}/) || content.match(/\[[\s\S]*\]/);
-    if (match) parsed = tryParse(match[0]);
-  }
-  if (!parsed) {
-    throw new Error("Could not parse OpenRouter response as JSON:\n" + content);
-  }
-
-  // Fallback if LLM returned an Array instead of an Object
-  if (Array.isArray(parsed)) {
-    console.log("[Recommend] LLM returned an array, restructuring to object.");
-    const movies = parsed.filter(i => !i.type || i.type === "movie" || i.isMovie);
-    const shows = parsed.filter(i => i.type === "tv" || i.isTv);
-    parsed = { recommendedMovies: movies, recommendedTvShows: shows };
-  }
-
-  const movieCount = (parsed.recommendedMovies || []).length;
-  const tvCount = (parsed.recommendedTvShows || []).length;
-  console.log(`[Recommend] Parsed ${movieCount} movies, ${tvCount} TV shows`);
-
-  return {
-    recommendedMovies: parsed.recommendedMovies || [],
-    recommendedTvShows: parsed.recommendedTvShows || [],
-  };
 }
 
-async function enrichItem(item, searchFn, mediaType) {
+async function enrichItem(item, requestedMediaType) {
   try {
     const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
-    let data = await searchFn(searchTitle, item.year);
-    let result = findBestMatch(data.results || [], searchTitle, item.year);
-
-    if (!result || data.results?.length === 0) {
-      console.log(`[Recommend] No matches for "${searchTitle}" with year ${item.year}, falling back to title-only search...`);
-      data = await searchFn(searchTitle);
-      result = findBestMatch(data.results || [], searchTitle, null);
-    }
-
-    if (!result && data.results?.length > 0) {
-      result = data.results[0];
-    }
+    let data = await searchMulti(searchTitle);
+    let results = (data.results || []).filter(r => r.media_type === "movie" || r.media_type === "tv");
+    
+    let result = findBestMatch(results, item.year, requestedMediaType);
 
     if (result) {
-      const isTv = mediaType === "tv";
+      const isTv = result.media_type === "tv";
       return {
         ...item,
         id: result.id,
@@ -148,24 +136,24 @@ async function enrichItem(item, searchFn, mediaType) {
         overview: result.overview,
         vote_average: result.vote_average,
         ...(isTv ? { first_air_date: result.first_air_date } : { release_date: result.release_date }),
-        media_type: mediaType,
+        media_type: result.media_type,
       };
     }
-    return { ...item, id: null, media_type: mediaType };
+    return { ...item, id: null, media_type: requestedMediaType };
   } catch (err) {
-    console.error(`[Recommend] Failed to enrich ${mediaType} "${item.title}": ${err}`);
-    return { ...item, id: null, media_type: mediaType };
+    console.error(`[Recommend] Failed to enrich "${item.title}": ${err}`);
+    return { ...item, id: null, media_type: requestedMediaType };
   }
 }
 
 const CONCURRENCY = 5;
 
-async function enrichBatch(items, searchFn, mediaType) {
+async function enrichBatch(items, mediaType) {
   const results = [];
   for (let i = 0; i < items.length; i += CONCURRENCY) {
     const batch = items.slice(i, i + CONCURRENCY);
     const batchResults = await Promise.allSettled(
-      batch.map(item => enrichItem(item, searchFn, mediaType))
+      batch.map(item => enrichItem(item, mediaType))
     );
     batchResults.forEach((r, idx) => {
       results.push(r.status === "fulfilled" ? r.value : { ...batch[idx], id: null, media_type: mediaType });
@@ -179,8 +167,8 @@ export async function enrichWithTmdb(recommendations) {
   console.log(`[Recommend] Enriching ${recommendations.recommendedMovies.length} movies and ${recommendations.recommendedTvShows.length} TV shows with TMDB data (concurrency ${CONCURRENCY})`);
 
   const [enrichedMovies, enrichedTvShows] = await Promise.all([
-    enrichBatch(recommendations.recommendedMovies || [], searchMovies, "movie"),
-    enrichBatch(recommendations.recommendedTvShows || [], searchTv, "tv"),
+    enrichBatch(recommendations.recommendedMovies || [], "movie"),
+    enrichBatch(recommendations.recommendedTvShows || [], "tv"),
   ]);
 
   console.log(`[Recommend] Enrichment complete in ${Date.now() - t0}ms. Final: ${enrichedMovies.length} movies, ${enrichedTvShows.length} TV shows`);
@@ -188,19 +176,30 @@ export async function enrichWithTmdb(recommendations) {
   return { recommendedMovies: enrichedMovies, recommendedTvShows: enrichedTvShows };
 }
 
-function findBestMatch(results, title, year) {
+function findBestMatch(results, year, preferredMediaType) {
   if (!results || results.length === 0) return null;
 
   if (year && year !== "Unknown") {
     const targetYear = parseInt(String(year), 10);
-    const exact = results.find((r) => {
+    
+    let match = results.find((r) => {
+      if (r.media_type !== preferredMediaType) return false;
       const date = r.release_date || r.first_air_date || "";
       const rYear = parseInt(date.substring(0, 4), 10);
-      if (isNaN(rYear)) return false;
-      return Math.abs(rYear - targetYear) <= 1;
+      return !isNaN(rYear) && Math.abs(rYear - targetYear) <= 1;
     });
-    if (exact) return exact;
+    if (match) return match;
+    
+    match = results.find((r) => {
+      const date = r.release_date || r.first_air_date || "";
+      const rYear = parseInt(date.substring(0, 4), 10);
+      return !isNaN(rYear) && Math.abs(rYear - targetYear) <= 1;
+    });
+    if (match) return match;
   }
+
+  const typeMatch = results.find(r => r.media_type === preferredMediaType);
+  if (typeMatch) return typeMatch;
 
   return results[0];
 }

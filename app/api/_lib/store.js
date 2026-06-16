@@ -251,7 +251,7 @@ export async function saveAiSettings(settings) {
 
 export async function getRecommendations() {
   const r = store.recommendations;
-  if (!r.generatedAt) return null;
+  if (!r.generatedAt && !r.isGenerating && !r.error) return null;
   return {
     recommendedMovies: r.recommendedMovies || [],
     recommendedTvShows: r.recommendedTvShows || [],
