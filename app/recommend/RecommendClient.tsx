@@ -77,6 +77,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         watchlist, ratings,
         handleRate, handleToggleWatchlist,
         refreshContinueWatching,
+        refreshWatchlist,
     } = useUserLists({ watchlist: wl, ratings: rt });
 
     usePlayerProgress(activeStreamRef, activeSourceRef, lastProgressRef, refreshContinueWatching);
@@ -95,6 +96,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
             setLoading(false);
         }
     }, []);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => { refreshContinueWatching(); refreshWatchlist(); }, []);
 
     useEffect(() => { fetchRecs(); }, [fetchRecs]);
 

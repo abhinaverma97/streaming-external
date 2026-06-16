@@ -123,6 +123,18 @@ export function useUserLists(initialData?: {
         }
     }, []);
 
+    const refreshWatchlist = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/watchlist`);
+            if (res.ok) {
+                const data = await res.json();
+                setWatchlist(data);
+            }
+        } catch (err) {
+            console.error(`[useUserLists] Failed to refresh watchlist: ${err}`);
+        }
+    }, []);
+
     return {
         watchlist,
         continueWatching,
@@ -131,5 +143,6 @@ export function useUserLists(initialData?: {
         handleDeleteRating,
         handleToggleWatchlist,
         refreshContinueWatching,
+        refreshWatchlist,
     };
 }

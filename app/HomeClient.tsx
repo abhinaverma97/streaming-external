@@ -56,6 +56,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
         watchlist, continueWatching, ratings,
         handleRate, handleToggleWatchlist,
         refreshContinueWatching,
+        refreshWatchlist,
     } = useUserLists({ watchlist: wl, continueWatching: cw, ratings: rt });
 
     const [trendingType, setTrendingType] = useState<"movie" | "tv">("movie");
@@ -100,7 +101,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     // Server component data may come from a stale RSC module instance;
     // the API route is always authoritative.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { refreshContinueWatching(); }, []);
+    useEffect(() => { refreshContinueWatching(); refreshWatchlist(); }, []);
 
     useEffect(() => {
         if (isSearching && !searchLoading && searchResults.length > 0 && !hasScrolledToSearch.current) {
