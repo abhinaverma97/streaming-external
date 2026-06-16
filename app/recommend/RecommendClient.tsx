@@ -366,8 +366,11 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
             <PlayerModal activeStream={activeStream} playerError={playerError}
                 effectiveSource={playerSource || effectiveSource} effectiveEnabledSources={effectiveEnabledSources}
                 selectedShowDetails={selectedShowDetails} selectedSeason={selectedSeason} selectedEpisode={selectedEpisode}
-                episodesList={episodesList} ratings={ratings} onClose={closePlayer} onSourceChange={handleSourceChange}
-                onRate={handleRate} onChangeEpisode={changeEpisode} />
+                episodesList={episodesList} ratings={ratings} watchlist={watchlist}
+                onClose={closePlayer} onSourceChange={handleSourceChange}
+                onRate={handleRate} onChangeEpisode={changeEpisode}
+                onToggleWatchlist={handleToggleWatchlist}
+                onPlaySimilar={(movie: any) => playRecommendation(movie)} />
 
             <MobileBottomNav
                 activeStream={activeStream}

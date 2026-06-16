@@ -424,10 +424,16 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                 selectedEpisode={selectedEpisode}
                 episodesList={episodesList}
                 ratings={ratings}
+                watchlist={watchlist}
                 onClose={closePlayer}
                 onSourceChange={handleSourceChange}
                 onRate={handleRate}
                 onChangeEpisode={changeEpisode}
+                onToggleWatchlist={handleToggleWatchlist}
+                onPlaySimilar={(movie: any) => {
+                    if (activeStream) flushGlobalProgress();
+                    playMovie(movie, 0);
+                }}
             />
 
             <MobileBottomNav
