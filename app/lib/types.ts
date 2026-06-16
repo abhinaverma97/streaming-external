@@ -21,5 +21,3 @@ export interface CwPlayContext {
     percent: number;
     isTv: boolean;
 }
-
-

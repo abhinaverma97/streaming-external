@@ -1,10 +1,11 @@
 "use client";
 
 import { memo } from "react";
-import { ViewTransitionLink as Link } from "./ViewTransitionLink";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Search, Home as HomeIcon, List, Settings as SettingsIcon, Film, Star, Sparkles } from "lucide-react";
-import { getCardBackdropUrl } from "../lib/tmdb-utils";
+import { getPosterUrl } from "../lib/tmdb-utils";
 
 interface MobileBottomNavProps {
     activeStream: any;
@@ -35,6 +36,7 @@ function MobileBottomNavInner({
     searchLoading = false,
     onCardClick,
 }: MobileBottomNavProps) {
+    const router = useRouter();
     const showResults = isMobileSearchOpen && isSearching && searchQuery;
 
     return (
@@ -59,7 +61,7 @@ function MobileBottomNavInner({
                                             onClick={() => {
                                                 if (currentPath !== "/") {
                                                     sessionStorage.setItem("pendingStream", JSON.stringify(movie));
-                                                    window.location.href = "/";
+                                                    router.push("/");
                                                 } else if (onCardClick) {
                                                     onCardClick(movie);
                                                 }
@@ -70,7 +72,7 @@ function MobileBottomNavInner({
                                         >
                                             {movie.backdrop_path ? (
                                                 <Image
-                                                    src={getCardBackdropUrl(movie.backdrop_path)}
+                                                    src={getPosterUrl(movie.backdrop_path)}
                                                     alt=""
                                                     fill
                                                     sizes="(max-width: 400px) 90vw"

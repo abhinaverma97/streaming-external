@@ -1,4 +1,5 @@
 import { searchMovies, searchTv } from "./tmdb.js";
+import { buildRecommendationPrompt } from "../../lib/format-ratings";
 
 let activeController = null;
 
@@ -11,47 +12,15 @@ export function cancelGeneration() {
   return false;
 }
 
-import { formatRatedItems, formatWatchlistItems } from "../../lib/format-ratings";
-
-function buildPrompt(formatted, formattedWatchlist) {
-  return `You are a movie and TV show recommendation engine.
-
-Analyze this user's complete set of rated content as a whole. Identify patterns in
-genres, themes, directors, tone, and era preferences. Then recommend movies and TV
-shows the user would likely enjoy.
-
-USER'S RATED CONTENT:
-${formatted || "None"}
-
-USER'S WATCHLIST:
-${formattedWatchlist || "None"}
-
-Based on ALL items above, return a JSON object with:
-
-{
-  "recommendedMovies": [
-    { "title": "Inception", "year": 2010, "reason": "You enjoy Christopher Nolan's complex storytelling" }
-  ],
-  "recommendedTvShows": [
-    { "title": "Better Call Saul", "year": 2015, "reason": "You enjoy Vince Gilligan's character-driven crime dramas" }
-  ]
-}
-
-IMPORTANT:
-- The "year" field must be the release year of the recommended title (used to look it up on TMDB)
-- Recommend AT LEAST 18 movies and 18 TV shows.
-- DO NOT recommend anything already in the user's rated content list OR their watchlist above.
-- Provide a brief 1-sentence reason for each recommendation based on their ratings.
-- ONLY output the raw JSON object. No markdown, no introduction, no codeblocks.`;
-}
-
-export function buildRecommendationPrompt(ratings, watchlist) {
-  const formatted = formatRatedItems(ratings);
-  const formattedWatchlist = formatWatchlistItems(watchlist);
-  return buildPrompt(formatted, formattedWatchlist);
-}
-
 export async function generateRecommendations(ratings, watchlist, aiSettings) {
+  if (activeController) {
+    // Another generation is already running (e.g. daemon + page-load race).
+    // Return null instead of throwing so the caller exits cleanly without
+    // recording a spurious error.
+    console.log("[Recommend] Generation already in progress, skipping.");
+    return null;
+  }
+
   const apiKey = aiSettings?.apiKey;
   if (!apiKey) {
     throw new Error("API Key required. Please enter your OpenRouter API key in Settings.");
@@ -151,13 +120,13 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
     recommendedTvShows: parsed.recommendedTvShows || [],
   };
 }
+
 async function enrichItem(item, searchFn, mediaType) {
   try {
     const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
     let data = await searchFn(searchTitle, item.year);
     let result = findBestMatch(data.results || [], searchTitle, item.year);
 
-    // Fallback: If no results when searching with year, try without year
     if (!result || data.results?.length === 0) {
       console.log(`[Recommend] No matches for "${searchTitle}" with year ${item.year}, falling back to title-only search...`);
       data = await searchFn(searchTitle);
@@ -198,9 +167,9 @@ async function enrichBatch(items, searchFn, mediaType) {
     const batchResults = await Promise.allSettled(
       batch.map(item => enrichItem(item, searchFn, mediaType))
     );
-    for (const r of batchResults) {
-      results.push(r.status === "fulfilled" ? r.value : { ...batch[results.length - batch.length + batchResults.indexOf(r)], id: null, media_type: mediaType });
-    }
+    batchResults.forEach((r, idx) => {
+      results.push(r.status === "fulfilled" ? r.value : { ...batch[idx], id: null, media_type: mediaType });
+    });
   }
   return results;
 }
@@ -228,10 +197,34 @@ function findBestMatch(results, title, year) {
       const date = r.release_date || r.first_air_date || "";
       const rYear = parseInt(date.substring(0, 4), 10);
       if (isNaN(rYear)) return false;
-      return Math.abs(rYear - targetYear) <= 1; // Fuzzy match: +/- 1 year
+      return Math.abs(rYear - targetYear) <= 1;
     });
     if (exact) return exact;
   }
 
   return results[0];
+}
+
+export async function runFullGenerationPipeline() {
+  const { setGenerationStatus, setGenerationError, getRatings, getWatchlist, getAiSettings, saveRecommendations } = await import("./store.js");
+
+  await setGenerationStatus(true);
+  try {
+    const ratings = await getRatings();
+    const watchlist = await getWatchlist();
+    const aiSettings = await getAiSettings();
+
+    const raw = await generateRecommendations(ratings, watchlist, aiSettings);
+    if (!raw) return; // already in progress — exit without recording an error
+    const enriched = await enrichWithTmdb(raw);
+    await saveRecommendations(enriched);
+  } catch (err) {
+    console.error("[Recommend] Error generating:", err);
+    if (err.message === "User cancelled generation") {
+      await setGenerationStatus(false);
+    } else {
+      await setGenerationError(err.message || "Failed to generate recommendations.");
+    }
+    throw err;
+  }
 }

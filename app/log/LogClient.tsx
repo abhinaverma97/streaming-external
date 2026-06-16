@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { FadeImage } from "../components/FadeImage";
 import { Star, Film } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
@@ -12,7 +13,6 @@ import { LogItemModal } from "../components/LogItemModal";
 import { getBackdropUrl, getPosterUrl } from "../lib/tmdb-utils";
 import { useUserLists } from "../hooks/useUserLists";
 import { useSearch } from "../hooks/useSearch";
-import { useSourcePrefs } from "../hooks/useSourcePrefs";
 
 interface LogClientProps {
     ratings: Record<string, any>;
@@ -37,8 +37,6 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
 
     const { ratings: ratingsMap, handleRate, handleDeleteRating } = useUserLists({ ratings: initialRatings });
 
-    const { onSourcesChange } = useSourcePrefs();
-
     const ratings = useMemo(() => {
         return Object.values(ratingsMap).filter((item: any) => item && item.movieDetails);
     }, [ratingsMap]);
@@ -46,16 +44,18 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
     const handleDesktopSearch = (e: any) => {
         e.preventDefault();
         if (searchQuery) {
+            sessionStorage.setItem("pendingSearch", searchQuery);
             router.push("/");
         }
     };
 
     const totalMovies = ratings.filter((r: any) => r.movieDetails?.media_type === "movie").length;
     const totalTv = ratings.filter((r: any) => r.movieDetails?.media_type === "tv").length;
-    const isTv = (r: any) => r.movieDetails?.media_type === "tv";
 
     const filteredRatings = useMemo(() => {
-        return mediaFilter === "all" ? ratings : ratings.filter((r: any) => mediaFilter === "tv" ? isTv(r) : !isTv(r));
+        return mediaFilter === "all" ? ratings : ratings.filter((r: any) =>
+            mediaFilter === "tv" ? r.movieDetails?.media_type === "tv" : r.movieDetails?.media_type !== "tv"
+        );
     }, [ratings, mediaFilter]);
 
     const sortedRatings = useMemo(() => {
@@ -76,8 +76,6 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
-            {/* Gradient overlay removed — it created a visible white tint on the top section */}
-
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/log">
                     <SearchInput
@@ -88,7 +86,7 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
                 </Navbar>
             </div>
 
-            <div className="content-transition w-full flex-1 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pb-12">
+            <div className="hero-transition w-full flex-1 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pb-12">
 
                 <div className="flex items-center justify-center gap-4 md:gap-6 mt-8 md:mt-16 mb-4 text-[10px] font-medium tracking-[0.2em] text-slate-500 uppercase">
                     <span>{ratings.length} <span className="text-slate-600">rated</span></span>
@@ -134,12 +132,12 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
                             <div key={item.movieDetails.id} className="group flex flex-col cursor-pointer" onClick={() => setSelectedLogItem(item)}>
                                 <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300">
                                     {item.movieDetails.backdrop_path || item.movieDetails.poster_path ? (
-                                        <Image
+                                        <FadeImage
                                             src={item.movieDetails.backdrop_path ? getBackdropUrl(item.movieDetails.backdrop_path) : getPosterUrl(item.movieDetails.poster_path)}
                                             alt={item.movieDetails.title || item.movieDetails.name || "Poster"}
                                             fill
                                             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 15vw"
-                                            className="object-cover brightness-90 group-hover:brightness-100 transition-all duration-300"
+                                            className="object-cover brightness-90 group-hover:brightness-100"
                                         />
                                     ) : (
                                         <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
@@ -177,7 +175,7 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
             )}
 
             <MobileBottomNav
-                activeStream={false}
+                activeStream={null}
                 isMobileSearchOpen={isMobileSearchOpen}
                 setIsMobileSearchOpen={setIsMobileSearchOpen}
                 searchQuery={searchQuery}
@@ -190,7 +188,7 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
                 currentPath="/log"
             />
 
-            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
+            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={() => {}} />
         </main>
     );
 }

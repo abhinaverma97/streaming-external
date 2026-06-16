@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { ViewTransitionLink as Link } from "./ViewTransitionLink";
+import Link from "next/link";
 
 interface NavbarProps {
   onSettingsClick: () => void;
@@ -11,52 +11,47 @@ interface NavbarProps {
 
 function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
   return (
-    <>
-      {/* Desktop Navbar */}
-      <header
-        className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300"
-      >
-        <div className="flex items-center flex-1">
-          <button
-            onClick={onSettingsClick}
-            className="hover:text-white transition-colors duration-200 cursor-pointer ml-3"
-          >
-            Settings
-          </button>
-        </div>
+    <header className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300">
+      <div className="flex items-center flex-1">
+        <button
+          onClick={onSettingsClick}
+          className="hover:text-white transition-colors duration-200 cursor-pointer ml-3"
+        >
+          Settings
+        </button>
+      </div>
 
-        <nav className="flex items-center justify-center gap-5 flex-shrink-0">
-          <Link
-            href="/"
-            className={`transition-colors duration-200 cursor-pointer ${
-              currentPath === "/" ? "text-white" : "hover:text-white"
-            }`}
-          >
-            Home
-          </Link>
-          <Link
-            href="/log"
-            className={`transition-colors duration-200 cursor-pointer ${
-              currentPath === "/log" ? "text-white" : "hover:text-white"
-            }`}
-          >
-            Log
-          </Link>
-          <Link
-            href="/recommend"
-            className={`transition-colors duration-200 cursor-pointer ${
-              currentPath === "/recommend" ? "text-white" : "hover:text-white"
-            }`}
-          >
-            Recs
-          </Link>
-        </nav>
+      <nav className="flex items-center justify-center gap-5 flex-shrink-0">
+        <Link
+          href="/"
+          className={`transition-colors duration-200 cursor-pointer ${
+            currentPath === "/" ? "text-white" : "hover:text-white"
+          }`}
+        >
+          Home
+        </Link>
+        <Link
+          href="/log"
+          className={`transition-colors duration-200 cursor-pointer ${
+            currentPath === "/log" ? "text-white" : "hover:text-white"
+          }`}
+        >
+          Log
+        </Link>
+        <Link
+          href="/recommend"
+          className={`transition-colors duration-200 cursor-pointer ${
+            currentPath === "/recommend" ? "text-white" : "hover:text-white"
+          }`}
+        >
+          Recs
+        </Link>
+      </nav>
 
-        <div className="flex items-center justify-end gap-4 flex-1">
-          {children}
-        </div>
-      </header>
-    </>
+      <div className="flex items-center justify-end gap-4 flex-1">
+        {children}
+      </div>
+    </header>
   );
 }
 

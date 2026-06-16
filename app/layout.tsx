@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import { PageTransition } from "./components/PageTransition";
 
 import "./globals.css";
 
@@ -10,7 +11,7 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: "spicy",
-  description: "Dynamic TMDB Metadata, WebTorrent Streaming & HLS Transcoding Backend Console.",
+  description: "A premium streaming catalog with personalized AI recommendations.",
   manifest: "/manifest.webmanifest",
 };
 
@@ -32,7 +33,7 @@ export default function RootLayout({
       >
         {/* Critical inline CSS: guarantees black bg before external stylesheet loads (fixes Firefox FOUC) */}
         <style dangerouslySetInnerHTML={{ __html: `html,body{background:#000;color:#f8fafc}` }} />
-          {children}
+        <PageTransition>{children}</PageTransition>
         {process.env.NODE_ENV === "production" ? (
           <script
             dangerouslySetInnerHTML={{

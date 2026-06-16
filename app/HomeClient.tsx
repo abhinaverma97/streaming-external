@@ -5,8 +5,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Navbar } from "./components/Navbar";
 import SettingsOverlay from "./components/SettingsOverlay";
 import { PlayerModal } from "./components/PlayerModal";
-import FadeContent from "./components/FadeContent";
-import ScrollRow from "./components/ScrollRow";
 import { SearchInput } from "./components/SearchInput";
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import { SearchResultsSection } from "./components/SearchResultsSection";
@@ -14,17 +12,15 @@ import { TrendingSection } from "./components/TrendingSection";
 import { ContinueWatchingSection } from "./components/ContinueWatchingSection";
 import { WatchlistSection } from "./components/WatchlistSection";
 import { HeroSection } from "./components/HeroSection";
-import { SOURCES, buildEmbedUrl } from "./lib/sources-config";
+import { buildEmbedUrl } from "./lib/sources-config";
 import { extractTrailerUrl } from "./lib/tmdb-utils";
 import { getWatchlistId } from "./lib/watchlist";
-import { Movie } from "./lib/types";
+import { Movie, CwPlayContext } from "./lib/types";
 
 import { useSearch } from "./hooks/useSearch";
 import { useSourcePrefs } from "./hooks/useSourcePrefs";
 import { useUserLists } from "./hooks/useUserLists";
 import { usePlayerProgress, flushGlobalProgress } from "./hooks/usePlayerProgress";
-
-const DEBUG = false;
 
 interface HomeClientProps {
     watchlist: any[];
@@ -77,10 +73,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
         return trending.filter(item => !historyIds.has(item.id));
     }, [trending, history]);
 
-    const [cwPlayContext, setCwPlayContext] = useState<{
-        movieId: number; timestamp: number; source?: string;
-        season?: number; episode?: number; percent: number; isTv: boolean;
-    } | null>(null);
+    const [cwPlayContext, setCwPlayContext] = useState<CwPlayContext | null>(null);
 
     const [showSettings, setShowSettings] = useState(false);
 
@@ -93,8 +86,6 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
 
     const heroAutoSelectDisabled = useRef(false);
     const lastProgressRef = useRef(0);
-    const playerContainerRef = useRef<HTMLDivElement>(null);
-    const playerRef = useRef<HTMLIFrameElement>(null);
     const hasScrolledToSearch = useRef(false);
 
     const activeStreamRef = useRef(activeStream);
@@ -130,7 +121,12 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
             setIsMobileSearchOpen(true);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
-    }, [setIsMobileSearchOpen]);
+        const pendingSearch = sessionStorage.getItem("pendingSearch");
+        if (pendingSearch) {
+            sessionStorage.removeItem("pendingSearch");
+            setSearchQuery(pendingSearch);
+        }
+    }, [setIsMobileSearchOpen, setSearchQuery]);
 
     const loadMovieDetails = useCallback(async (tmdbId: number, mediaType: string = "movie") => {
         try {
@@ -197,7 +193,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                 loadMovieDetails(trending[0].id, trendingType);
             }
         }
-    }, [continueWatching, trending, activeStream, loadMovieDetails]);
+    }, [continueWatching, trending, trendingType, activeStream, loadMovieDetails, selectedMovie]);
 
     const handleCardClick = useCallback((movie: Movie) => {
         heroAutoSelectDisabled.current = true;
@@ -285,7 +281,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
             }
         }
 
-        let baseTitle = movie.title || movie.name || "Untitled";
+        const baseTitle = movie.title || movie.name || "Untitled";
         let cleanTitle = baseTitle.replace(/ S\d{2}E\d{2}/g, "").trim();
 
         if (cleanTitle === "undefined" || cleanTitle === "Untitled") {
@@ -342,9 +338,6 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
         playMovie(cwMovie, item.timestamp, fs, fe, src || effectiveSource);
     }, [playMovie, effectiveSource]);
 
-    const handleSettingsOpen = useCallback(() => setShowSettings(true), [setShowSettings]);
-    const handleSettingsClose = useCallback(() => setShowSettings(false), [setShowSettings]);
-
     const handleWatchlistCardClick = useCallback((item: any) => {
         const mt = item.mediaType || item.movieDetails?.media_type || "movie";
         handleCardClick({ ...(item.movieDetails || {}), media_type: mt });
@@ -352,10 +345,8 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
 
     return (
         <div className="relative h-screen flex flex-col overflow-hidden bg-black select-none text-slate-100">
-            {/* Gradient overlay removed — it created a visible white tint on the top section */}
-
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
-                <Navbar onSettingsClick={handleSettingsOpen} currentPath="/">
+                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/">
                     <SearchInput
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
@@ -409,7 +400,6 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                             effectiveEnabledSources={effectiveEnabledSources}
                             effectiveSource={effectiveSource}
                             onResume={handleCWResume}
-                            DEBUG={DEBUG}
                             isLoading={false}
                         />
 
@@ -427,8 +417,6 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
             <PlayerModal
                 activeStream={activeStream}
                 playerError={playerError}
-                playerContainerRef={playerContainerRef}
-                playerRef={playerRef}
                 effectiveSource={playerSource || effectiveSource}
                 effectiveEnabledSources={effectiveEnabledSources}
                 selectedShowDetails={selectedShowDetails}
@@ -457,7 +445,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                 onCardClick={handleCardClick}
             />
 
-            <SettingsOverlay isOpen={showSettings} onClose={handleSettingsClose} onSourcesChange={onSourcesChange} />
+            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
 
         </div>
     );

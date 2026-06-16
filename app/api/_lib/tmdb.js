@@ -67,16 +67,4 @@ async function getTrendingTv(page = 1) {
     return tmdbGet("/trending/tv/week", { page });
 }
 
-async function getTopRatedMovies(page = 1) {
-    return tmdbGet("/movie/top_rated", { page });
-}
-
-async function getMoviesByGenre(genreId, page = 1) {
-    return tmdbGet("/discover/movie", { with_genres: genreId, page, sort_by: "popularity.desc" });
-}
-
-async function getTvByGenre(genreId, page = 1) {
-    return tmdbGet("/discover/tv", { with_genres: genreId, page, sort_by: "popularity.desc" });
-}
-
-export { searchMovies, searchTv, movieDetails, tvDetails, getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre, getTvByGenre };
+export { searchMovies, searchTv, movieDetails, tvDetails, getTrendingMovies, getTrendingTv };

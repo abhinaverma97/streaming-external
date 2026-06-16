@@ -2,24 +2,31 @@
 
 import { useEffect, useState, RefObject } from "react";
 
+const DEFAULT_OPTIONS: IntersectionObserverInit = { rootMargin: "400px" };
+
 export function useIntersectionObserver(
     ref: RefObject<Element | null>,
     initialIsVisible: boolean = false,
-    options: IntersectionObserverInit = { rootMargin: "400px" }
+    options: IntersectionObserverInit = DEFAULT_OPTIONS
 ): boolean {
-    const [isIntersecting, setIsIntersecting] = useState(initialIsVisible);
+    const [isVisible, setIsVisible] = useState(initialIsVisible);
 
     useEffect(() => {
+        if (isVisible) return; // Already visible — one-shot, never hide again
         const element = ref.current;
         if (!element) return;
 
         const observer = new IntersectionObserver(([entry]) => {
-            setIsIntersecting(entry.isIntersecting);
+            if (entry.isIntersecting) {
+                setIsVisible(true);
+                observer.disconnect();
+            }
         }, options);
 
         observer.observe(element);
         return () => observer.disconnect();
-    }, [ref, options.rootMargin, options.threshold, options.root]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ref, isVisible, options.rootMargin]);
 
-    return isIntersecting;
+    return isVisible;
 }

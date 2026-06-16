@@ -39,6 +39,12 @@ yarn-error.log*
 # user data
 .cache/
 
+# personal seed data (restored at build time)
+hist.txt
+
+# benchmark output
+/bench-results
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

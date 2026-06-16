@@ -136,7 +136,7 @@ function PlayerSidebarInner({
                     <div className="flex items-center justify-between gap-2 mt-1">
                         <button
                             onClick={goToPrevEpisode}
-                            disabled={selectedEpisode <= 1 && (!selectedShowDetails?.seasons?.some((s: any) => s.season_number === selectedSeason - 1))}
+                            disabled={selectedEpisode <= 1 && !selectedShowDetails?.seasons?.filter((s: any) => s.season_number > 0).some((s: any) => s.season_number === selectedSeason - 1)}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/10 disabled:opacity-25 disabled:cursor-not-allowed text-white/70 hover:text-white text-xs transition-all active:scale-95"
                         >
                             <ChevronLeft className="w-3.5 h-3.5" /> Prev

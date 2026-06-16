@@ -14,9 +14,7 @@ export interface SourceConfig {
   };
 }
 
-const M = "ffffff";
-const D = "ffffff";
-const L = "ffffff";
+const COLOR = "ffffff";
 
 export const SOURCES: SourceConfig[] = [
   {
@@ -24,12 +22,12 @@ export const SOURCES: SourceConfig[] = [
     name: "VIDEASY",
     origins: ["https://player.videasy.net", "https://player.videasy.to"],
     buildMovieUrl: (id, st) => {
-      let u = `https://player.videasy.net/movie/${id}?color=${M}`;
+      let u = `https://player.videasy.net/movie/${id}?color=${COLOR}`;
       if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
     buildTvUrl: (id, s, e, st) => {
-      let u = `https://player.videasy.net/tv/${id}/${s}/${e}?color=${M}`;
+      let u = `https://player.videasy.net/tv/${id}/${s}/${e}?color=${COLOR}`;
       if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
@@ -40,12 +38,12 @@ export const SOURCES: SourceConfig[] = [
     name: "VidFast",
     origins: ["https://vidfast.pro", "https://vidfast.in", "https://vidfast.io", "https://vidfast.me", "https://vidfast.net", "https://vidfast.pm", "https://vidfast.xyz"],
     buildMovieUrl: (id, st) => {
-      let u = `https://vidfast.pro/movie/${id}?theme=${M}&autoPlay=true&title=false&poster=false&hideServer=false`;
+      let u = `https://vidfast.pro/movie/${id}?theme=${COLOR}&autoPlay=true&title=false&poster=false&hideServer=false`;
       if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
       return u;
     },
     buildTvUrl: (id, s, e, st) => {
-      let u = `https://vidfast.pro/tv/${id}/${s}/${e}?theme=${M}&autoPlay=true&title=false&poster=false&hideServer=false`;
+      let u = `https://vidfast.pro/tv/${id}/${s}/${e}?theme=${COLOR}&autoPlay=true&title=false&poster=false&hideServer=false`;
       if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
       return u;
     },
@@ -56,9 +54,9 @@ export const SOURCES: SourceConfig[] = [
     name: "Cinezo",
     origins: ["https://player.cinezo.live"],
     buildMovieUrl: (id) =>
-      `https://player.cinezo.live/embed/movie/${id}?primarycolor=${M}&secondarycolor=${D}&iconcolor=${L}&autoplay=true&poster=false&servericon=true&setting=true`,
+      `https://player.cinezo.live/embed/movie/${id}?primarycolor=${COLOR}&secondarycolor=${COLOR}&iconcolor=${COLOR}&autoplay=true&poster=false&servericon=true&setting=true`,
     buildTvUrl: (id, s, e) =>
-      `https://player.cinezo.live/embed/tv/${id}/${s}/${e}?primarycolor=${M}&secondarycolor=${D}&iconcolor=${L}&autoplay=true&poster=false&servericon=true&setting=true`,
+      `https://player.cinezo.live/embed/tv/${id}/${s}/${e}?primarycolor=${COLOR}&secondarycolor=${COLOR}&iconcolor=${COLOR}&autoplay=true&poster=false&servericon=true&setting=true`,
     supports: { autoPlay: true, serverSelection: true, subtitles: false, colorTheme: true, startTime: false, progress: true },
   },
   {
@@ -66,12 +64,12 @@ export const SOURCES: SourceConfig[] = [
     name: "VidLink",
     origins: ["https://vidlink.pro"],
     buildMovieUrl: (id, st) => {
-      let u = `https://vidlink.pro/movie/${id}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
+      let u = `https://vidlink.pro/movie/${id}?primaryColor=${COLOR}&secondaryColor=${COLOR}&iconColor=${COLOR}&autoplay=true&title=false&poster=false`;
       if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
       return u;
     },
     buildTvUrl: (id, s, e, st) => {
-      let u = `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=${M}&secondaryColor=${D}&iconColor=${L}&autoplay=true&title=false&poster=false`;
+      let u = `https://vidlink.pro/tv/${id}/${s}/${e}?primaryColor=${COLOR}&secondaryColor=${COLOR}&iconColor=${COLOR}&autoplay=true&title=false&poster=false`;
       if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
       return u;
     },
@@ -88,7 +86,7 @@ export const SOURCES: SourceConfig[] = [
     },
     buildTvUrl: (id, s, e, st) => {
       let u = `https://vidnest.fun/tv/${id}/${s}/${e}?servericon=false`;
-      if (st && st > 0) u += `&startAt=${Math.floor(st)}`;
+      if (st && st > 0) u += `&progress=${Math.floor(st)}`;
       return u;
     },
     supports: { autoPlay: false, serverSelection: true, subtitles: false, colorTheme: false, startTime: true, progress: true },
@@ -98,9 +96,9 @@ export const SOURCES: SourceConfig[] = [
     name: "VidRock",
     origins: ["https://vidrock.ru"],
     buildMovieUrl: (id) =>
-      `https://vidrock.ru/movie/${id}?autoplay=true&theme=${M}&download=false&nextbutton=false&episodeselector=false`,
+      `https://vidrock.ru/movie/${id}?autoplay=true&theme=${COLOR}&download=false&nextbutton=false&episodeselector=false`,
     buildTvUrl: (id, s, e) =>
-      `https://vidrock.ru/tv/${id}/${s}/${e}?autoplay=true&theme=${M}&download=false&nextbutton=false&episodeselector=false`,
+      `https://vidrock.ru/tv/${id}/${s}/${e}?autoplay=true&theme=${COLOR}&download=false&nextbutton=false&episodeselector=false`,
     supports: { autoPlay: true, serverSelection: false, subtitles: true, colorTheme: true, startTime: false, progress: true },
   },
 ];

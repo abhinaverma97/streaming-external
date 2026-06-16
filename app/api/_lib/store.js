@@ -16,7 +16,7 @@ const store = {
     enabledSources: [],
     defaultSource: "videasy",
     aiApiKey: "",
-    aiModel: "openai/gpt-oss-120b:free",
+    aiModel: defaultAiModel,
   },
   recommendations: {
     recommendedMovies: [],
@@ -65,18 +65,55 @@ function persist() {
   }, 500);
 }
 
-load();
-
-function ensureLoaded() {
-    // Guard against RSC/API route module instance divergence in Next.js:
-    // If all Maps are empty, re-read from disk to ensure fresh data.
-    if (store.progress.size === 0 && store.watchlist.size === 0 && store.history.length === 0 && store.ratings.size === 0) {
-        load();
-    }
+// Synchronous flush used on process exit so a pending debounced write is not lost.
+function persistSync() {
+  if (store._saveTimeout) {
+    clearTimeout(store._saveTimeout);
+    store._saveTimeout = null;
+  }
+  try {
+    fs.writeFileSync(
+      DATA_FILE,
+      JSON.stringify({
+        watchlist: [...store.watchlist],
+        progress: [...store.progress],
+        history: store.history,
+        ratings: [...store.ratings],
+        settings: store.settings,
+        recommendations: store.recommendations,
+      })
+    );
+  } catch (e) {
+    console.error("[Store] Failed to persist on exit:", e.message);
+  }
 }
 
+load();
+
+// Seed from data/seed.json on first boot (empty volume).
+// Pure JSON read — no network calls, no async, ~0ms.
+function seedIfEmpty() {
+  if (store.ratings.size > 0) return; // already has data
+  const seedFile = path.join(process.cwd(), "data", "seed.json");
+  if (!fs.existsSync(seedFile)) return;
+  try {
+    const seed = JSON.parse(fs.readFileSync(seedFile, "utf-8"));
+    store.ratings = new Map(seed.ratings || []);
+    store.watchlist = new Map(seed.watchlist || []);
+    persistSync(); // write to volume immediately so next boot skips this
+    console.log(`[Store] Seeded ${store.ratings.size} ratings + ${store.watchlist.size} watchlist from data/seed.json`);
+  } catch (e) {
+    console.error("[Store] Failed to seed:", e.message);
+  }
+}
+
+seedIfEmpty();
+
+process.on("exit", persistSync);
+process.on("SIGTERM", () => { persistSync(); process.exit(0); });
+process.on("SIGINT", () => { persistSync(); process.exit(0); });
+
 export async function getWatchlist() {
-  ensureLoaded();
   return [...store.watchlist.values()]
     .map(r => ({
       tmdbId: r.tmdbId,
@@ -98,7 +135,6 @@ export async function removeFromWatchlist(tmdbId) {
 }
 
 export async function getProgress() {
-  ensureLoaded();
   const items = [...store.progress.values()].map(r => ({
     tmdbId: r.tmdbId,
     timestamp: r.timestamp,
@@ -135,7 +171,7 @@ export async function saveProgress(tmdbId, timestamp, duration, movieDetails, me
   const percentage = timestamp / duration;
   if (percentage > 0.95) {
     store.progress.delete(tmdbId);
-    addToHistory(tmdbId, movieDetails);
+    await addToHistory(tmdbId, movieDetails);
   } else {
     store.progress.set(tmdbId, {
       tmdbId, timestamp, duration, movieDetails, mediaType, source: source || null, updatedAt: Date.now(),
@@ -145,7 +181,6 @@ export async function saveProgress(tmdbId, timestamp, duration, movieDetails, me
 }
 
 export async function getHistory() {
-  ensureLoaded();
   return store.history
     .map(r => ({ tmdbId: r.tmdbId, movieDetails: r.movieDetails, watchedAt: r.watchedAt }))
     .sort((a, b) => b.watchedAt - a.watchedAt)
@@ -166,7 +201,6 @@ export async function removeFromHistory(tmdbId) {
 }
 
 export async function getRatings() {
-  ensureLoaded();
   const ratings = {};
   for (const [tmdbId, r] of store.ratings) {
     ratings[tmdbId] = {
@@ -190,7 +224,6 @@ export async function deleteRating(tmdbId) {
 }
 
 export async function getSourcePrefs() {
-  ensureLoaded();
   return {
     enabled: store.settings.enabledSources,
     defaultSource: store.settings.defaultSource || "videasy",
@@ -212,13 +245,13 @@ export async function getAiSettings() {
 
 export async function saveAiSettings(settings) {
   store.settings.aiApiKey = settings.apiKey || "";
-  store.settings.aiModel = settings.model || "openai/gpt-oss-120b:free";
+  store.settings.aiModel = settings.model || defaultAiModel;
   persist();
 }
 
 export async function getRecommendations() {
   const r = store.recommendations;
-  if (!r.recommendedMovies && !r.recommendedTvShows) return null;
+  if (!r.generatedAt) return null;
   return {
     recommendedMovies: r.recommendedMovies || [],
     recommendedTvShows: r.recommendedTvShows || [],
@@ -226,10 +259,6 @@ export async function getRecommendations() {
     error: r.error,
     generatedAt: r.generatedAt,
   };
-}
-
-export async function getGenerationStatus() {
-  return !!store.recommendations.isGenerating;
 }
 
 export async function setGenerationStatus(isGenerating) {
@@ -255,5 +284,3 @@ export async function saveRecommendations(recs) {
   store.recommendations.generatedAt = Date.now();
   persist();
 }
-
-

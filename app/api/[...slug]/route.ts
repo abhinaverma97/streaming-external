@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import {
     movieDetails, tvDetails,
-    getTrendingMovies, getTrendingTv, getTopRatedMovies, getMoviesByGenre, getTvByGenre
+    getTrendingMovies, getTrendingTv,
 } from "../_lib/tmdb.js";
 import {
     getWatchlist, addToWatchlist, removeFromWatchlist,
@@ -12,7 +12,6 @@ import {
     getSourcePrefs, saveSourcePrefs,
     getAiSettings, saveAiSettings
 } from "../_lib/store.js";
-type RouteHandler = (req: NextRequest, segments: string[]) => Promise<NextResponse>;
 
 function json(data: any, status = 200) {
     return NextResponse.json(data, { status });
@@ -24,31 +23,23 @@ function error(msg: string, status = 500) {
 
 async function handle(req: NextRequest, segments: string[]): Promise<NextResponse> {
     const method = req.method;
-    const [s0, s1, s2, s3] = segments;
+    const [s0, s1, s2] = segments;
 
     try {
-        // ── Health ─────────────────────────────────────────────────────
-        if (s0 === "health") {
-            return json({ ok: true });
-        }
+        if (s0 === "health") return json({ ok: true });
 
-        // ── Movie / TV Details ─────────────────────────────────────────
         const pageNum = (p: string | null) => p ? Number(p) : 1;
 
         if ((s0 === "movie" || s0 === "movies") && s1 && method === "GET") {
             if (s1 === "trending") return json(await getTrendingMovies(pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s1 === "top-rated") return json(await getTopRatedMovies(pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s1 === "genre" && s2) return json(await getMoviesByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))));
             return json({ tmdb: await movieDetails(s1) });
         }
 
         if (s0 === "tv" && s1 && method === "GET") {
             if (s1 === "trending") return json(await getTrendingTv(pageNum(req.nextUrl.searchParams.get("page"))));
-            if (s1 === "genre" && s2) return json(await getTvByGenre(s2, pageNum(req.nextUrl.searchParams.get("page"))));
             return json({ tmdb: await tvDetails(s1) });
         }
 
-        // ── Watchlist ──────────────────────────────────────────────────
         if (s0 === "watchlist") {
             if (method === "GET") return json(await getWatchlist());
             if (method === "POST") {
@@ -63,25 +54,18 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             }
         }
 
-        // ── Progress ───────────────────────────────────────────────────
         if (s0 === "progress" && method === "POST") {
             const body = await req.json();
-            if (!body.tmdbId || typeof body.timestamp !== "number" || isNaN(body.timestamp)) {
+            if (!body.tmdbId || typeof body.timestamp !== "number" || isNaN(body.timestamp))
                 return error("Missing or invalid required fields", 400);
-            }
-            if (typeof body.duration !== "number" || isNaN(body.duration)) {
+            if (typeof body.duration !== "number" || isNaN(body.duration))
                 return error("Duration unavailable or invalid", 400);
-            }
             await saveProgress(body.tmdbId, body.timestamp, body.duration, body.movieDetails, body.mediaType, body.source);
             return json({ ok: true });
         }
 
-        // ── Continue Watching ──────────────────────────────────────────
-        if (s0 === "continue-watching") {
-            return json(await getProgress());
-        }
+        if (s0 === "continue-watching") return json(await getProgress());
 
-        // ── History ────────────────────────────────────────────────────
         if (s0 === "history") {
             if (method === "GET") return json(await getHistory());
             if (method === "POST") {
@@ -90,20 +74,18 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
                 await addToHistory(body.tmdbId, body.movieDetails);
                 return json({ ok: true });
             }
-            if ((method === "DELETE") && s1) {
+            if (method === "DELETE" && s1) {
                 await removeFromHistory(s1);
                 return json({ ok: true });
             }
         }
 
-        // ── Ratings ────────────────────────────────────────────────────
         if (s0 === "ratings") {
             if (method === "GET") return json(await getRatings());
             if (method === "POST" && s1) {
                 const body = await req.json();
-                if (typeof body.rating !== "number" || isNaN(body.rating) || body.rating < 1 || body.rating > 5) {
+                if (typeof body.rating !== "number" || isNaN(body.rating) || body.rating < 1 || body.rating > 5)
                     return error("Invalid rating", 400);
-                }
                 await saveRating(s1, body.rating, body.movieDetails, body.thoughts);
                 return json({ ok: true });
             }
@@ -113,18 +95,22 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             }
         }
 
-        // ── Source Preferences ─────────────────────────────────────────
         if (s0 === "source-prefs") {
             if (method === "GET") return json(await getSourcePrefs());
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.enabled || !body.defaultSource) return error("Missing enabled or defaultSource", 400);
+                const { SOURCES } = await import("../../lib/sources-config");
+                const validIds = SOURCES.map((s: any) => s.id);
+                const isValid = body.enabled.every((id: string) => validIds.includes(id)) && validIds.includes(body.defaultSource);
+                if (!isValid) return error("Invalid source ID", 400);
                 await saveSourcePrefs(body.enabled, body.defaultSource);
                 return json({ ok: true });
             }
         }
 
-        // ── AI Settings ────────────────────────────────────────────────
+        // Single-user self-hosted app: return real key.
+        // Masking removed because it overwrote the stored key on blur.
         if (s0 === "ai-settings") {
             if (method === "GET") return json(await getAiSettings());
             if (method === "POST") {
@@ -141,16 +127,13 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
-    const slug = (await params).slug;
-    return handle(req, slug);
+    return handle(req, (await params).slug);
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
-    const slug = (await params).slug;
-    return handle(req, slug);
+    return handle(req, (await params).slug);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ slug: string[] }> }) {
-    const slug = (await params).slug;
-    return handle(req, slug);
+    return handle(req, (await params).slug);
 }

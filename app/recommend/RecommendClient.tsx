@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { Star, Film, Plus, Check, Play, RotateCw, RefreshCw, X } from "lucide-react";
+import { FadeImage } from "../components/FadeImage";
+import { Film, Plus, Check, Play, RotateCw, RefreshCw, X } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
 import { PlayerModal } from "../components/PlayerModal";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { buildEmbedUrl } from "../lib/sources-config";
-import { getBackdropUrl, extractTrailerUrl } from "../lib/tmdb-utils";
+import { getBackdropUrl } from "../lib/tmdb-utils";
 import { getWatchlistId } from "../lib/watchlist";
 import { useSourcePrefs } from "../hooks/useSourcePrefs";
 import { useUserLists } from "../hooks/useUserLists";
@@ -51,18 +52,16 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     const handleDesktopSearch = (e: any) => {
         e.preventDefault();
         if (searchQuery) {
-            router.push(`/?q=${encodeURIComponent(searchQuery)}`);
+            sessionStorage.setItem("pendingSearch", searchQuery);
+            router.push("/");
         }
     };
 
     const lastProgressRef = useRef(0);
-    const playerContainerRef = useRef<HTMLDivElement>(null);
-    const playerRef = useRef<HTMLIFrameElement>(null);
     const activeStreamRef = useRef(activeStream);
     useEffect(() => { activeStreamRef.current = activeStream; }, [activeStream]);
 
     const {
-        defaultSource: currentDefaultSource,
         effectiveEnabledSources, effectiveSource,
         onSourcesChange,
     } = useSourcePrefs(defaultSource, enabledSources);
@@ -206,7 +205,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     const changeEpisode = (season: number, episode: number) => {
         if (!activeStream) return;
         setSelectedSeason(season); setSelectedEpisode(episode);
-        setActiveStream({ ...activeStream, embedUrl: buildEmbedUrl(effectiveSource, activeStream.details.id, "tv", season, episode, 0) });
+        setActiveStream({ ...activeStream, embedUrl: buildEmbedUrl(playerSource || effectiveSource, activeStream.details.id, "tv", season, episode, 0) });
     };
 
     const generatedAt = recommendations?.generatedAt;
@@ -217,8 +216,6 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
-            {/* Gradient overlay removed — it created a visible white tint on the top section */}
-
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
                 <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/recommend">
                     <SearchInput
@@ -229,7 +226,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                 </Navbar>
             </div>
 
-            <div className="content-transition w-full flex-1 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pb-12">
+            <div className="hero-transition w-full flex-1 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pb-12">
 
                 <div className="flex items-center justify-center gap-4 md:gap-6 mt-8 md:mt-16 mb-4 text-[10px] font-medium tracking-[0.2em] text-slate-500 uppercase">
                     <span>{totalCount} <span className="text-slate-600">recommended</span></span>
@@ -302,9 +299,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                                     <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300"
                                         onClick={() => playRecommendation(item)}>
                                         {backdropPath ? (
-                                            <Image src={getBackdropUrl(backdropPath)} alt={title} fill
+                                            <FadeImage src={getBackdropUrl(backdropPath)} alt={title} fill
                                                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 15vw"
-                                                className="object-cover brightness-90 group-hover:brightness-100 transition-all duration-300" />
+                                                className="object-cover brightness-90 group-hover:brightness-100" />
                                         ) : (
                                             <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
                                                 <Film className="w-6 h-6 text-slate-600" />
@@ -348,7 +345,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                 )}
             </div>
 
-            <PlayerModal activeStream={activeStream} playerError={playerError} playerContainerRef={playerContainerRef} playerRef={playerRef}
+            <PlayerModal activeStream={activeStream} playerError={playerError}
                 effectiveSource={playerSource || effectiveSource} effectiveEnabledSources={effectiveEnabledSources}
                 selectedShowDetails={selectedShowDetails} selectedSeason={selectedSeason} selectedEpisode={selectedEpisode}
                 episodesList={episodesList} ratings={ratings} onClose={closePlayer} onSourceChange={handleSourceChange}

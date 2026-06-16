@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { memo, useRef } from "react";
-import { Play, Film, Plus, Check } from "lucide-react";
-import { getCardBackdropUrl } from "../lib/tmdb-utils";
+import { memo, useRef, useState } from "react";
+import { Play, Film } from "lucide-react";
+import { getPosterUrl } from "../lib/tmdb-utils";
 import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
 
 interface MovieCardProps {
@@ -27,17 +27,16 @@ interface MovieCardProps {
     label?: React.ReactNode;
     showPlayOverlay?: boolean;
     priority?: boolean;
-    onWatchlist?: (e: React.MouseEvent) => void;
-    isInWatchlist?: boolean;
 }
 
-function MovieCardInner({ item, onClick, isActive, progressPercent, label, showPlayOverlay, priority, onWatchlist, isInWatchlist }: MovieCardProps) {
+function MovieCardInner({ item, onClick, isActive, progressPercent, label, showPlayOverlay, priority }: MovieCardProps) {
     const title = item.movieDetails?.title || item.movieDetails?.name || item.title || item.name || "Unknown Title";
     const backdropPath = item.movieDetails?.backdrop_path || item.backdrop_path;
     const posterPath = item.movieDetails?.poster_path || item.poster_path;
 
     const imageRef = useRef<HTMLDivElement>(null);
     const isImageVisible = useIntersectionObserver(imageRef, true, { rootMargin: "400px" });
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     return (
         <div
@@ -56,13 +55,14 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                     <>
                         {backdropPath || posterPath ? (
                             <Image
-                                src={getCardBackdropUrl(backdropPath || posterPath || "")}
+                                src={getPosterUrl(backdropPath || posterPath || "")}
                                 alt={title}
                                 fill
                                 priority={priority}
                                 loading={priority ? undefined : "lazy"}
+                                onLoad={() => setImageLoaded(true)}
                                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                                className="object-cover transition-all duration-300 md:brightness-90 md:group-hover:brightness-100"
+                                className={`object-cover transition-all duration-500 md:brightness-90 md:group-hover:brightness-100 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                             />
                         ) : (
                             <div className="absolute inset-0 flex items-center justify-center text-slate-600 bg-slate-950">
@@ -76,15 +76,6 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
                                     <Play className="w-3.5 h-3.5 fill-black pl-0.5" />
                                 </div>
                             </div>
-                        )}
-
-                        {onWatchlist && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); onWatchlist(e); }}
-                                className="absolute top-2 right-2 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                            >
-                                {isInWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                            </button>
                         )}
 
                         {progressPercent !== undefined && (

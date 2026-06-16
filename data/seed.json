@@ -1,0 +1,3590 @@
+{
+  "ratings": [
+    [
+      "77",
+      {
+        "tmdbId": "77",
+        "rating": 4,
+        "movieDetails": {
+          "id": 77,
+          "title": "Memento",
+          "poster_path": "/fKTPH2WvH8nHTXeBYBVhawtRqtR.jpg",
+          "backdrop_path": "/7Wev9JMo6R5XAfz2KDvXb7oPMmy.jpg",
+          "overview": "Leonard Shelby is tracking down the man who raped and murdered his wife. The difficulty of locating his wife's killer, however, is compounded by the fact that he suffers from a rare, untreatable form of short-term memory loss. Although he can recall details of life before his accident, Leonard cannot remember what happened fifteen minutes ago, where he's going, or why.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "107",
+      {
+        "tmdbId": "107",
+        "rating": 3,
+        "movieDetails": {
+          "id": 107,
+          "title": "Snatch",
+          "poster_path": "/kJZoAHq1SLDdWjeNGtlHAnGpmFV.jpg",
+          "backdrop_path": "/gTghF8ardwJ48XLHkiapWk3ZmSo.jpg",
+          "overview": "Unscrupulous boxing promoters, violent bookies, a Russian gangster, incompetent amateur robbers, and supposedly Jewish jewellers fight to track down a priceless stolen diamond.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "115",
+      {
+        "tmdbId": "115",
+        "rating": 3,
+        "movieDetails": {
+          "id": 115,
+          "title": "The Big Lebowski",
+          "poster_path": "/3bv6WAp6BSxxYvB5ozKFUYuRA8C.jpg",
+          "backdrop_path": "/hXsy4XCCHrUk81XoRhcooyWejao.jpg",
+          "overview": "Jeffrey 'The Dude' Lebowski, a Los Angeles slacker who only wants to bowl and drink White Russians, is mistaken for another Jeffrey Lebowski, a wheelchair-bound millionaire, and finds himself dragged into a strange series of events involving nihilists, adult film producers, ferrets, errant toes, and large sums of money.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "Nice, funny, good laugh"
+      }
+    ],
+    [
+      "129",
+      {
+        "tmdbId": "129",
+        "rating": 5,
+        "movieDetails": {
+          "id": 129,
+          "title": "Spirited Away",
+          "poster_path": "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+          "backdrop_path": "/dyJvKsNs2KP8qQnAXbRwDjblViy.jpg",
+          "overview": "A young girl, Chihiro, becomes trapped in a strange new world of spirits. When her parents undergo a mysterious transformation, she must call upon the courage she never knew she had to free her family.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "141",
+      {
+        "tmdbId": "141",
+        "rating": 1,
+        "movieDetails": {
+          "id": 141,
+          "title": "Donnie Darko",
+          "poster_path": "/sv7D4vlfIH25lNjQYoXzoOFCYaz.jpg",
+          "backdrop_path": "/msCHK5Kh1YbdZ0zPJ2nzPUhhSN9.jpg",
+          "overview": "After narrowly escaping a bizarre accident, a troubled teenager is plagued by visions of a large bunny rabbit that manipulates him to commit a series of crimes.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "dont remember much"
+      }
+    ],
+    [
+      "155",
+      {
+        "tmdbId": "155",
+        "rating": 4,
+        "movieDetails": {
+          "id": 155,
+          "title": "The Dark Knight",
+          "poster_path": "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+          "backdrop_path": "/cfT29Im5VDvjE0RpyKOSdCKZal7.jpg",
+          "overview": "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "274",
+      {
+        "tmdbId": "274",
+        "rating": 5,
+        "movieDetails": {
+          "id": 274,
+          "title": "The Silence of the Lambs",
+          "poster_path": "/uS9m8OBk1A8eM9I042bx8XXpqAq.jpg",
+          "backdrop_path": "/aYcnDyLMnpKce1FOYUpZrXtgUye.jpg",
+          "overview": "Clarice Starling is a top student at the FBI's training academy.  Jack Crawford wants Clarice to interview Dr. Hannibal Lecter, a brilliant psychiatrist who is also a violent psychopath, serving life behind bars for various acts of murder and cannibalism.  Crawford believes that Lecter may have insight into a case and that Starling, as an attractive young woman, may be just the bait to draw him out.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "ooooff the acting the story the direction , best"
+      }
+    ],
+    [
+      "550",
+      {
+        "tmdbId": "550",
+        "rating": 5,
+        "movieDetails": {
+          "id": 550,
+          "title": "Fight Club",
+          "poster_path": "/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg",
+          "backdrop_path": "/xRyINp9KfMLVjRiO5nCsoRDdvvF.jpg",
+          "overview": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "its a classic, too famous"
+      }
+    ],
+    [
+      "603",
+      {
+        "tmdbId": "603",
+        "rating": 4,
+        "movieDetails": {
+          "id": 603,
+          "title": "The Matrix",
+          "poster_path": "/aOIuZAjPaRIE6CMzbazvcHuHXDc.jpg",
+          "backdrop_path": "/tlm8UkiQsitc8rSuIAscQDCnP8d.jpg",
+          "overview": "Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "629",
+      {
+        "tmdbId": "629",
+        "rating": 5,
+        "movieDetails": {
+          "id": 629,
+          "title": "The Usual Suspects",
+          "poster_path": "/99X2SgyFunJFXGAYnDv3sb9pnUD.jpg",
+          "backdrop_path": "/hy0Hx9fMPk2fmw26Li60z1S2giU.jpg",
+          "overview": "Held in an L.A. interrogation room, Verbal Kint attempts to convince the feds that a mythic crime lord, Keyser Soze, not only exists, but was also responsible for drawing him and his four partners into a multi-million dollar heist that ended with an explosion in San Pedro harbor – leaving few survivors. Verbal lures his interrogators with an incredible story of the crime lord's almost supernatural prowess.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "what a twist, damn, nicely written and directed"
+      }
+    ],
+    [
+      "670",
+      {
+        "tmdbId": "670",
+        "rating": 5,
+        "movieDetails": {
+          "id": 670,
+          "title": "Oldboy",
+          "poster_path": "/pWDtjs568ZfOTMbURQBYuT4Qxka.jpg",
+          "backdrop_path": "/sdwjQEM869JFwMytTmvr6ggvaUl.jpg",
+          "overview": "With no clue how he came to be imprisoned, drugged and tortured for 15 years, a desperate man seeks revenge on his captors.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "mindbogglingly, Park Chan-wook is just gold, not gold he is diamond"
+      }
+    ],
+    [
+      "680",
+      {
+        "tmdbId": "680",
+        "rating": 4,
+        "movieDetails": {
+          "id": 680,
+          "title": "Pulp Fiction",
+          "poster_path": "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg",
+          "backdrop_path": "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
+          "overview": "A burger-loving hit man, his philosophical partner, a drug-addled gangster's moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip back and forth in time.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "807",
+      {
+        "tmdbId": "807",
+        "rating": 4,
+        "movieDetails": {
+          "id": 807,
+          "title": "Se7en",
+          "poster_path": "/191nKfP0ehp3uIvWqgPbFmI4lv9.jpg",
+          "backdrop_path": "/i5H7zusQGsysGQ8i6P361Vnr0n2.jpg",
+          "overview": "Two homicide detectives are on a desperate hunt for a serial killer whose crimes are based on the \"seven deadly sins\" in this dark and haunting film that takes viewers from the tortured remains of one victim to the next. The seasoned Det. Somerset researches each sin in an effort to get inside the killer's mind, while his novice partner, Mills, scoffs at his efforts to unravel the case.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "843",
+      {
+        "tmdbId": "843",
+        "rating": 5,
+        "movieDetails": {
+          "id": 843,
+          "title": "In the Mood for Love",
+          "poster_path": "/iYypPT4bhqXfq1b6EnmxvRt6b2Y.jpg",
+          "backdrop_path": "/ffQFnAUm2Uu4RU0nijpjPRf9TBT.jpg",
+          "overview": "In 1960s Hong Kong, two neighbors form an intimate bond after making a discovery about their spouses in this visually stunning tale of unrequited love.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "its Wong Kar-wai, what you expect, its brilliant"
+      }
+    ],
+    [
+      "1018",
+      {
+        "tmdbId": "1018",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1018,
+          "title": "Mulholland Drive",
+          "poster_path": "/x7A59t6ySylr1L7aubOQEA480vM.jpg",
+          "backdrop_path": "/g9ClaS5EqU0Hk8WIbMNhld0Bk6f.jpg",
+          "overview": "Blonde Betty Elms has only just arrived in Hollywood to become a movie star when she meets an enigmatic brunette with amnesia. Meanwhile, as the two set off to solve the second woman's identity, filmmaker Adam Kesher runs into ominous trouble while casting his latest project.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1124",
+      {
+        "tmdbId": "1124",
+        "rating": 2,
+        "movieDetails": {
+          "id": 1124,
+          "title": "The Prestige",
+          "poster_path": "/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg",
+          "backdrop_path": "/z3br1ub7spqGMkxgjgJSdM4DC21.jpg",
+          "overview": "A mysterious story of two magicians whose intense rivalry leads them on a life-long battle for supremacy -- full of obsession, deceit and jealousy with dangerous and deadly consequences.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i watched waaay back, dont remember much"
+      }
+    ],
+    [
+      "1255",
+      {
+        "tmdbId": "1255",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1255,
+          "title": "The Host",
+          "poster_path": "/m3OE5bpcGHMWYlPkYvgIrncuuGN.jpg",
+          "backdrop_path": "/m0wczZyNfWpu5q9wNuhFUGGiLxG.jpg",
+          "overview": "A teenage girl is captured by a giant mutated squid-like creature that appears from Seoul's Han River after toxic waste was dumped in it, prompting her family into a frantic search for her.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1271",
+      {
+        "tmdbId": "1271",
+        "rating": 5,
+        "movieDetails": {
+          "id": 1271,
+          "title": "300",
+          "poster_path": "/h7Lcio0c9ohxPhSZg42eTlKIVVY.jpg",
+          "backdrop_path": "/lgBZlJ1LHQel5nneNQMoesmvc7l.jpg",
+          "overview": "A story very loosely based the 480 B.C. Battle of Thermopylae, where the King of Sparta led his army against the advancing Persians.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "pure raw manly, pure testotorne fun"
+      }
+    ],
+    [
+      "1359",
+      {
+        "tmdbId": "1359",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1359,
+          "title": "American Psycho",
+          "poster_path": "/9uGHEgsiUXjCNq8wdq4r49YL8A1.jpg",
+          "backdrop_path": "/5oaMV2q0qzxkIW2ukU3lldLu5q2.jpg",
+          "overview": "A wealthy New York investment banking executive hides his alternate psychopathic ego from his co-workers and friends as he escalates deeper into his illogical, gratuitous fantasies.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "crazies are the best"
+      }
+    ],
+    [
+      "1396",
+      {
+        "tmdbId": "1396",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1396,
+          "title": "Breaking Bad",
+          "poster_path": "/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg",
+          "backdrop_path": "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
+          "overview": "Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "fuck skyler, season 3 was pure ragebait garbage"
+      }
+    ],
+    [
+      "1398",
+      {
+        "tmdbId": "1398",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1398,
+          "title": "The Sopranos",
+          "poster_path": "/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg",
+          "backdrop_path": "/lNpkvX2s8LGB0mjGODMT4o6Up7j.jpg",
+          "overview": "The story of New Jersey-based Italian-American mobster Tony Soprano and the difficulties he faces as he tries to balance the conflicting requirements of his home life and the criminal organization he heads. Those difficulties are often highlighted through his ongoing professional relationship with psychiatrist Jennifer Melfi. The show features Tony's family members and Mafia associates in prominent roles and story arcs, most notably his wife Carmela and his cousin and protégé Christopher Moltisanti.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1399",
+      {
+        "tmdbId": "1399",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1399,
+          "title": "Game of Thrones",
+          "poster_path": "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
+          "backdrop_path": "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg",
+          "overview": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "other then last season, its bannger"
+      }
+    ],
+    [
+      "1405",
+      {
+        "tmdbId": "1405",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1405,
+          "title": "Dexter",
+          "poster_path": "/q8dWfc4JwQuv3HayIZeO84jAXED.jpg",
+          "backdrop_path": "/aSGSxGMTP893DPMCvMl9AdnEICE.jpg",
+          "overview": "Dexter Morgan, a blood spatter pattern analyst for the Miami Metro Police also leads a secret life as a serial killer, hunting down criminals who have slipped through the cracks of justice.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1422",
+      {
+        "tmdbId": "1422",
+        "rating": 1,
+        "movieDetails": {
+          "id": 1422,
+          "title": "The Departed",
+          "poster_path": "/nT97ifVT2J1yMQmeq20Qblg61T.jpg",
+          "backdrop_path": "/6WRrGYalXXveItfpnipYdayFkQB.jpg",
+          "overview": "To take down South Boston's Irish Mafia, the police send in one of their own to infiltrate the underworld, not realizing the syndicate has done likewise. While an undercover cop curries favor with the mob kingpin, a career criminal rises through the police ranks. But both sides soon discover there's a mole among them.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1425",
+      {
+        "tmdbId": "1425",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1425,
+          "title": "House of Cards",
+          "poster_path": "/hKWxWjFwnMvkWQawbhvC0Y7ygQ8.jpg",
+          "backdrop_path": "/zoAxfThy7ntyCutBeNgdaKhRoSX.jpg",
+          "overview": "Betrayed by the White House, Congressman Frank Underwood embarks on a ruthless rise to power. Blackmail, seduction and ambition are his weapons.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1429",
+      {
+        "tmdbId": "1429",
+        "rating": 5,
+        "movieDetails": {
+          "id": 1429,
+          "title": "Attack on Titan",
+          "poster_path": "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+          "backdrop_path": "/rqbCbjB19amtOtFQbb3K2lgm2zv.jpg",
+          "overview": "100 years ago, the last remnants of humanity were forced to retreat behind the towering walls of a fortified city to escape the massive, man-eating Titans that roamed the land outside their fortress. Only the members of the Scouting Legion dared to stray beyond the safety of the walls – but even those brave warriors seldom returned alive. Those within the city clung to the illusion of a peaceful existence until the day that dream was shattered, and their slim chance at survival was reduced to one horrifying choice: kill – or be devoured!",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "the world building  next level, the concept next level, but i did not like the childish protag"
+      }
+    ],
+    [
+      "1668",
+      {
+        "tmdbId": "1668",
+        "rating": 5,
+        "movieDetails": {
+          "id": 1668,
+          "title": "Friends",
+          "poster_path": "/2koX1xLkpTQM4IZebYvKysFW1Nh.jpg",
+          "backdrop_path": "/m3Jev59mJLyUp5bXhY5SVfIBZI0.jpg",
+          "overview": "Six young people from New York City, on their own and struggling to survive in the real world, find the companionship, comfort and support they get from each other to be the perfect antidote to the pressures of life.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "its the og comedy"
+      }
+    ],
+    [
+      "1813",
+      {
+        "tmdbId": "1813",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1813,
+          "title": "The Devil's Advocate",
+          "poster_path": "/5ZzBGpxy55OQzHxKVY11IpY6a0o.jpg",
+          "backdrop_path": "/2Y6Q7eYDXoolcHjYCAyJQlE2CVT.jpg",
+          "overview": "Aspiring Florida defense lawyer Kevin Lomax accepts a job at a New York law firm. With the stakes getting higher every case, Kevin quickly learns that his boss has something far more evil planned.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1920",
+      {
+        "tmdbId": "1920",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1920,
+          "title": "Twin Peaks",
+          "poster_path": "/lA9CNSdo50iQPZ8A2fyVpMvJZAf.jpg",
+          "backdrop_path": "/j5w04XEuFv85N3RIovXBJIHxjSb.jpg",
+          "overview": "The body of Laura Palmer is washed up on a beach near the small Washington state town of Twin Peaks. FBI Special Agent Dale Cooper is called in to investigate her strange demise only to uncover a web of mystery that ultimately leads him deep into the heart of the surrounding woodland and his very own soul.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "first season 10 on 10, then its down hill just milking money but the first season the vibe is on, very nice vibe"
+      }
+    ],
+    [
+      "1933",
+      {
+        "tmdbId": "1933",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1933,
+          "title": "The Others",
+          "poster_path": "/p8g1vlTvpM6nr2hMMiZ1fUlKF0D.jpg",
+          "backdrop_path": "/rbBe9WQ1OqCxzgwskOTnaY6JdUA.jpg",
+          "overview": "Grace is a woman who lives in an old house kept dark because her two children, Anne and Nicholas, have a rare sensitivity to light. When the family begins to suspect the house is haunted, Grace fights to protect her children at any cost in the face of strange events and disturbing visions.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "nice twist but lenghty"
+      }
+    ],
+    [
+      "1949",
+      {
+        "tmdbId": "1949",
+        "rating": 2,
+        "movieDetails": {
+          "id": 1949,
+          "title": "Zodiac",
+          "poster_path": "/6YmeO4pB7XTh8P8F960O1uA14JO.jpg",
+          "backdrop_path": "/3zCPI4JFc54xvLaJ71oI2KoP3az.jpg",
+          "overview": "Over the course of a decade, editors of the San Francisco Chronicle entice themselves in the murders of the Zodiac Killer. However, as time runs its course, interest in the case dwindles in the eyes of the professionals. The Killer stops interacting with the public. However, believing he has the answers, an amateur cartoonist from the initial sightings races against time to prevent what he believes is another murder.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "2316",
+      {
+        "tmdbId": "2316",
+        "rating": 4,
+        "movieDetails": {
+          "id": 2316,
+          "title": "The Office",
+          "poster_path": "/7DJKHzAi83BmQrWLrYYOqcoKfhR.jpg",
+          "backdrop_path": "/mLyW3UTgi2lsMdtueYODcfAB9Ku.jpg",
+          "overview": "The everyday lives of office employees in the Scranton, Pennsylvania branch of the fictional Dunder Mifflin Paper Company.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "4553",
+      {
+        "tmdbId": "4553",
+        "rating": 4,
+        "movieDetails": {
+          "id": 4553,
+          "title": "The Machinist",
+          "poster_path": "/diAYqR4xdF9Hnj7qun6DEQhRrT2.jpg",
+          "backdrop_path": "/hi3lxLd93iKwCmVAfhMV9m1k2jr.jpg",
+          "overview": "Trevor, an insomniac lathe operator, experiences unusual occurrences at work and home. A strange man follows him everywhere, but no one else seems to notice him.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i dont remember much but i liked it"
+      }
+    ],
+    [
+      "4689",
+      {
+        "tmdbId": "4689",
+        "rating": 3,
+        "movieDetails": {
+          "id": 4689,
+          "title": "Sympathy for Mr. Vengeance",
+          "poster_path": "/uj42ubGbgVL65T10SvPVr0p9mJc.jpg",
+          "backdrop_path": "/b6elu2cz2Be9PqgX0MzggMCH4fk.jpg",
+          "overview": "A deaf man and his girlfriend resort to desperate measures in order to fund a kidney transplant for his sister. Things go horribly wrong, and the situation spirals rapidly into a cycle of violence and revenge.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "6145",
+      {
+        "tmdbId": "6145",
+        "rating": 4,
+        "movieDetails": {
+          "id": 6145,
+          "title": "Fracture",
+          "poster_path": "/qNen8x5gaikjIg9CFihgxYcJwQe.jpg",
+          "backdrop_path": "/mujUrk2diGe5vRCb3kdpHZeobRs.jpg",
+          "overview": "A husband is on trial for the attempted murder of his wife, in what is seemingly an open/shut case for the ambitious district attorney trying to put him away. However, there are surprises for both around every corner, and, as a suspenseful game of cat-and-mouse is played out, each must manipulate and outwit the other.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "court drama with high lvl iq stuff nice nice"
+      }
+    ],
+    [
+      "6977",
+      {
+        "tmdbId": "6977",
+        "rating": 5,
+        "movieDetails": {
+          "id": 6977,
+          "title": "No Country for Old Men",
+          "poster_path": "/6d5XOczc226jECq0LIX0siKtgHR.jpg",
+          "backdrop_path": "/gddUsvfyySrM5k8B8wwJy2VRlBx.jpg",
+          "overview": "Llewelyn Moss stumbles upon dead bodies, $2 million and a hoard of heroin in a Texas desert, but methodical killer Anton Chigurh comes looking for it, with local sheriff Ed Tom Bell hot on his trail. The roles of prey and predator blur as the violent pursuit of money and justice collide.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "well now we have a villain"
+      }
+    ],
+    [
+      "9463",
+      {
+        "tmdbId": "9463",
+        "rating": 5,
+        "movieDetails": {
+          "id": 9463,
+          "title": "Vampire Hunter D",
+          "poster_path": "/5Ni9RhIs6cLUrBLwdrqZ2fUFimS.jpg",
+          "backdrop_path": "/97hGh5XNbUcfAJxBTaH6W2NQyLj.jpg",
+          "overview": "In a far-future time ruled by the supernatural, a young girl requests the help of a vampire hunter to kill the vampire who has bitten her and thus prevent her from becoming a vampire herself.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "ooooohhh the animation, pure aura"
+      }
+    ],
+    [
+      "9693",
+      {
+        "tmdbId": "9693",
+        "rating": 3,
+        "movieDetails": {
+          "id": 9693,
+          "title": "Children of Men",
+          "poster_path": "/k9IAS4TehZFcKi4HVByxZNPfqex.jpg",
+          "backdrop_path": "/gFGLwUBhVrq0bq4j9DU08xQDRU2.jpg",
+          "overview": "In 2027, in a chaotic world in which humans can no longer procreate, a former activist agrees to help transport a miraculously pregnant woman to a sanctuary at sea, where her child's birth may help scientists save the future of humankind.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "11036",
+      {
+        "tmdbId": "11036",
+        "rating": 5,
+        "movieDetails": {
+          "id": 11036,
+          "title": "The Notebook",
+          "poster_path": "/rNzQyW4f8B8cQeg7Dgj3n6eT5k9.jpg",
+          "backdrop_path": "/zdXnJqBaGFVtLoPNuMeKfEYUViZ.jpg",
+          "overview": "An epic love story centered around an older man who reads aloud to a woman with Alzheimer's. From a faded notebook, the old man's words bring to life the story about a couple who is separated by World War II, and is then passionately reunited, seven years later, after they have taken different paths.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "og romance"
+      }
+    ],
+    [
+      "11324",
+      {
+        "tmdbId": "11324",
+        "rating": 3,
+        "movieDetails": {
+          "id": 11324,
+          "title": "Shutter Island",
+          "poster_path": "/nrmXQ0zcZUL8jFLrakWc90IR8z9.jpg",
+          "backdrop_path": "/rbZvGN1A1QyZuoKzhCw8QPmf2q0.jpg",
+          "overview": "World War II soldier-turned-U.S. Marshal Teddy Daniels investigates the disappearance of a patient from a hospital for the criminally insane, but his efforts are compromised by troubling visions and a mysterious doctor.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i dont like leonardo"
+      }
+    ],
+    [
+      "11344",
+      {
+        "tmdbId": "11344",
+        "rating": 5,
+        "movieDetails": {
+          "id": 11344,
+          "title": "A Bittersweet Life",
+          "poster_path": "/iqUGAIQqHMMscatykpR6hVBxezA.jpg",
+          "backdrop_path": "/t8EDE4bkYZBaSCo7Gq8uIWtW4pV.jpg",
+          "overview": "Kim Sun-woo is an enforcer and manager for a hotel owned by a cold, calculative crime boss, Kang who assigns Sun-woo to a simple errand while he is away on a business trip; to shadow his young mistress, Hee-soo, for fear that she may be cheating on him with a younger man with the mandate that he must kill them both if he discovers their affair.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "south korea just hit different, what a movie"
+      }
+    ],
+    [
+      "11423",
+      {
+        "tmdbId": "11423",
+        "rating": 5,
+        "movieDetails": {
+          "id": 11423,
+          "title": "Memories of Murder",
+          "poster_path": "/jcgUjx1QcupGzjntTVlnQ15lHqy.jpg",
+          "backdrop_path": "/6Kn6qW3an3DkPl3MahWemTzrjCt.jpg",
+          "overview": "A sadistic serial rapist and murderer of young women terrorizes a small province in 1980s South Korea. To prevent further crimes, three increasingly desperate detectives with conflicting methods race against time to unravel the violent mind of the killer in a futile effort to solve the case.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "Park Chan-wook man is a lengend"
+      }
+    ],
+    [
+      "13916",
+      {
+        "tmdbId": "13916",
+        "rating": 5,
+        "movieDetails": {
+          "id": 13916,
+          "title": "Death Note",
+          "poster_path": "/tCZFfYTIwrR7n94J6G14Y4hAFU6.jpg",
+          "backdrop_path": "/koBa94NxTaGe2FoDzlXMuJptsv0.jpg",
+          "overview": "Light Yagami is an ace student with great prospects—and he’s bored out of his mind. But all that changes when he finds the Death Note, a notebook dropped by a rogue Shinigami death god. Any human whose name is written in the notebook dies, and Light has vowed to use the power of the Death Note to rid the world of evil. But will Light succeed in his noble goal, or will the Death Note turn him into the very thing he fights against?",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "this is what Sherlock wanted to be"
+      }
+    ],
+    [
+      "16869",
+      {
+        "tmdbId": "16869",
+        "rating": 5,
+        "movieDetails": {
+          "id": 16869,
+          "title": "Inglourious Basterds",
+          "poster_path": "/7sfbEnaARXDDhKm0CZ7D7uc2sbo.jpg",
+          "backdrop_path": "/hwNtEmmugU5Yd7hpfprNWI0DGIn.jpg",
+          "overview": "In Nazi-occupied France during World War II, a group of Jewish-American soldiers known as \"The Basterds\" are chosen specifically to spread fear throughout the Third Reich by scalping and brutally killing Nazis. The Basterds, lead by Lt. Aldo Raine soon cross paths with a French-Jewish teenage girl who runs a movie theater in Paris which is targeted by the soldiers.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "masterclass in direction"
+      }
+    ],
+    [
+      "19885",
+      {
+        "tmdbId": "19885",
+        "rating": 2,
+        "movieDetails": {
+          "id": 19885,
+          "title": "Sherlock",
+          "poster_path": "/7WTsnHkbA0FaG6R9twfFde0I9hl.jpg",
+          "backdrop_path": "/8rvLEmdI4gLrMO1rLqbNdnNcPFE.jpg",
+          "overview": "A modern update finds the famous sleuth and his doctor partner solving crime in 21st century London.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "22947",
+      {
+        "tmdbId": "22947",
+        "rating": 4,
+        "movieDetails": {
+          "id": 22947,
+          "title": "Up in the Air",
+          "poster_path": "/useGH8nfwlaHK44IWEZdUYJOE2N.jpg",
+          "backdrop_path": "/yTweHAwEokqAgZg1Io8e0zCJQvt.jpg",
+          "overview": "Corporate downsizing expert Ryan Bingham spends his life in planes, airports, and hotels, but just as he’s about to reach a milestone of ten million frequent flyer miles, he meets a woman who causes him to rethink his transient life.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "emotion touching"
+      }
+    ],
+    [
+      "27205",
+      {
+        "tmdbId": "27205",
+        "rating": 5,
+        "movieDetails": {
+          "id": 27205,
+          "title": "Inception",
+          "poster_path": "/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
+          "backdrop_path": "/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg",
+          "overview": "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "everybody knows inception"
+      }
+    ],
+    [
+      "30984",
+      {
+        "tmdbId": "30984",
+        "rating": 5,
+        "movieDetails": {
+          "id": 30984,
+          "title": "Bleach",
+          "poster_path": "/5iVUUnE2tgBPypACYNobCKHagfV.jpg",
+          "backdrop_path": "/o0NsbcIvsllg6CJX0FBFY8wWbsn.jpg",
+          "overview": "For as long as he can remember, Ichigo Kurosaki has been able to see ghosts. But when he meets Rukia, a Soul Reaper who battles evil spirits known as Hollows, he finds his life is changed forever. Now, with a newfound wealth of spiritual energy, Ichigo discovers his true calling: to protect the living and the dead from evil.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "latest thousand blood war season animation,  music, god level"
+      }
+    ],
+    [
+      "31911",
+      {
+        "tmdbId": "31911",
+        "rating": 5,
+        "movieDetails": {
+          "id": 31911,
+          "title": "Fullmetal Alchemist: Brotherhood",
+          "poster_path": "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+          "backdrop_path": "/2UG177tWHy7xRmMKWJHB7nAUmKd.jpg",
+          "overview": "Disregard for alchemy’s laws ripped half of Edward Elric’s limbs from his body and left his brother Alphonse’s soul clinging to a suit of armor. To restore what was lost, the brothers seek the Philosopher’s Stone. Enemies and allies – the corrupt military, the Homunculi, and foreign alchemists – will alter the Elric brothers course, but their purpose will remain unchanged and their bond unbreakable.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "og"
+      }
+    ],
+    [
+      "37799",
+      {
+        "tmdbId": "37799",
+        "rating": 4,
+        "movieDetails": {
+          "id": 37799,
+          "title": "The Social Network",
+          "poster_path": "/n0ybibhJtQ5icDqTp8eRytcIHJx.jpg",
+          "backdrop_path": "/1GlZNA9L5trst3ItgRiyQTUH1uf.jpg",
+          "overview": "In 2003, Harvard undergrad and computer programmer Mark Zuckerberg begins work on a new concept that eventually turns into the global social network known as Facebook. Six years later, Mark is one of the youngest billionaires ever, but his unprecedented success leads to both personal and legal complications when he ends up on the receiving end of two lawsuits, one involving his former friend.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "39852",
+      {
+        "tmdbId": "39852",
+        "rating": 2,
+        "movieDetails": {
+          "id": 39852,
+          "title": "The Sinner",
+          "poster_path": "/rmibFGdqOe0kKKhPls0jVOdZCWw.jpg",
+          "backdrop_path": "/lVWku9LX2qdJTtAbRzaCDhhWeTK.jpg",
+          "overview": "In a small New York town, a haunted detective hunts for answers about perplexing crimes while wrestling with his own demons.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "that betrayal hurt very much"
+      }
+    ],
+    [
+      "42009",
+      {
+        "tmdbId": "42009",
+        "rating": 4,
+        "movieDetails": {
+          "id": 42009,
+          "title": "Black Mirror",
+          "poster_path": "/seN6rRfN0I6n8iDXjlSMk1QjNcq.jpg",
+          "backdrop_path": "/dg3OindVAGZBjlT3xYKqIAdukPL.jpg",
+          "overview": "Twisted tales run wild in this mind-bending anthology series that reveals humanity's worst traits, greatest innovations and more.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "45612",
+      {
+        "tmdbId": "45612",
+        "rating": 3,
+        "movieDetails": {
+          "id": 45612,
+          "title": "Source Code",
+          "poster_path": "/nTr0lvAzeQmUjgSgDEHTJpnrxTz.jpg",
+          "backdrop_path": "/s2Cu1y9Al9RbwRU5blAH8wMCrBI.jpg",
+          "overview": "When decorated soldier Captain Colter Stevens wakes up in the body of an unknown man, he discovers he's part of a mission to find the bomber of a Chicago commuter train.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "nice time shit"
+      }
+    ],
+    [
+      "46260",
+      {
+        "tmdbId": "46260",
+        "rating": 2,
+        "movieDetails": {
+          "id": 46260,
+          "title": "Naruto",
+          "poster_path": "/xppeysfvDKVx775MFuH8Z9BlpMk.jpg",
+          "backdrop_path": "/5F0HVEgkgP99fEWDjPyikGt9jQi.jpg",
+          "overview": "Naruto Uzumaki, a mischievous adolescent ninja, struggles as he searches for recognition and dreams of becoming the Hokage, the village's leader and strongest ninja.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "46298",
+      {
+        "tmdbId": "46298",
+        "rating": 5,
+        "movieDetails": {
+          "id": 46298,
+          "title": "Hunter x Hunter",
+          "poster_path": "/i2EEr2uBvRlAwJ8d8zTG2Y19mIa.jpg",
+          "backdrop_path": "/bFKKyCI89Xq98Gul8cGox8K3sZa.jpg",
+          "overview": "Gon, a young boy who lives on Whale Island, dreams of becoming a Hunter like his father, who left when Gon was still young.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "the characters are just brillant"
+      }
+    ],
+    [
+      "46648",
+      {
+        "tmdbId": "46648",
+        "rating": 2,
+        "movieDetails": {
+          "id": 46648,
+          "title": "True Detective",
+          "poster_path": "/zYqVTiHK5ZajYcNzAW7qWte5NWS.jpg",
+          "backdrop_path": "/v8YFr8BbU9qsO8PYIulzTeM6Qk.jpg",
+          "overview": "An American anthology police detective series utilizing multiple timelines in which investigations seem to unearth personal and professional secrets of those involved, both within or outside the law.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "making things straight out of the ass, get out of the delulu"
+      }
+    ],
+    [
+      "49010",
+      {
+        "tmdbId": "49010",
+        "rating": 3,
+        "movieDetails": {
+          "id": 49010,
+          "title": "The Fall",
+          "poster_path": "/fm7nN3nUADA7JGgnFNlOWpXn1tf.jpg",
+          "backdrop_path": "/vunaJ5k1cG8T4ROUGDZ05IhNXkP.jpg",
+          "overview": "When the Police Service of Northern Ireland are unable to close a case after 28 days, Detective Superintendent Stella Gibson of the Metropolitan Police Service is called in to review the case. Under her new leadership, the local detectives must track down and stop a serial killer who is terrorising the city of Belfast.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "49797",
+      {
+        "tmdbId": "49797",
+        "rating": 2,
+        "movieDetails": {
+          "id": 49797,
+          "title": "I Saw the Devil",
+          "poster_path": "/zp5NrmYp80axIGiEiYPmm1CW6uH.jpg",
+          "backdrop_path": "/dXDFWWxiEb6tg4ojMWQJrSI0Tun.jpg",
+          "overview": "Kyung-chul is a dangerous psychopath who kills for pleasure. Soo-hyeon, a top-secret agent, decides to track down the murderer himself. He promises himself that he will do everything in his power to take vengeance against the killer, even if it means that he must become a monster himself.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "53182",
+      {
+        "tmdbId": "53182",
+        "rating": 5,
+        "movieDetails": {
+          "id": 53182,
+          "title": "300: Rise of an Empire",
+          "poster_path": "/wYDdWN1McB1Sio4z1dPSkb40Z78.jpg",
+          "backdrop_path": "/chjkfyo57JexWo1YeIZRMk8wA4m.jpg",
+          "overview": "Greek general Themistocles attempts to unite all of Greece by leading the charge that will change the course of the war. Themistocles faces the massive invading Persian forces led by mortal-turned-god, Xerxes and Artemesia, the vengeful commander of the Persian navy.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "pure testosterone"
+      }
+    ],
+    [
+      "54344",
+      {
+        "tmdbId": "54344",
+        "rating": 2,
+        "movieDetails": {
+          "id": 54344,
+          "title": "The Leftovers",
+          "poster_path": "/NKJdryIFHr245Umq6gXsf7oULW.jpg",
+          "backdrop_path": "/rK9D7R4nzG3YGBktQY7VD5tGdtb.jpg",
+          "overview": "When 2% of the world's population abruptly disappears without explanation, the world struggles to understand just what they're supposed to do about it. This is the story of the people who didn't make the cut.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "too much shit"
+      }
+    ],
+    [
+      "59967",
+      {
+        "tmdbId": "59967",
+        "rating": 2,
+        "movieDetails": {
+          "id": 59967,
+          "title": "Looper",
+          "poster_path": "/sNjL6SqErDBE8OUZlrDLkexfsCj.jpg",
+          "backdrop_path": "/4GPCnwvTbsDleH5QIOyDLMsK8a2.jpg",
+          "overview": "In the year 2044, time travel has not yet been invented but in 30 years it will have been. When the mob wants to get rid of someone, they will send their target into the past where a looper, a hired gun, like Joe is waiting to mop up. Joe is getting rich and life is good until the day the mob decides to close the loop, sending back Joe's future self for assassination.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "60059",
+      {
+        "tmdbId": "60059",
+        "rating": 4,
+        "movieDetails": {
+          "id": 60059,
+          "title": "Better Call Saul",
+          "poster_path": "/zjg4jpK1Wp2kiRvtt5ND0kznako.jpg",
+          "backdrop_path": "/og2jKploGHYnCz68vV1nRSEE0xV.jpg",
+          "overview": "Six years before Saul Goodman meets Walter White. We meet him when the man who will become Saul Goodman is known as Jimmy McGill, a small-time lawyer searching for his destiny, and, more immediately, hustling to make ends meet. Working alongside, and, often, against Jimmy, is “fixer” Mike Ehrmantraut. The series tracks Jimmy’s transformation into Saul Goodman, the man who puts “criminal” in “criminal lawyer\".",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "60574",
+      {
+        "tmdbId": "60574",
+        "rating": 5,
+        "movieDetails": {
+          "id": 60574,
+          "title": "Peaky Blinders",
+          "poster_path": "/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg",
+          "backdrop_path": "/dzq83RHwQcnP6WGJ6YkenIqeaa5.jpg",
+          "overview": "A gangster family epic set in 1919 Birmingham, England and centered on a gang who sew razor blades in the peaks of their caps, and their fierce boss Tommy Shelby, who means to move up in the world.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "pure aura"
+      }
+    ],
+    [
+      "60622",
+      {
+        "tmdbId": "60622",
+        "rating": 5,
+        "movieDetails": {
+          "id": 60622,
+          "title": "Fargo",
+          "poster_path": "/a3VW6khsyUVKrG0GBCWFG3NzWPX.jpg",
+          "backdrop_path": "/4jrSbRpLqpvYJtLKncaxZVC47EW.jpg",
+          "overview": "A close-knit anthology series dealing with stories involving malice, violence and murder based in and around Minnesota.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "what a series, stories in parallel at a time, best"
+      }
+    ],
+    [
+      "60625",
+      {
+        "tmdbId": "60625",
+        "rating": 5,
+        "movieDetails": {
+          "id": 60625,
+          "title": "Rick and Morty",
+          "poster_path": "/owhkU6KRqdXoUQpjV8uyZGPtX58.jpg",
+          "backdrop_path": "/9In9QgVJx7PlFOAgVHCKKSbo605.jpg",
+          "overview": "Follows a sociopathic genius scientist who drags his inherently timid grandson on adventures across the universe.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "even rick is sad but still cool"
+      }
+    ],
+    [
+      "61859",
+      {
+        "tmdbId": "61859",
+        "rating": 5,
+        "movieDetails": {
+          "id": 61859,
+          "title": "The Night Manager",
+          "poster_path": "/1MccRnw41qQjREuZkovqP2UX1i3.jpg",
+          "backdrop_path": "/2vAOdruqvx9GojXxKi3xVsZZvKU.jpg",
+          "overview": "Former British soldier Jonathan Pine navigates the shadowy recesses of Whitehall and Washington where an unholy alliance operates between the intelligence community and the secret arms trade. To infiltrate the inner circle of lethal arms dealer Richard Onslow Roper, Pine must himself become a criminal.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "Loved it Nice action Nice protag"
+      }
+    ],
+    [
+      "61889",
+      {
+        "tmdbId": "61889",
+        "rating": 3,
+        "movieDetails": {
+          "id": 61889,
+          "title": "Marvel's Daredevil",
+          "poster_path": "/QWbPaDxiB6LW2LjASknzYBvjMj.jpg",
+          "backdrop_path": "/qsnXwGS7KBbX4JLqHvICngtR8qg.jpg",
+          "overview": "Lawyer-by-day Matt Murdock uses his heightened senses from being blinded as a young boy to fight crime at night on the streets of Hell’s Kitchen as Daredevil.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i dont like marvel"
+      }
+    ],
+    [
+      "62560",
+      {
+        "tmdbId": "62560",
+        "rating": 5,
+        "movieDetails": {
+          "id": 62560,
+          "title": "Mr. Robot",
+          "poster_path": "/kv1nRqgebSsREnd7vdC2pSGjpLo.jpg",
+          "backdrop_path": "/4ceSkV7cmCon4exXaZwuhW1VdE0.jpg",
+          "overview": "A young programmer, Elliot, suffers from a debilitating anti-social disorder and decides that he can only connect to people by hacking them. He wields his skills as a weapon to protect the people that he cares about. Elliot finds himself in the intersection between a cybersecurity firm he works for and the underworld organizations that are recruiting him to bring down corporate America.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "and thats how you hack"
+      }
+    ],
+    [
+      "63247",
+      {
+        "tmdbId": "63247",
+        "rating": 3,
+        "movieDetails": {
+          "id": 63247,
+          "title": "Westworld",
+          "poster_path": "/ALlSU9du9iRiKIIoY1sREGNqQ5.jpg",
+          "backdrop_path": "/rX5hvSRB2k4YoIvRg6Zky52rWk0.jpg",
+          "overview": "A dark odyssey about the dawn of artificial consciousness and the evolution of sin. Set at the intersection of the near future and the reimagined past, it explores a world in which every human appetite, no matter how noble or depraved, can be indulged.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "downhill after the first season, steep down hill very"
+      }
+    ],
+    [
+      "63351",
+      {
+        "tmdbId": "63351",
+        "rating": 5,
+        "movieDetails": {
+          "id": 63351,
+          "title": "Narcos",
+          "poster_path": "/rTmal9fDbwh5F0waol2hq35U4ah.jpg",
+          "backdrop_path": "/y9ekzkPFmWSqUU3Kj0wHmYUM8qu.jpg",
+          "overview": "A gritty chronicle of the war against Colombia's infamously violent and powerful drug cartels.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "money money money"
+      }
+    ],
+    [
+      "63639",
+      {
+        "tmdbId": "63639",
+        "rating": 2,
+        "movieDetails": {
+          "id": 63639,
+          "title": "The Expanse",
+          "poster_path": "/5vQlVWkIMPhZ88OWchJsgwGEK9.jpg",
+          "backdrop_path": "/uUwnClwdMA12bpHgeKgkQrbu5Oe.jpg",
+          "overview": "A thriller set two hundred years in the future following the case of a missing young woman who brings a hardened detective and a rogue ship's captain together in a race across the solar system to expose the greatest conspiracy in human history.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "dropped after season 1"
+      }
+    ],
+    [
+      "64690",
+      {
+        "tmdbId": "64690",
+        "rating": 4,
+        "movieDetails": {
+          "id": 64690,
+          "title": "Drive",
+          "poster_path": "/602vevIURmpDfzbnv5Ubi6wIkQm.jpg",
+          "backdrop_path": "/iymDDg4upZWgpbSeiE1JCjsSPBs.jpg",
+          "overview": "Driver is a skilled Hollywood stuntman who moonlights as a getaway driver for criminals. Though he projects an icy exterior, lately he's been warming up to a pretty neighbor named Irene and her young son, Benicio. When Irene's husband gets out of jail, he enlists Driver's help in a million-dollar heist. The job goes horribly wrong, and Driver must risk his life to protect Irene and Benicio from the vengeful masterminds behind the robbery.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "65754",
+      {
+        "tmdbId": "65754",
+        "rating": 5,
+        "movieDetails": {
+          "id": 65754,
+          "title": "The Girl with the Dragon Tattoo",
+          "poster_path": "/8bokS83zGdhaXgN9tjidUKmAftW.jpg",
+          "backdrop_path": "/dNFbrnF0mIBm0rClbfEFWTtsgMP.jpg",
+          "overview": "Disgraced journalist Mikael Blomkvist investigates the disappearance of a weary patriarch's niece from 40 years ago. He is aided by the pierced, tattooed, punk computer hacker named Lisbeth Salander. As they work together in the investigation, Blomkvist and Salander uncover immense corruption beyond anything they have ever imagined.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "66573",
+      {
+        "tmdbId": "66573",
+        "rating": 2,
+        "movieDetails": {
+          "id": 66573,
+          "title": "The Good Place",
+          "poster_path": "/qIhsuhoIYR5yTnDta0IL4senbeN.jpg",
+          "backdrop_path": "/tZmlWeFEMvxrjJhBJJcLNXpSRiG.jpg",
+          "overview": "Eleanor Shellstrop, an ordinary woman who, through an extraordinary string of events, enters the afterlife where she comes to realize that she hasn't been a very good person. With the help of her wise afterlife mentor, she's determined to shed her old way of living and discover the awesome (or at least the pretty good) person within.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "66732",
+      {
+        "tmdbId": "66732",
+        "rating": 1,
+        "movieDetails": {
+          "id": 66732,
+          "title": "Stranger Things",
+          "poster_path": "/uOOtwVbSr4QDjAGIifLDwpb2Pdl.jpg",
+          "backdrop_path": "/56v2KjBlU4XaOv9rVYEQypROD7P.jpg",
+          "overview": "When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "ewww stupid kids"
+      }
+    ],
+    [
+      "67070",
+      {
+        "tmdbId": "67070",
+        "rating": 4,
+        "movieDetails": {
+          "id": 67070,
+          "title": "Fleabag",
+          "poster_path": "/27vEYsRKa3eAniwmoccOoluEXQ1.jpg",
+          "backdrop_path": "/hXdQ4MWsEOX6qg6VydKrLb3YJ4g.jpg",
+          "overview": "A portrait into the mind of a dry-witted, sexual, angry, porn-watching, grief-riddled woman, trying to make sense of the world. As she hurls herself headlong at modern living, Fleabag is thrown roughly up against the walls of contemporary London, with all its frenetic energy, late nights, and bright lights.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "67744",
+      {
+        "tmdbId": "67744",
+        "rating": 5,
+        "movieDetails": {
+          "id": 67744,
+          "title": "MINDHUNTER",
+          "poster_path": "/fbKE87mojpIETWepSbD5Qt741fp.jpg",
+          "backdrop_path": "/lpDVJuIro21gtMj9iXMFKHuroZN.jpg",
+          "overview": "An agent in the FBI's Elite Serial Crime Unit develops profiling techniques as he pursues notorious serial killers and rapists.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "what a show, now that how you do a criminal show, perfect"
+      }
+    ],
+    [
+      "68718",
+      {
+        "tmdbId": "68718",
+        "rating": 4,
+        "movieDetails": {
+          "id": 68718,
+          "title": "Django Unchained",
+          "poster_path": "/7oWY8VDWW7thTzWh3OKYRkWUlD5.jpg",
+          "backdrop_path": "/2oZklIzUbvZXXzIFzv7Hi68d6xf.jpg",
+          "overview": "With the help of a German bounty hunter, a freed slave sets out to rescue his wife from a brutal Mississippi plantation owner.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "69478",
+      {
+        "tmdbId": "69478",
+        "rating": 3,
+        "movieDetails": {
+          "id": 69478,
+          "title": "The Handmaid's Tale",
+          "poster_path": "/eGUT7j3n3rn5yGihlCgwUnD70HV.jpg",
+          "backdrop_path": "/atb20IUkdYcZISq3DJ769nc3h1G.jpg",
+          "overview": "Set in a dystopian future, a woman is forced to live as a concubine under a fundamentalist theocratic dictatorship.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "69740",
+      {
+        "tmdbId": "69740",
+        "rating": 3,
+        "movieDetails": {
+          "id": 69740,
+          "title": "Ozark",
+          "poster_path": "/pCGyPVrI9Fzw6rE1Pvi4BIXF6ET.jpg",
+          "backdrop_path": "/aatG9iVAUL7U7OyFEmupESpOrD2.jpg",
+          "overview": "A financial adviser drags his family from Chicago to the Missouri Ozarks, where he must launder $500 million in five years to appease a drug boss.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "love the main character woke shit got us again"
+      }
+    ],
+    [
+      "71446",
+      {
+        "tmdbId": "71446",
+        "rating": 3,
+        "movieDetails": {
+          "id": 71446,
+          "title": "Money Heist",
+          "poster_path": "/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
+          "backdrop_path": "/gFZriCkpJYsApPZEF3jhxL4yLzG.jpg",
+          "overview": "To carry out the biggest heist in history, a mysterious man called The Professor recruits a band of eight robbers who have a single characteristic: none of them has anything to lose. Five months of seclusion - memorizing every step, every detail, every probability - culminate in eleven days locked up in the National Coinage and Stamp Factory of Spain, surrounded by police forces and with dozens of hostages in their power, to find out whether their suicide wager will lead to everything or nothing.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "over rated"
+      }
+    ],
+    [
+      "71912",
+      {
+        "tmdbId": "71912",
+        "rating": 2,
+        "movieDetails": {
+          "id": 71912,
+          "title": "The Witcher",
+          "poster_path": "/AoGsDM02UVt0npBA8OvpDcZbaMi.jpg",
+          "backdrop_path": "/foGkPxpw9h8zln81j63mix5B7m8.jpg",
+          "overview": "Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in a turbulent world where people often prove more wicked than beasts.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "fucked the story after season one, woke shit"
+      }
+    ],
+    [
+      "72750",
+      {
+        "tmdbId": "72750",
+        "rating": 2,
+        "movieDetails": {
+          "id": 72750,
+          "title": "Killing Eve",
+          "poster_path": "/4wKhTVw8aGq5AZMa0Q1spERdi7n.jpg",
+          "backdrop_path": "/2eR0H27Us1tvbjd95oW7WhiKioC.jpg",
+          "overview": "A security consultant hunts for a ruthless assassin. Equally obsessed with each other, they go head to head in an epic game of cat-and-mouse.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "dont remember much"
+      }
+    ],
+    [
+      "72844",
+      {
+        "tmdbId": "72844",
+        "rating": 3,
+        "movieDetails": {
+          "id": 72844,
+          "title": "The Haunting of Hill House",
+          "poster_path": "/38PkhBGRQtmVx2drvPik3F42qHO.jpg",
+          "backdrop_path": "/sNtNXwtEbdw4LaCFxFQwL2Jv4yW.jpg",
+          "overview": "Flashing between past and present, a fractured family confronts haunting memories of their old home and the terrifying events that drove them from it.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "73107",
+      {
+        "tmdbId": "73107",
+        "rating": 5,
+        "movieDetails": {
+          "id": 73107,
+          "title": "Barry",
+          "poster_path": "/j1XpwD11f0BAEI7pX6UdMhUVX2F.jpg",
+          "backdrop_path": "/cj0zZiJfFj3xn9p0K3kx8qHSyng.jpg",
+          "overview": "A hit man from the Midwest moves to Los Angeles and gets caught up in the city's theatre arts scene.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "master lvl comedy"
+      }
+    ],
+    [
+      "74577",
+      {
+        "tmdbId": "74577",
+        "rating": 2,
+        "movieDetails": {
+          "id": 74577,
+          "title": "The End of the F***ing World",
+          "poster_path": "/f1OV9xEJCZVYcYSDRr5xOD8NJw3.jpg",
+          "backdrop_path": "/nfWhNM5VVd9a5bEGobs83TWTuLM.jpg",
+          "overview": "James is 17 and is pretty sure he is a psychopath. Alyssa, also 17, is the cool and moody new girl at school. The pair make a connection and she persuades him to embark on a darkly comedic road trip in search of her real father.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i watched it dont remember much, 2.5 rating ig"
+      }
+    ],
+    [
+      "76148",
+      {
+        "tmdbId": "76148",
+        "rating": 4,
+        "movieDetails": {
+          "id": 76148,
+          "title": "Derry Girls",
+          "poster_path": "/btIm8LOtm2qgHIA2IHmQJvD1Mju.jpg",
+          "backdrop_path": "/nQyQ4c8DUvXra1LDWnNfV9QJluD.jpg",
+          "overview": "Amidst the political conflict of Northern Ireland in the 1990s, five secondary school students square off with the universal challenges of being a teenager.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "76341",
+      {
+        "tmdbId": "76341",
+        "rating": 5,
+        "movieDetails": {
+          "id": 76341,
+          "title": "Mad Max: Fury Road",
+          "poster_path": "/hA2ple9q4qnwxp3hKVNhroipsir.jpg",
+          "backdrop_path": "/uT895WNwm0aIJRtGizcQhrejWUo.jpg",
+          "overview": "An apocalyptic story set in the furthest reaches of our planet, in a stark desert landscape where humanity is broken, and most everyone is crazed fighting for the necessities of life. Within this world exist two rebels on the run who just might be able to restore order.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "banger fantasy and visual, and who does not love the protag"
+      }
+    ],
+    [
+      "76479",
+      {
+        "tmdbId": "76479",
+        "rating": 3,
+        "movieDetails": {
+          "id": 76479,
+          "title": "The Boys",
+          "poster_path": "/in1R2dDc421JxsoRWaIIAqVI2KE.jpg",
+          "backdrop_path": "/bq28ajZaoMyzEIm6REelqyqtEDZ.jpg",
+          "overview": "A group of vigilantes known informally as “The Boys” set out to take down corrupt superheroes with no more than blue-collar grit and a willingness to fight dirty.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "good first season then down hill"
+      }
+    ],
+    [
+      "77338",
+      {
+        "tmdbId": "77338",
+        "rating": 5,
+        "movieDetails": {
+          "id": 77338,
+          "title": "The Intouchables",
+          "poster_path": "/1QU7HKgsQbGpzsJbJK4pAVQV9F5.jpg",
+          "backdrop_path": "/cK070s3Qdn1Ib7Gq8RgIyJKgvu3.jpg",
+          "overview": "A true story of two men who should never have met – a quadriplegic aristocrat who was injured in a paragliding accident and a young man from the projects.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "now thats how you touch emotions"
+      }
+    ],
+    [
+      "82507",
+      {
+        "tmdbId": "82507",
+        "rating": 5,
+        "movieDetails": {
+          "id": 82507,
+          "title": "Sinister",
+          "poster_path": "/nzx10sca3arCeYBAomHan4Q6wa1.jpg",
+          "backdrop_path": "/jovIEk4cAxWmA2dBcPrfhn3jzYN.jpg",
+          "overview": "True-crime writer Ellison Oswalt is in a slump; he hasn't had a best seller in more than 10 years and is becoming increasingly desperate for a hit. So, when he discovers the existence of a snuff film showing the deaths of a family, he vows to solve the mystery. He moves his own family into the victims' home and gets to work. However, when old film footage and other clues hint at the presence of a supernatural force, Ellison learns that living in the house may be fatal.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "scary scary scary"
+      }
+    ],
+    [
+      "82856",
+      {
+        "tmdbId": "82856",
+        "rating": 4,
+        "movieDetails": {
+          "id": 82856,
+          "title": "The Mandalorian",
+          "poster_path": "/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg",
+          "backdrop_path": "/9zcbqSxdsRMZWHYtyCd1nXPr2xq.jpg",
+          "overview": "After the fall of the Galactic Empire, lawlessness has spread throughout the galaxy. A lone gunfighter makes his way through the outer reaches, earning his keep as a bounty hunter.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "83880",
+      {
+        "tmdbId": "83880",
+        "rating": 5,
+        "movieDetails": {
+          "id": 83880,
+          "title": "Our Planet",
+          "poster_path": "/wRSnArnQBmeUYb5GWDU595bGsBr.jpg",
+          "backdrop_path": "/p8EUX6MPSNLxVwqO3fCYTi896Ro.jpg",
+          "overview": "Experience our planet's natural beauty and examine how climate change impacts all living creatures in this ambitious documentary of spectacular scope.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "banger documentry"
+      }
+    ],
+    [
+      "84661",
+      {
+        "tmdbId": "84661",
+        "rating": 4,
+        "movieDetails": {
+          "id": 84661,
+          "title": "The Outsider",
+          "poster_path": "/aMiPwPQjQI1EZN3xP2V0sSU37dc.jpg",
+          "backdrop_path": "/lmlsqpAfDZnZumcFhbsTrOy9uNZ.jpg",
+          "overview": "When an insidious supernatural force edges its way into a seemingly straightforward investigation into the gruesome murder of a young boy, it leads a seasoned cop and an unorthodox investigator to question everything they believe in.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "86829",
+      {
+        "tmdbId": "86829",
+        "rating": 5,
+        "movieDetails": {
+          "id": 86829,
+          "title": "Inside Llewyn Davis",
+          "poster_path": "/nNxK3pC3DMpPpWKMvo2p3liREVT.jpg",
+          "backdrop_path": "/kdkCTC6Cl20TJSf4B1eIJXAFeXl.jpg",
+          "overview": "In Greenwich Village in the early 1960s, gifted but volatile folk musician Llewyn Davis struggles with money, relationships, and his uncertain future.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "who does not love depression"
+      }
+    ],
+    [
+      "87108",
+      {
+        "tmdbId": "87108",
+        "rating": 5,
+        "movieDetails": {
+          "id": 87108,
+          "title": "Chernobyl",
+          "poster_path": "/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg",
+          "backdrop_path": "/3URK0z9PzpVNJrGE7XOuyy6KFzk.jpg",
+          "overview": "The true story of one of the worst man-made catastrophes in history: the catastrophic nuclear accident at Chernobyl. A tale of the brave men and women who sacrificed to save Europe from unimaginable disaster.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "88803",
+      {
+        "tmdbId": "88803",
+        "rating": 5,
+        "movieDetails": {
+          "id": 88803,
+          "title": "Vinland Saga",
+          "poster_path": "/vUHlpA5c1NXkds59reY3HMb4Abs.jpg",
+          "backdrop_path": "/xamCBQePUy9xI42GvtphLuGqd09.jpg",
+          "overview": "For a thousand years, the Vikings have made quite a name and reputation for themselves as the strongest families with a thirst for violence. Thorfinn, the son of one of the Vikings' greatest warriors, spends his boyhood in a battlefield enhancing his skills in his adventure to redeem his most-desired revenge after his father was murdered.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "89905",
+      {
+        "tmdbId": "89905",
+        "rating": 5,
+        "movieDetails": {
+          "id": 89905,
+          "title": "Normal People",
+          "poster_path": "/c4mk4EQVIM11yd3W43DDdqDazDU.jpg",
+          "backdrop_path": "/w8rTBScgj2MON7eGN7raoU5qChJ.jpg",
+          "overview": "Marianne and Connell weave in and out of each other's lives in this exploration of sex, power and the desire to love and be loved.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "made me cry, hard to do that"
+      }
+    ],
+    [
+      "94605",
+      {
+        "tmdbId": "94605",
+        "rating": 2,
+        "movieDetails": {
+          "id": 94605,
+          "title": "Arcane",
+          "poster_path": "/abf8tHznhSvl9BAElD2cQeRr7do.jpg",
+          "backdrop_path": "/q8eejQcg1bAqImEV8jh8RtBD4uH.jpg",
+          "overview": "Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and clashing convictions.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i dont like the main protag"
+      }
+    ],
+    [
+      "95396",
+      {
+        "tmdbId": "95396",
+        "rating": 3,
+        "movieDetails": {
+          "id": 95396,
+          "title": "Severance",
+          "poster_path": "/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
+          "backdrop_path": "/ixgFmf1X59PUZam2qbAfskx2gQr.jpg",
+          "overview": "Mark leads a team of office workers whose memories have been surgically divided between their work and personal lives. When a mysterious colleague appears outside of work, it begins a journey to discover the truth about their jobs.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "dropped after season 1"
+      }
+    ],
+    [
+      "106646",
+      {
+        "tmdbId": "106646",
+        "rating": 4,
+        "movieDetails": {
+          "id": 106646,
+          "title": "The Wolf of Wall Street",
+          "poster_path": "/kW9LmvYHAaS9iA0tHmZVq8hQYoq.jpg",
+          "backdrop_path": "/7Nwnmyzrtd0FkcRyPqmdzTPppQa.jpg",
+          "overview": "A New York stockbroker refuses to cooperate in a large securities fraud case involving corruption on Wall Street, corporate banking world and mob infiltration. Based on Jordan Belfort's autobiography.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "110415",
+      {
+        "tmdbId": "110415",
+        "rating": 4,
+        "movieDetails": {
+          "id": 110415,
+          "title": "Snowpiercer",
+          "poster_path": "/kw6YQudA0TMcNmGUGy5XIw7zbnV.jpg",
+          "backdrop_path": "/tBIRtMCELcA5PxO7z7OiuCHJdFO.jpg",
+          "overview": "In a future where a failed global-warming experiment kills off most life on the planet, a class system evolves aboard the Snowpiercer; a train that travels around the globe via a perpetual-motion engine.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "124364",
+      {
+        "tmdbId": "124364",
+        "rating": 2,
+        "movieDetails": {
+          "id": 124364,
+          "title": "FROM",
+          "poster_path": "/pRtJagIxpfODzzb0T0NAvZSzErC.jpg",
+          "backdrop_path": "/xLdw1xdHocKYFFvx7w41NchXMfJ.jpg",
+          "overview": "Unravel the mystery of a nightmarish town in middle America that traps all those who enter. As the unwilling residents fight to keep a sense of normalcy and search for a way out, they must also survive the threats of the surrounding forest – including the terrifying creatures that come out when the sun goes down.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "edging the viewer, create mystery to solve mystery"
+      }
+    ],
+    [
+      "137113",
+      {
+        "tmdbId": "137113",
+        "rating": 4,
+        "movieDetails": {
+          "id": 137113,
+          "title": "Edge of Tomorrow",
+          "poster_path": "/nBM9MMa2WCwvMG4IJ3eiGUdbPe6.jpg",
+          "backdrop_path": "/4V1yIoAKPMRQwGBaSses8Bp2nsi.jpg",
+          "overview": "Major Bill Cage is an officer who has never seen a day of combat when he is unceremoniously demoted and dropped into combat. Cage is killed within minutes, managing to take an alpha alien down with him. He awakens back at the beginning of the same day and is forced to fight and die again... and again - as physical contact with the alien has thrown him into a time loop.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "146233",
+      {
+        "tmdbId": "146233",
+        "rating": 4,
+        "movieDetails": {
+          "id": 146233,
+          "title": "Prisoners",
+          "poster_path": "/jsS3a3ep2KyBVmmiwaz3LvK49b1.jpg",
+          "backdrop_path": "/n1ItmvzsDV5yLgDodSCLZpFlsP6.jpg",
+          "overview": "Keller Dover is facing every parent’s worst nightmare. His six-year-old daughter, Anna, is missing, together with her young friend, Joy, and as minutes turn to hours, panic sets in. The only lead is a dilapidated RV that had earlier been parked on their street.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "156022",
+      {
+        "tmdbId": "156022",
+        "rating": 5,
+        "movieDetails": {
+          "id": 156022,
+          "title": "The Equalizer",
+          "poster_path": "/9u4yW7yPA0BQ2pv9XwiNzItwvp8.jpg",
+          "backdrop_path": "/wNAfVj1ObGNye5fQM4tJXJGtU0.jpg",
+          "overview": "McCall believes he has put his mysterious past behind him and dedicated himself to beginning a new, quiet life. But when he meets Teri, a young girl under the control of ultra-violent Russian gangsters, he can’t stand idly by – he has to help her. Armed with hidden skills that allow him to serve vengeance against anyone who would brutalize the helpless, McCall comes out of his self-imposed retirement and finds his desire for justice reawakened. If someone has a problem, if the odds are stacked against them, if they have nowhere else to turn, McCall will help. He is The Equalizer.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "action action action pure action"
+      }
+    ],
+    [
+      "157336",
+      {
+        "tmdbId": "157336",
+        "rating": 5,
+        "movieDetails": {
+          "id": 157336,
+          "title": "Interstellar",
+          "poster_path": "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+          "backdrop_path": "/2ssWTSVklAEc98frZUQhgtGHx7s.jpg",
+          "overview": "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "space done right and very emotion touching"
+      }
+    ],
+    [
+      "165213",
+      {
+        "tmdbId": "165213",
+        "rating": 5,
+        "movieDetails": {
+          "id": 165213,
+          "title": "New World",
+          "poster_path": "/v6wvLIF2X9juSXsBb5Ch6tU2LOK.jpg",
+          "backdrop_path": "/6UnVwCA6F29erZK29PKqRyHqFA.jpg",
+          "overview": "An undercover cop has his loyalties tested when the boss of the corporate gang he's spent years infiltrating dies.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "181886",
+      {
+        "tmdbId": "181886",
+        "rating": 3,
+        "movieDetails": {
+          "id": 181886,
+          "title": "Enemy",
+          "poster_path": "/vf40tyDRKZsBmaLsYeopzfFLzLx.jpg",
+          "backdrop_path": "/deYWtXTc56YdXyIuuMuA8dvBY16.jpg",
+          "overview": "A mild-mannered college professor discovers a look-alike actor and delves into the other man's private affairs.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "202783",
+      {
+        "tmdbId": "202783",
+        "rating": 3,
+        "movieDetails": {
+          "id": 202783,
+          "title": "A Killer Paradox",
+          "poster_path": "/i2yYZGT2If8XcCZS9ASF1g13MiT.jpg",
+          "backdrop_path": "/viQZtznvR20oTTSbXp6MPAWkGB2.jpg",
+          "overview": "When one accidental killing leads to another, an ordinary young man finds himself stuck in an endless cat-and-mouse chase with a shrewd detective.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "203801",
+      {
+        "tmdbId": "203801",
+        "rating": 3,
+        "movieDetails": {
+          "id": 203801,
+          "title": "The Man from U.N.C.L.E.",
+          "poster_path": "/y5yZaForGSJbPD66Cvq9AT5WMAD.jpg",
+          "backdrop_path": "/bu0LiPEWKHWViRoaFwlTAzZ8wyS.jpg",
+          "overview": "At the height of the Cold War, a mysterious criminal organization plans to use nuclear weapons and technology to upset the fragile balance of power between the United States and Soviet Union. CIA agent Napoleon Solo and KGB agent Illya Kuryakin are forced to put aside their hostilities and work together to stop the evildoers in their tracks. The duo's only lead is the daughter of a missing German scientist, whom they must find soon to prevent a global catastrophe.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "cool shit"
+      }
+    ],
+    [
+      "209867",
+      {
+        "tmdbId": "209867",
+        "rating": 5,
+        "movieDetails": {
+          "id": 209867,
+          "title": "Frieren: Beyond Journey's End",
+          "poster_path": "/dqZENchTd7lp5zht7BdlqM7RBhD.jpg",
+          "backdrop_path": "/rBOnrVlck7BIlGeWVlzYiZeg4l2.jpg",
+          "overview": "After the party of heroes defeated the Demon King, they restored peace to the land and returned to lives of solitude.  Generations pass, and the elven mage Frieren comes face to face with humanity’s mortality. She takes on a new apprentice and promises to fulfill old friends’ dying wishes. Can an elven mind make peace with the nature of life and death? Frieren embarks on her quest to find out.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "pure fantasy"
+      }
+    ],
+    [
+      "210577",
+      {
+        "tmdbId": "210577",
+        "rating": 5,
+        "movieDetails": {
+          "id": 210577,
+          "title": "Gone Girl",
+          "poster_path": "/ts996lKsxvjkO2yiYG0ht4qAicO.jpg",
+          "backdrop_path": "/iWak7wT0j6ycCc8lKr4NBz9c7n5.jpg",
+          "overview": "With his wife's disappearance having become the focus of an intense media circus, a man sees the spotlight turned on him when it's suspected that he may not be innocent.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "the suspense is crazy"
+      }
+    ],
+    [
+      "216015",
+      {
+        "tmdbId": "216015",
+        "rating": 4,
+        "movieDetails": {
+          "id": 216015,
+          "title": "Fifty Shades of Grey",
+          "poster_path": "/63kGofUkt1Mx0SIL4XI4Z5AoSgt.jpg",
+          "backdrop_path": "/7IGKrY1f1KfwMipx9wZC4NRgIdF.jpg",
+          "overview": "When college senior Anastasia Steele steps in for her sick roommate to interview prominent businessman Christian Grey for their campus paper, little does she realize the path her life will take. Christian, as enigmatic as he is rich and powerful, finds himself strangely drawn to Ana, and she to him. Though sexually inexperienced, Ana plunges headlong into an affair -- and learns that Christian's true sexual proclivities push the boundaries of pain and pleasure.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "eeerrooticc"
+      }
+    ],
+    [
+      "224372",
+      {
+        "tmdbId": "224372",
+        "rating": 4,
+        "movieDetails": {
+          "id": 224372,
+          "title": "A Knight of the Seven Kingdoms",
+          "poster_path": "/k8yARbD9iYn2nRX2HvsopfKDN2r.jpg",
+          "backdrop_path": "/7mkUu1F2hVUNgz24xO8HPx0D6mK.jpg",
+          "overview": "A century before the events of Game of Thrones, two unlikely heroes wandered Westeros: a young, naive but courageous knight, Ser Duncan the Tall, and his diminutive squire, Egg. Set in an age when the Targaryen line still holds the Iron Throne and the last dragon has not yet passed from living memory, great destinies, powerful foes, and dangerous exploits await these improbable and incomparable friends.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "236235",
+      {
+        "tmdbId": "236235",
+        "rating": 5,
+        "movieDetails": {
+          "id": 236235,
+          "title": "The Gentlemen",
+          "poster_path": "/tw3tzfXaSpmUZIB8ZNqNEGzMBCy.jpg",
+          "backdrop_path": "/PqIW7PA74YBURz5slZkxc0K5Pl.jpg",
+          "overview": "When aristocratic Eddie inherits the family estate, he discovers that it's home to an enormous weed empire — and its proprietors aren't going anywhere.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "pure entertainment"
+      }
+    ],
+    [
+      "242224",
+      {
+        "tmdbId": "242224",
+        "rating": 2,
+        "movieDetails": {
+          "id": 242224,
+          "title": "The Babadook",
+          "poster_path": "/qt3fqapeo94TfvMyld8P7gkpXLz.jpg",
+          "backdrop_path": "/t18ocAG0cpgC1AP288SseqmXqB5.jpg",
+          "overview": "A grieving single mother and her child fall into a deep well of paranoia when an eerie children's book manifests in their home.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i remember it being good"
+      }
+    ],
+    [
+      "242582",
+      {
+        "tmdbId": "242582",
+        "rating": 3,
+        "movieDetails": {
+          "id": 242582,
+          "title": "Nightcrawler",
+          "poster_path": "/j9HrX8f7GbZQm1BrBiR40uFQZSb.jpg",
+          "backdrop_path": "/bdI6U1mT0kCdTJ6TWtiFxQ42GSn.jpg",
+          "overview": "When Lou Bloom, desperate for work, muscles into the world of L.A. crime journalism, he blurs the line between observer and participant to become the star of his own story. Aiding him in his effort is Nina, a TV-news veteran.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "244786",
+      {
+        "tmdbId": "244786",
+        "rating": 4,
+        "movieDetails": {
+          "id": 244786,
+          "title": "Whiplash",
+          "poster_path": "/7fn624j5lj3xTme2SgiLCeuedmO.jpg",
+          "backdrop_path": "/wbQa0EnWUyRzQ5d1pHLNRlmsCUP.jpg",
+          "overview": "Under the direction of a ruthless instructor, a talented young drummer begins to pursue perfection at any cost, even his humanity.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "excellence"
+      }
+    ],
+    [
+      "245891",
+      {
+        "tmdbId": "245891",
+        "rating": 5,
+        "movieDetails": {
+          "id": 245891,
+          "title": "John Wick",
+          "poster_path": "/wXqWR7dHncNRbxoEGybEy7QTe9h.jpg",
+          "backdrop_path": "/ff2ti5DkA9UYLzyqhQfI2kZqEuh.jpg",
+          "overview": "Ex-hitman John Wick comes out of retirement to track down the gangsters that took everything from him.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "badass"
+      }
+    ],
+    [
+      "250307",
+      {
+        "tmdbId": "250307",
+        "rating": 4,
+        "movieDetails": {
+          "id": 250307,
+          "title": "The Pitt",
+          "poster_path": "/kvFSpESyBZMjaeOJDx7RS3P1jey.jpg",
+          "backdrop_path": "/7Sgo1XdCrIpJpiNsTPMi9vwKSuC.jpg",
+          "overview": "The staff of Pittsburgh's Trauma Medical Center work around the clock to save lives in an overcrowded and underfunded emergency department.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "254320",
+      {
+        "tmdbId": "254320",
+        "rating": 3,
+        "movieDetails": {
+          "id": 254320,
+          "title": "The Lobster",
+          "poster_path": "/7Y9ILV1unpW9mLpGcqyGQU72LUy.jpg",
+          "backdrop_path": "/iH2esZUZvt8qlJgu74WBvibDnfF.jpg",
+          "overview": "In a dystopian near future, single people, according to the laws of The City, are taken to The Hotel, where they are obliged to find a romantic partner in forty-five days or are transformed into animals and sent off into The Woods.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "pretty nice watch"
+      }
+    ],
+    [
+      "264660",
+      {
+        "tmdbId": "264660",
+        "rating": 3,
+        "movieDetails": {
+          "id": 264660,
+          "title": "Ex Machina",
+          "poster_path": "/dmJW8IAKHKxFNiUnoDR7JfsK7Rp.jpg",
+          "backdrop_path": "/uqOuJ50EtTj7kkDIXP8LCg7G45D.jpg",
+          "overview": "Caleb, a coder at the world's largest internet company, wins a competition to spend a week at a private mountain retreat belonging to Nathan, the reclusive CEO of the company. But when Caleb arrives at the remote location he finds that he will have to participate in a strange and fascinating experiment in which he must interact with the world's first true artificial intelligence, housed in the body of a beautiful robot girl.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i like tech"
+      }
+    ],
+    [
+      "273240",
+      {
+        "tmdbId": "273240",
+        "rating": 4,
+        "movieDetails": {
+          "id": 273240,
+          "title": "Off Campus",
+          "poster_path": "/cbODFqkcmRgrYH8NkG4Q4Hcg8Z1.jpg",
+          "backdrop_path": "/52sp0vPhLOWrZ1QoZIWiapronM.jpg",
+          "overview": "Hannah Wells tutors hockey captain Garrett Graham to win over her crush. Their deal becomes real connection as they face their pasts. Friends Logan, Dean, Tucker, and Allie navigate college life and love.",
+          "media_type": "tv"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "always open for good romance drama"
+      }
+    ],
+    [
+      "273248",
+      {
+        "tmdbId": "273248",
+        "rating": 4,
+        "movieDetails": {
+          "id": 273248,
+          "title": "The Hateful Eight",
+          "poster_path": "/jIywvdPjia2t3eKYbjVTcwBQlG8.jpg",
+          "backdrop_path": "/7g1zO5t0bd27Iqn5ZUDJmksOGPJ.jpg",
+          "overview": "Bounty hunters seek shelter from a raging blizzard and get caught up in a plot of betrayal and deception.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "Quentin Tarantino og"
+      }
+    ],
+    [
+      "273481",
+      {
+        "tmdbId": "273481",
+        "rating": 4,
+        "movieDetails": {
+          "id": 273481,
+          "title": "Sicario",
+          "poster_path": "/lz8vNyXeidqqOdJW9ZjnDAMb5Vr.jpg",
+          "backdrop_path": "/fKPgObonYgPgCdu88yjV7Hpn7Dp.jpg",
+          "overview": "An idealistic FBI agent is enlisted by a government task force to aid in the escalating war against drugs at the border area between the U.S. and Mexico.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "good shit"
+      }
+    ],
+    [
+      "274854",
+      {
+        "tmdbId": "274854",
+        "rating": 1,
+        "movieDetails": {
+          "id": 274854,
+          "title": "The Last Witch Hunter",
+          "poster_path": "/dS9YdnJkxtKE2PKCSsxTaO7Jpf5.jpg",
+          "backdrop_path": "/mXmvN6drkdU1PWFF92AGklEVIa3.jpg",
+          "overview": "The modern world holds many secrets, but by far the most astounding is that witches still live among us; vicious supernatural creatures intent on unleashing the Black Death upon the world and putting an end to the human race once and for all. Armies of witch hunters have battled this unnatural enemy for centuries, including Kaulder, a valiant warrior who many years ago slayed the all-powerful Witch Queen, decimating her followers in the process. In the moments right before her death, the Queen cursed Kaulder with immortality, forever separating him from his beloved wife and daughter. Today, Kaulder is the last living hunter who has spent his immortal life tracking down rogue witches, all the while yearning for his long-lost family.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "eww vin diesel"
+      }
+    ],
+    [
+      "281957",
+      {
+        "tmdbId": "281957",
+        "rating": 2,
+        "movieDetails": {
+          "id": 281957,
+          "title": "The Revenant",
+          "poster_path": "/ji3ecJphATlVgWNY0B0RVXZizdf.jpg",
+          "backdrop_path": "/mNQtUJv1F3u0uSKILFrGjIHqkxx.jpg",
+          "overview": "In the 1820s, a frontiersman, Hugh Glass, sets out on a path of vengeance against those who left him for dead after a bear mauling.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "286217",
+      {
+        "tmdbId": "286217",
+        "rating": 4,
+        "movieDetails": {
+          "id": 286217,
+          "title": "The Martian",
+          "poster_path": "/3ndAx3weG6KDkJIRMCi5vXX6Dyb.jpg",
+          "backdrop_path": "/lzMS0CI3FLQYC5EgJoWeIaEt0lm.jpg",
+          "overview": "During a manned mission to Mars, Astronaut Mark Watney is presumed dead after a fierce storm and left behind by his crew. But Watney has survived and finds himself stranded and alone on the hostile planet. With only meager supplies, he must draw upon his ingenuity, wit and spirit to subsist and find a way to signal to Earth that he is alive.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "space potato"
+      }
+    ],
+    [
+      "290250",
+      {
+        "tmdbId": "290250",
+        "rating": 3,
+        "movieDetails": {
+          "id": 290250,
+          "title": "The Nice Guys",
+          "poster_path": "/clq4So9spa9cXk3MZy2iMdqkxP2.jpg",
+          "backdrop_path": "/yxYUN3fBPJdTNdXC1l8L24XFPhX.jpg",
+          "overview": "A private eye investigates the apparent suicide of a fading porn star in 1970s Los Angeles and uncovers a conspiracy.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "its ryan gosling"
+      }
+    ],
+    [
+      "293670",
+      {
+        "tmdbId": "293670",
+        "rating": 5,
+        "movieDetails": {
+          "id": 293670,
+          "title": "The Wailing",
+          "poster_path": "/RbymxgEM5SpDfO2Io2JMFG10Vi.jpg",
+          "backdrop_path": "/9qxBNfI1QFbiZS62fsgaUd563t2.jpg",
+          "overview": "A stranger arrives in a little village and soon after a mysterious sickness starts spreading. A policeman is drawn into the incident and is forced to solve the mystery in order to save his daughter.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "horror done right, and you know the director"
+      }
+    ],
+    [
+      "300668",
+      {
+        "tmdbId": "300668",
+        "rating": 2,
+        "movieDetails": {
+          "id": 300668,
+          "title": "Annihilation",
+          "poster_path": "/4YRplSk6BhH6PRuE9gfyw9byUJ6.jpg",
+          "backdrop_path": "/9trZvBr44UGedUOiGo3jgSUw13e.jpg",
+          "overview": "A biologist signs up for a dangerous, secret expedition into a mysterious zone where the laws of nature don't apply.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "dont remember much, watched when it came"
+      }
+    ],
+    [
+      "313922",
+      {
+        "tmdbId": "313922",
+        "rating": 5,
+        "movieDetails": {
+          "id": 313922,
+          "title": "Green Room",
+          "poster_path": "/evZicaR7nXe4LiD9G6QYTorcJGO.jpg",
+          "backdrop_path": "/qRjahAq8JVoJBT2x18x2A01kxZT.jpg",
+          "overview": "A punk rock band is forced to fight for survival after witnessing an act of violence at a skinhead bar.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "the silence, the burst, damn"
+      }
+    ],
+    [
+      "318846",
+      {
+        "tmdbId": "318846",
+        "rating": 4,
+        "movieDetails": {
+          "id": 318846,
+          "title": "The Big Short",
+          "poster_path": "/scVEaJEwP8zUix8vgmMoJJ9Nq0w.jpg",
+          "backdrop_path": "/u6UyFHkkpUGzZec88PYaaamya5E.jpg",
+          "overview": "The men who made millions from a global economic meltdown.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "finance bro, make me money"
+      }
+    ],
+    [
+      "329865",
+      {
+        "tmdbId": "329865",
+        "rating": 3,
+        "movieDetails": {
+          "id": 329865,
+          "title": "Arrival",
+          "poster_path": "/x2FJsf1ElAgr63Y3PNPtJrcmpoe.jpg",
+          "backdrop_path": "/uKPbFF08QkRMvIAsgCh1soeyPhZ.jpg",
+          "overview": "Taking place after alien crafts land around the world, an expert linguist is recruited by the military to determine whether they come in peace or are a threat.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "good but big plot holes"
+      }
+    ],
+    [
+      "334541",
+      {
+        "tmdbId": "334541",
+        "rating": 5,
+        "movieDetails": {
+          "id": 334541,
+          "title": "Manchester by the Sea",
+          "poster_path": "/o9VXYOuaJxCEKOxbA86xqtwmqYn.jpg",
+          "backdrop_path": "/fjk4eE8Ypke4YLv5A3ArDH4GzYH.jpg",
+          "overview": "After his older brother passes away, Lee Chandler is forced to return home to care for his 16-year-old nephew. There he is compelled to deal with a tragic past that separated him from his family and the community where he was born and raised.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "who does not like depression"
+      }
+    ],
+    [
+      "335984",
+      {
+        "tmdbId": "335984",
+        "rating": 3,
+        "movieDetails": {
+          "id": 335984,
+          "title": "Blade Runner 2049",
+          "poster_path": "/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
+          "backdrop_path": "/mVr0UiqyltcfqxbAUcLl9zWL8ah.jpg",
+          "overview": "Thirty years after the events of the first film, a new blade runner, LAPD Officer K, unearths a long-buried secret that has the potential to plunge what's left of society into chaos. K's discovery leads him on a quest to find Rick Deckard, a former LAPD blade runner who has been missing for 30 years.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "340666",
+      {
+        "tmdbId": "340666",
+        "rating": 3,
+        "movieDetails": {
+          "id": 340666,
+          "title": "Nocturnal Animals",
+          "poster_path": "/mdLDgQBD0va09npSQX5Zgo2evXM.jpg",
+          "backdrop_path": "/5d6m8CIBQcHeiwr6R5ou4wxO9Vn.jpg",
+          "overview": "Susan Morrow receives a book manuscript from her ex-husband – a man she left 20 years earlier – asking for her opinion of his writing. As she reads, she is drawn into the fictional life of Tony Hastings, a mathematics professor whose family vacation turns violent.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "remember liking it"
+      }
+    ],
+    [
+      "345887",
+      {
+        "tmdbId": "345887",
+        "rating": 4,
+        "movieDetails": {
+          "id": 345887,
+          "title": "The Equalizer 2",
+          "poster_path": "/cQvc9N6JiMVKqol3wcYrGshsIdZ.jpg",
+          "backdrop_path": "/z7noaCJ4KtmhwHw7QcNtnMMo4Qy.jpg",
+          "overview": "Robert McCall, who serves an unflinching justice for the exploited and oppressed, embarks on a relentless, globe-trotting quest for vengeance when his former partner is murdered.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "372058",
+      {
+        "tmdbId": "372058",
+        "rating": 5,
+        "movieDetails": {
+          "id": 372058,
+          "title": "Your Name.",
+          "poster_path": "/q719jXXEzOoYaps6babgKnONONX.jpg",
+          "backdrop_path": "/mMtUybQ6hL24FXo0F3Z4j2KG7kZ.jpg",
+          "overview": "High schoolers Mitsuha and Taki are complete strangers living separate lives. But one night, they suddenly switch places. Mitsuha wakes up in Taki’s body, and he in hers. This bizarre occurrence continues to happen randomly, and the two must adjust their lives around each other.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "first anime"
+      }
+    ],
+    [
+      "378064",
+      {
+        "tmdbId": "378064",
+        "rating": 5,
+        "movieDetails": {
+          "id": 378064,
+          "title": "A Silent Voice: The Movie",
+          "poster_path": "/tuFaWiqX0TXoWu7DGNcmX3UW7sT.jpg",
+          "backdrop_path": "/5lAMQMWpXMsirvtLLvW7cJgEPkU.jpg",
+          "overview": "Shouya Ishida starts bullying the new girl in class, Shouko Nishimiya, because she is deaf. But as the teasing continues, the rest of the class starts to turn on Shouya for his lack of compassion. When they leave elementary school, Shouko and Shouya do not speak to each other again... until an older, wiser Shouya, tormented by his past behaviour, decides he must see Shouko once more. He wants to atone for his sins, but is it already too late...?",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "emotion touching"
+      }
+    ],
+    [
+      "381288",
+      {
+        "tmdbId": "381288",
+        "rating": 5,
+        "movieDetails": {
+          "id": 381288,
+          "title": "Split",
+          "poster_path": "/lli31lYTFpvxVBeFHWoe5PMfW5s.jpg",
+          "backdrop_path": "/9pkZesKMnblFfKxEhQx45YQ2kIe.jpg",
+          "overview": "Though Kevin has evidenced 23 personalities to his trusted psychiatrist, Dr. Fletcher, there remains one still submerged who is set to materialize and dominate all the others. Compelled to abduct three teenage girls led by the willful, observant Casey, Kevin reaches a war for survival among all of those contained within him — as well as everyone around him — as the walls between his compartments shatter apart.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "damn the acting and story, lovely"
+      }
+    ],
+    [
+      "396535",
+      {
+        "tmdbId": "396535",
+        "rating": 4,
+        "movieDetails": {
+          "id": 396535,
+          "title": "Train to Busan",
+          "poster_path": "/vNVFt6dtcqnI7hqa6LFBUibuFiw.jpg",
+          "backdrop_path": "/qFKb25O9ROiGYt3GwtuXG5Lb2J.jpg",
+          "overview": "When a zombie virus pushes Korea into a state of emergency, those trapped on an express train to Busan must fight for their own survival.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "398978",
+      {
+        "tmdbId": "398978",
+        "rating": 2,
+        "movieDetails": {
+          "id": 398978,
+          "title": "The Irishman",
+          "poster_path": "/mbm8k3GFhXS0ROd9AD1gqYbIFbM.jpg",
+          "backdrop_path": "/1RDto0tLo8Fhq7OcwgDaM7nECb7.jpg",
+          "overview": "Pennsylvania, 1956. Frank Sheeran, a war veteran of Irish origin who works as a truck driver, accidentally meets mobster Russell Bufalino. Once Frank becomes his trusted man, Bufalino sends him to Chicago with the task of helping Jimmy Hoffa, a powerful union leader related to organized crime, with whom Frank will maintain a close friendship for nearly twenty years.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "boring"
+      }
+    ],
+    [
+      "414906",
+      {
+        "tmdbId": "414906",
+        "rating": 5,
+        "movieDetails": {
+          "id": 414906,
+          "title": "The Batman",
+          "poster_path": "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+          "backdrop_path": "/IYUD7rAIXzBM91TT3Z5fILUS7n.jpg",
+          "overview": "In his second year of fighting crime, Batman uncovers corruption in Gotham City that connects to his own family while facing a serial killer known as the Riddler.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "the cinematography next lvl, the audio next lvl, its batman"
+      }
+    ],
+    [
+      "418078",
+      {
+        "tmdbId": "418078",
+        "rating": 4,
+        "movieDetails": {
+          "id": 418078,
+          "title": "It Comes at Night",
+          "poster_path": "/rNKJpFMlOZn5zkzBPZxEJrQn5Km.jpg",
+          "backdrop_path": "/6h9pjTsWzaUWuUszHHbeI1JWE1.jpg",
+          "overview": "Secure within a desolate home as an unnatural threat terrorizes the world, a man has established a tenuous domestic order with his wife and son, but this will soon be put to test when a desperate young family arrives seeking refuge.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i was scared ,nice"
+      }
+    ],
+    [
+      "419430",
+      {
+        "tmdbId": "419430",
+        "rating": 5,
+        "movieDetails": {
+          "id": 419430,
+          "title": "Get Out",
+          "poster_path": "/mE24wUCfjK8AoBBjaMjho7Rczr7.jpg",
+          "backdrop_path": "/o8dPH0ZSIyyViP6rjRX1djwCUwI.jpg",
+          "overview": "Chris and his girlfriend Rose go upstate to visit her parents for the weekend. At first, Chris reads the family's overly accommodating behavior as nervous attempts to deal with their daughter's interracial relationship, but as the weekend progresses, a series of increasingly disturbing discoveries lead him to a truth that he never could have imagined.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "twist twist twist make my mind twist"
+      }
+    ],
+    [
+      "433808",
+      {
+        "tmdbId": "433808",
+        "rating": 3,
+        "movieDetails": {
+          "id": 433808,
+          "title": "The Ritual",
+          "poster_path": "/9022CYEGqYETCeXN1oE3uwYJWub.jpg",
+          "backdrop_path": "/vaArQHq1lHFNppoJlMlv30Gs2fQ.jpg",
+          "overview": "A group of college friends reunite for a trip to the forest, but encounter a menacing presence in the woods that's stalking them.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "438631",
+      {
+        "tmdbId": "438631",
+        "rating": 5,
+        "movieDetails": {
+          "id": 438631,
+          "title": "Dune",
+          "poster_path": "/gDzOcq0pfeCeqMBwKIJlSmQpjkZ.jpg",
+          "backdrop_path": "/qVgZu5BTx6pu4owCvVOm4zjTfOi.jpg",
+          "overview": "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people. As malevolent forces explode into conflict over the planet's exclusive supply of the most precious resource in existence-a commodity capable of unlocking humanity's greatest potential-only those who can conquer their fear will survive.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "next lvl cinematography"
+      }
+    ],
+    [
+      "447332",
+      {
+        "tmdbId": "447332",
+        "rating": 2,
+        "movieDetails": {
+          "id": 447332,
+          "title": "A Quiet Place",
+          "poster_path": "/nAU74GmpUk7t5iklEp3bufwDq4n.jpg",
+          "backdrop_path": "/nHRUtBwFNnNN70vcQ7lAsjc2T6S.jpg",
+          "overview": "A family is forced to live in silence while hiding from creatures that hunt by sound.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "meh"
+      }
+    ],
+    [
+      "473033",
+      {
+        "tmdbId": "473033",
+        "rating": 5,
+        "movieDetails": {
+          "id": 473033,
+          "title": "Uncut Gems",
+          "poster_path": "/6XN1vxHc7kUSqNWtaQKN45J5x2v.jpg",
+          "backdrop_path": "/eGljNfNCrPhFYG2RXXmmE0OKu5.jpg",
+          "overview": "A charismatic New York City jeweler always on the lookout for the next big score makes a series of high-stakes bets that could lead to the windfall of a lifetime. Howard must perform a precarious high-wire act, balancing business, family, and encroaching adversaries on all sides in his relentless pursuit of the ultimate win.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "anxiety anxiety anxiety oooff makes you a pressure cooker"
+      }
+    ],
+    [
+      "475557",
+      {
+        "tmdbId": "475557",
+        "rating": 3,
+        "movieDetails": {
+          "id": 475557,
+          "title": "Joker",
+          "poster_path": "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+          "backdrop_path": "/rlay2M5QYvi6igbGcFjq8jxeusY.jpg",
+          "overview": "During the 1980s, a failed stand-up comedian is driven insane and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic crime figure.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "491584",
+      {
+        "tmdbId": "491584",
+        "rating": 5,
+        "movieDetails": {
+          "id": 491584,
+          "title": "Burning",
+          "poster_path": "/kXiF80o74fE9gf3Utf9moAI7ar0.jpg",
+          "backdrop_path": "/qQEt2FqF8McryFBNX30dyDJKiEK.jpg",
+          "overview": "Deliveryman Jong-su is out on a job when he runs into Hae-mi, a girl who once lived in his neighborhood. She asks if he'd mind looking after her cat while she's away on a trip to Africa. On her return, she introduces to Jong-su an enigmatic young man named Ben, who she met during her trip. One day Ben tells Jong-su about his most unusual hobby.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "going beyond, expecting more from the viewer"
+      }
+    ],
+    [
+      "493922",
+      {
+        "tmdbId": "493922",
+        "rating": 3,
+        "movieDetails": {
+          "id": 493922,
+          "title": "Hereditary",
+          "poster_path": "/4GFPuL14eXi66V96xBWY73Y9PfR.jpg",
+          "backdrop_path": "/gJbTXKNTL6O7r7PzF6ZRkJGBlPp.jpg",
+          "overview": "Following the death of the Leigh family matriarch, Annie and her children uncover disturbing secrets about their heritage. Their daily lives are not only impacted, but they also become entangled in a chilling fate from which they cannot escape, driving them to the brink of madness.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "496243",
+      {
+        "tmdbId": "496243",
+        "rating": 5,
+        "movieDetails": {
+          "id": 496243,
+          "title": "Parasite",
+          "poster_path": "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+          "backdrop_path": "/8eihUxjQsJ7WvGySkVMC0EwbPAD.jpg",
+          "overview": "All unemployed, Ki-taek's family takes peculiar interest in the wealthy and glamorous Parks for their livelihood until they get entangled in an unexpected incident.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "global phenomena"
+      }
+    ],
+    [
+      "500664",
+      {
+        "tmdbId": "500664",
+        "rating": 3,
+        "movieDetails": {
+          "id": 500664,
+          "title": "Upgrade",
+          "poster_path": "/woLGROUdPWdBnLVFKYdGD3kFkPY.jpg",
+          "backdrop_path": "/oiPUcD1IIZrYGTSIpvTmd3dRmPo.jpg",
+          "overview": "A brutal mugging leaves Grey Trace paralyzed in the hospital and his beloved wife dead. A billionaire inventor soon offers Trace a cure — an artificial intelligence implant called STEM that will enhance his body. Now able to walk, Grey finds that he also has superhuman strength and agility — skills he uses to seek revenge against the thugs who destroyed his life.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "like the futuritic setting and visuals, and story"
+      }
+    ],
+    [
+      "503919",
+      {
+        "tmdbId": "503919",
+        "rating": 2,
+        "movieDetails": {
+          "id": 503919,
+          "title": "The Lighthouse",
+          "poster_path": "/f1tIYarTbkBdIT1aW0gzelDwknv.jpg",
+          "backdrop_path": "/sYLzRuEcwSz0L1Z92wQNrETHU9O.jpg",
+          "overview": "Two lighthouse keepers try to maintain their sanity while living on a remote and mysterious New England island in the 1890s.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "522627",
+      {
+        "tmdbId": "522627",
+        "rating": 5,
+        "movieDetails": {
+          "id": 522627,
+          "title": "The Gentlemen",
+          "poster_path": "/jtrhTYB7xSrJxR1vusu99nvnZ1g.jpg",
+          "backdrop_path": "/9Qfawg9WT3cSbBXQgDRuWbYS9lj.jpg",
+          "overview": "American expat Mickey Pearson has built a highly profitable marijuana empire in London. When word gets out that he’s looking to cash out of the business forever it triggers plots, schemes, bribery and blackmail in an attempt to steal his domain out from under him.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "manly"
+      }
+    ],
+    [
+      "530385",
+      {
+        "tmdbId": "530385",
+        "rating": 2,
+        "movieDetails": {
+          "id": 530385,
+          "title": "Midsommar",
+          "poster_path": "/7LEI8ulZzO5gy9Ww2NVCrKmHeDZ.jpg",
+          "backdrop_path": "/pYgj8e2Y6RufnSyOA6OnzmxFXxZ.jpg",
+          "overview": "Several friends travel to Sweden to study as anthropologists a summer festival that is held every ninety years in the remote hometown of one of them. What begins as a dream vacation in a place where the sun never sets, gradually turns into a dark nightmare as the mysterious inhabitants invite them to participate in their disturbing festive activities.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "no story, no nothing, its is mess, nothing scary,"
+      }
+    ],
+    [
+      "530915",
+      {
+        "tmdbId": "530915",
+        "rating": 5,
+        "movieDetails": {
+          "id": 530915,
+          "title": "1917",
+          "poster_path": "/iZf0KyrE25z1sage4SYFLCCrMi9.jpg",
+          "backdrop_path": "/2lBOQK06tltt8SQaswgb8d657Mv.jpg",
+          "overview": "At the height of the First World War, two young British soldiers must cross enemy territory and deliver a message that will stop a deadly attack on hundreds of soldiers.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "545611",
+      {
+        "tmdbId": "545611",
+        "rating": 5,
+        "movieDetails": {
+          "id": 545611,
+          "title": "Everything Everywhere All at Once",
+          "poster_path": "/u68AjlvlutfEIcpmbYpKcdi09ut.jpg",
+          "backdrop_path": "/ss0Os3uWJfQAENILHZUdX8Tt1OC.jpg",
+          "overview": "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what's important to her by connecting with the lives she could have led in other universes.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "touching"
+      }
+    ],
+    [
+      "546554",
+      {
+        "tmdbId": "546554",
+        "rating": 5,
+        "movieDetails": {
+          "id": 546554,
+          "title": "Knives Out",
+          "poster_path": "/pThyQovXQrw2m0s9x82twj48Jq4.jpg",
+          "backdrop_path": "/4HWAQu28e2yaWrtupFPGFkdNU7V.jpg",
+          "overview": "When renowned crime novelist Harlan Thrombey is found dead at his estate just after his 85th birthday, the inquisitive and debonair Detective Benoit Blanc is mysteriously enlisted to investigate. From Harlan's dysfunctional family to his devoted staff, Blanc sifts through a web of red herrings and self-serving lies to uncover the truth behind Harlan's untimely death.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "mystery, who does not love mystery"
+      }
+    ],
+    [
+      "567748",
+      {
+        "tmdbId": "567748",
+        "rating": 2,
+        "movieDetails": {
+          "id": 567748,
+          "title": "The Guilty",
+          "poster_path": "/m8aR1k35oZMOzZ1kYWUyt401mwq.jpg",
+          "backdrop_path": "/5wPWgTvdoVKW6ICeEAg86IBJOBW.jpg",
+          "overview": "A demoted police officer assigned to a call dispatch desk is conflicted when he receives an emergency phone call from a kidnapped woman.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "569912",
+      {
+        "tmdbId": "569912",
+        "rating": 4,
+        "movieDetails": {
+          "id": 569912,
+          "title": "Aamis",
+          "poster_path": "/aBD6Jhze6kS36wBLVYkp7EGEBxr.jpg",
+          "backdrop_path": "/xB3AGu8oQigY0zdDogRCMDwGr4u.jpg",
+          "overview": "A lonely, married woman bonds with a younger man over their shared love of unusual foods. As their excursions become more adventurous, their relationship begins to take a dark turn.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "meat"
+      }
+    ],
+    [
+      "577922",
+      {
+        "tmdbId": "577922",
+        "rating": 2,
+        "movieDetails": {
+          "id": 577922,
+          "title": "Tenet",
+          "poster_path": "/aCIFMriQh8rvhxpN1IWGgvH0Tlg.jpg",
+          "backdrop_path": "/mQOUyqDybTqxl73hO5LujCZsM1o.jpg",
+          "overview": "Armed with only one word - Tenet - and fighting for the survival of the entire world, the Protagonist journeys through a twilight world of international espionage on a mission that will unfold in something beyond real time.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "convoluted mess"
+      }
+    ],
+    [
+      "593643",
+      {
+        "tmdbId": "593643",
+        "rating": 5,
+        "movieDetails": {
+          "id": 593643,
+          "title": "The Menu",
+          "poster_path": "/fPtUgMcLIboqlTlPrq0bQpKK8eq.jpg",
+          "backdrop_path": "/4vSBj7BYsyuKCx96EJzGyp20WfY.jpg",
+          "overview": "A young couple travels to a remote island to eat at an exclusive restaurant where the chef has prepared a lavish menu, with some shocking surprises.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "the message, nice"
+      }
+    ],
+    [
+      "619264",
+      {
+        "tmdbId": "619264",
+        "rating": 3,
+        "movieDetails": {
+          "id": 619264,
+          "title": "The Platform",
+          "poster_path": "/iXvQnzy6JCAx1PiQEKXuTY04ZHl.jpg",
+          "backdrop_path": "/3tkDMNfM2YuIAJlvGO6rfIzAnfG.jpg",
+          "overview": "A slab of food descends down a vertical facility. The residents above eat heartily, leaving those below starving and desperate. A rebellion is imminent.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "639933",
+      {
+        "tmdbId": "639933",
+        "rating": 5,
+        "movieDetails": {
+          "id": 639933,
+          "title": "The Northman",
+          "poster_path": "/aSSJMnHknzKjlZ6zybwD7eyJ4Po.jpg",
+          "backdrop_path": "/fMiEp00v8gGWEceL4QeLu6H6z69.jpg",
+          "overview": "Prince Amleth is on the verge of becoming a man when his father is brutally murdered by his uncle, who kidnaps the boy's mother. Two decades later, Amleth is now a Viking who's on a mission to save his mother, kill his uncle and avenge his father.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "the setting, the sets, the cinematography lovely"
+      }
+    ],
+    [
+      "661374",
+      {
+        "tmdbId": "661374",
+        "rating": 5,
+        "movieDetails": {
+          "id": 661374,
+          "title": "Glass Onion: A Knives Out Mystery",
+          "poster_path": "/vDGr1YdrlfbU9wxTOdpf3zChmv9.jpg",
+          "backdrop_path": "/dKqa850uvbNSCaQCV4Im1XlzEtQ.jpg",
+          "overview": "World-famous detective Benoit Blanc heads to Greece to peel back the layers of a mystery surrounding a tech billionaire and his eclectic crew of friends.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "664300",
+      {
+        "tmdbId": "664300",
+        "rating": 5,
+        "movieDetails": {
+          "id": 664300,
+          "title": "Shiva Baby",
+          "poster_path": "/4sdqVsT6SHqtbCYZS7bhVoEftlL.jpg",
+          "backdrop_path": "/feQvRl67oc4AOWN4LhAwkrMWdX4.jpg",
+          "overview": "College student Danielle must cover her tracks when she unexpectedly runs into her sugar daddy at a shiva - with her parents, ex-girlfriend and family friends also in attendance.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "who doesnt love pressure cooker"
+      }
+    ],
+    [
+      "687163",
+      {
+        "tmdbId": "687163",
+        "rating": 5,
+        "movieDetails": {
+          "id": 687163,
+          "title": "Project Hail Mary",
+          "poster_path": "/yihdXomYb5kTeSivtFndMy5iDmf.jpg",
+          "backdrop_path": "/2I1OFQJ0L9T0dpU6FobKFWV2PxX.jpg",
+          "overview": "Science teacher Ryland Grace wakes up on a spaceship light years from home with no recollection of who he is or how he got there. As his memory returns, he begins to uncover his mission: solve the riddle of the mysterious substance causing the sun to die out. He must call on his scientific knowledge and unorthodox ideas to save everything on Earth from extinction.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "space done right"
+      }
+    ],
+    [
+      "693134",
+      {
+        "tmdbId": "693134",
+        "rating": 5,
+        "movieDetails": {
+          "id": 693134,
+          "title": "Dune: Part Two",
+          "poster_path": "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+          "backdrop_path": "/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg",
+          "overview": "Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a path of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe, Paul endeavors to prevent a terrible future only he can foresee.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "better then part one"
+      }
+    ],
+    [
+      "705996",
+      {
+        "tmdbId": "705996",
+        "rating": 5,
+        "movieDetails": {
+          "id": 705996,
+          "title": "Decision to Leave",
+          "poster_path": "/zI8KZ4EdLUymWKX1YEkpZ0gtPUa.jpg",
+          "backdrop_path": "/A1bWhTFQKkhF1yhSKWosSyzn2Hp.jpg",
+          "overview": "From a mountain peak in South Korea, a man plummets to his death. Did he jump, or was he pushed? When detective Hae-joon arrives on the scene, he begins to suspect the dead man’s wife Seo-rae. But as he digs deeper into the investigation, he finds himself trapped in a web of deception and desire.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "Park Chan-wook strikes again"
+      }
+    ],
+    [
+      "786892",
+      {
+        "tmdbId": "786892",
+        "rating": 3,
+        "movieDetails": {
+          "id": 786892,
+          "title": "Furiosa: A Mad Max Saga",
+          "poster_path": "/iADOJ8Zymht2JPMoy3R7xceZprc.jpg",
+          "backdrop_path": "/raph7qjAGTMXaIjVxt6ZDSXRzUr.jpg",
+          "overview": "As the world falls, young Furiosa is snatched from the Green Place of Many Mothers into the hands of a great biker horde led by the warlord Dementus. Sweeping through the wasteland, they encounter the citadel presided over by Immortan Joe. The two tyrants wage war for dominance, and Furiosa must survive many trials as she puts together the means to find her way home.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "where is our previous mc"
+      }
+    ],
+    [
+      "787752",
+      {
+        "tmdbId": "787752",
+        "rating": 3,
+        "movieDetails": {
+          "id": 787752,
+          "title": "Fresh",
+          "poster_path": "/tlu71AgaL3EQBBCNGsAwZLPbV5D.jpg",
+          "backdrop_path": "/oVv5l6L5Wi5j3gd4P2vt0YvVMOg.jpg",
+          "overview": "Frustrated by scrolling dating apps only to end up on lame, tedious dates, Noa takes a chance by giving her number to the awkwardly charming Steve after a produce-section meet-cute at the grocery store.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "nice meat"
+      }
+    ],
+    [
+      "800158",
+      {
+        "tmdbId": "800158",
+        "rating": 4,
+        "movieDetails": {
+          "id": 800158,
+          "title": "The Killer",
+          "poster_path": "/ipkcgvN7h3yZnbYowthloHLKsf4.jpg",
+          "backdrop_path": "/f9Atch0jlzcOT9RbF8UccqfNOpd.jpg",
+          "overview": "After a fateful miss, an assassin battles his employers, and himself, on an international manhunt he insists isn't personal.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "812583",
+      {
+        "tmdbId": "812583",
+        "rating": 5,
+        "movieDetails": {
+          "id": 812583,
+          "title": "Wake Up Dead Man: A Knives Out Mystery",
+          "poster_path": "/qCOGGi8JBVEZMc3DVby8rUivyXz.jpg",
+          "backdrop_path": "/fiRDzpcJe7qz3yIR43hdXIE3NHv.jpg",
+          "overview": "When young priest Jud Duplenticy is sent to assist charismatic firebrand Monsignor Jefferson Wicks, it’s clear that all is not well in the pews. After a sudden and seemingly impossible murder rocks the town, the lack of an obvious suspect prompts local police chief Geraldine Scott to join forces with renowned detective Benoit Blanc to unravel a mystery that defies all logic.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "877817",
+      {
+        "tmdbId": "877817",
+        "rating": 3,
+        "movieDetails": {
+          "id": 877817,
+          "title": "Wolfs",
+          "poster_path": "/vOX1Zng472PC2KnS0B9nRfM8aaZ.jpg",
+          "backdrop_path": "/nSVwus6Vcnw06zqKAa1ioacrpUF.jpg",
+          "overview": "Hired to cover up a high-profile crime, a fixer soon finds his night spiralling out of control when he's forced to work with an unexpected counterpart.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "926393",
+      {
+        "tmdbId": "926393",
+        "rating": 4,
+        "movieDetails": {
+          "id": 926393,
+          "title": "The Equalizer 3",
+          "poster_path": "/b0Ej6fnXAP8fK75hlyi2jKqdhHz.jpg",
+          "backdrop_path": "/gystuaqp5AkVqqu3Nf0564zeOv4.jpg",
+          "overview": "Robert McCall finds himself at home in Southern Italy but he discovers his friends are under the control of local crime bosses. As events turn deadly, McCall knows what he has to do: become his friends' protector by taking on the mafia.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "938614",
+      {
+        "tmdbId": "938614",
+        "rating": 3,
+        "movieDetails": {
+          "id": 938614,
+          "title": "Late Night with the Devil",
+          "poster_path": "/mu8LRWT9GHkfiyHm7kgxT6YNvMW.jpg",
+          "backdrop_path": "/umyOinNa6vqqnqoVc9QqzyaapUz.jpg",
+          "overview": "A live broadcast of a late-night talk show in 1977 goes horribly wrong, unleashing evil into the nation's living rooms.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "965150",
+      {
+        "tmdbId": "965150",
+        "rating": 3,
+        "movieDetails": {
+          "id": 965150,
+          "title": "Aftersun",
+          "poster_path": "/evKz85EKouVbIr51zy5fOtpNRPg.jpg",
+          "backdrop_path": "/4jdduww9j5RyzO4ITRcuBFhqNN1.jpg",
+          "overview": "Sophie reflects on the shared joy and private melancholy of a holiday she took with her father twenty years earlier. Memories fill the gaps between camcorder footages as she tries to reconcile the father she knew with the troubled man she didn't.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "974635",
+      {
+        "tmdbId": "974635",
+        "rating": 5,
+        "movieDetails": {
+          "id": 974635,
+          "title": "Hit Man",
+          "poster_path": "/oil3EZwKFp3CWxZnfGfGglesvm9.jpg",
+          "backdrop_path": "/nv6F6tz7r61DUhE7zgHwLJFcTYp.jpg",
+          "overview": "A mild-mannered professor moonlighting as a fake hit man in police stings ignites a chain reaction of trouble when he falls for a potential client.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "comedy done right, love both mc and fl"
+      }
+    ],
+    [
+      "1029281",
+      {
+        "tmdbId": "1029281",
+        "rating": 5,
+        "movieDetails": {
+          "id": 1029281,
+          "title": "Strange Darling",
+          "poster_path": "/kWNCRgt3ocv19bYO0sk7TRuZuFY.jpg",
+          "backdrop_path": "/I4ofwq3XfmwXAETUs5pjubcMJ0.jpg",
+          "overview": "Nothing is what it seems when a twisted one-night stand spirals into a serial killer’s vicious murder spree.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "twist twist twist, didnt see that coming"
+      }
+    ],
+    [
+      "1052280",
+      {
+        "tmdbId": "1052280",
+        "rating": 5,
+        "movieDetails": {
+          "id": 1052280,
+          "title": "It's What's Inside",
+          "poster_path": "/6jzwaLoDurD6Jn2ILb42nFcn3xq.jpg",
+          "backdrop_path": "/xU2C64VWhYJMBDrjEsFPbVTWAjN.jpg",
+          "overview": "A pre-wedding reunion descends into a psychological nightmare for a group of college friends when a surprise guest arrives with a mysterious suitcase.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "drama drama drama nice drama"
+      }
+    ],
+    [
+      "1097549",
+      {
+        "tmdbId": "1097549",
+        "rating": 5,
+        "movieDetails": {
+          "id": 1097549,
+          "title": "Babygirl",
+          "poster_path": "/ilwO6elz3mLV9CToT7C8pjVeKX0.jpg",
+          "backdrop_path": "/s7vWRjcfRVMW8tBIxhC3UhKxRoo.jpg",
+          "overview": "A high-powered CEO puts her career and family on the line when she begins a torrid affair with her much younger intern.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "ooff erotica, makes the dick hard"
+      }
+    ],
+    [
+      "1122573",
+      {
+        "tmdbId": "1122573",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1122573,
+          "title": "In the Grey",
+          "poster_path": "/dQgIcW6Th08kMRf2HBoYWoFE6OD.jpg",
+          "backdrop_path": "/qcIKxhqGMIj8uujsSoSMZWr8QqU.jpg",
+          "overview": "A covert team of elite operatives are living in the shadows. When a ruthless despot steals a billion-dollar fortune, they're sent to take it back—an impossible heist that erupts into a deadly game of strategy, deception and survival.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1126934",
+      {
+        "tmdbId": "1126934",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1126934,
+          "title": "What You Wish For",
+          "poster_path": "/bBbceiJHq4dqrKcFEAKolBhiDx0.jpg",
+          "backdrop_path": "/sGAvgQDy1HShW8ja7R6pkUqJUKe.jpg",
+          "overview": "A talented chef with gambling woes flees to a Latin American villa to visit an old friend who appears to be living an extraordinary life as a private chef. Envy soon turns to greed and then to something deeply unsettling for the chef when he assumes his friend's life and discovers the motives of his mysterious clients.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1239193",
+      {
+        "tmdbId": "1239193",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1239193,
+          "title": "Deep Cover",
+          "poster_path": "/yYfaChljpg6eo9ZlFyTmI81PMZC.jpg",
+          "backdrop_path": "/lOje1iz4VYWELYWRkZAwI7oIJd0.jpg",
+          "overview": "Kat is an improv comedy teacher beginning to question if she’s missed her shot at success. When an undercover cop offers her the role of a lifetime, she recruits two of her students to infiltrate London’s gangland by impersonating dangerous criminals.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": "i love comedy done nice"
+      }
+    ],
+    [
+      "1249213",
+      {
+        "tmdbId": "1249213",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1249213,
+          "title": "Drop",
+          "poster_path": "/hSQPSW8aLjsMBfwqGjgJ6HozTkp.jpg",
+          "backdrop_path": "/akBGSguhkAj1TXOdZUcL11e1hpH.jpg",
+          "overview": "Violet, a widowed mother on her first date in years, arrives at an upscale restaurant where she is relieved that her date, Henry, is more charming and handsome than she expected. But their chemistry begins to curdle as Violet begins being irritated and then terrorized by a series of anonymous drops to her phone.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1304313",
+      {
+        "tmdbId": "1304313",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1304313,
+          "title": "Lee Cronin's The Mummy",
+          "poster_path": "/1q308iixueCU4pFtSYugNOevtNx.jpg",
+          "backdrop_path": "/xugEpZk9YQ0DIz1aFvH5HGkqpZK.jpg",
+          "overview": "The young daughter of a journalist disappears into the desert without a trace—eight years later, the broken family is shocked when she is returned to them, as what should be a joyful reunion turns into a living nightmare.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1339713",
+      {
+        "tmdbId": "1339713",
+        "rating": 4,
+        "movieDetails": {
+          "id": 1339713,
+          "title": "Obsession",
+          "poster_path": "/bRwnj8WEKBCvmfeUNOukJPwB43K.jpg",
+          "backdrop_path": "/4k99kV4R1bbbrsnjR205v91Xbin.jpg",
+          "overview": "After breaking the mysterious \"One Wish Willow\" to win his crush's heart, a hopeless romantic finds himself getting exactly what he asked for but soon discovers that some desires come at a dark, sinister price.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ],
+    [
+      "1430077",
+      {
+        "tmdbId": "1430077",
+        "rating": 3,
+        "movieDetails": {
+          "id": 1430077,
+          "title": "Hokum",
+          "poster_path": "/jKPWwsbAM6HKURPYQ1eG8DmKMKn.jpg",
+          "backdrop_path": "/woZX9wZaiX70LbW7bOeNccNTIhp.jpg",
+          "overview": "When novelist Ohm Bauman retreats to a remote inn to scatter his parents' ashes, he is consumed by tales of a witch haunting the honeymoon suite. Disturbing visions and a shocking disappearance forces him to confront dark corners of his past.",
+          "media_type": "movie"
+        },
+        "ratedAt": 1700000000000,
+        "thoughts": ""
+      }
+    ]
+  ],
+  "watchlist": [
+    [
+      "593",
+      {
+        "tmdbId": "593",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 593,
+          "title": "Solaris",
+          "poster_path": "/pgqj7QoBPWFLLKtLEpPmFYFRMgB.jpg",
+          "backdrop_path": "/jZv1u7uzpOE5JOc2MmrvPUZWoyb.jpg",
+          "overview": "A psychologist is sent to a space station orbiting a planet called Solaris to investigate the death of a doctor and the mental problems of cosmonauts on the station. He soon discovers that the water on the planet is a type of brain which brings out repressed memories and obsessions.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "1381",
+      {
+        "tmdbId": "1381",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 1381,
+          "title": "The Fountain",
+          "poster_path": "/4XTf8GuCVLWolubANaKkpk62YPq.jpg",
+          "backdrop_path": "/9RNJ0pKYA8EQiMa0lFZ68gzeElH.jpg",
+          "overview": "Spanning over one thousand years, and three parallel stories, The Fountain is a story of love, death, spirituality, and the fragility of our existence in this world.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "4552",
+      {
+        "tmdbId": "4552",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 4552,
+          "title": "A Tale of Two Sisters",
+          "poster_path": "/l3exwhwyGE0NnHJ3lFQ7eXoBSkH.jpg",
+          "backdrop_path": "/syKbZiHVdXw0NcH6NdXWEKZaECv.jpg",
+          "overview": "Two sisters return home after a stay in a mental institution, only to face disturbing events and a strained relationship with their stepmother. As eerie occurrences unfold, dark family secrets begin to surface, blurring the line between reality and nightmare.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "4977",
+      {
+        "tmdbId": "4977",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 4977,
+          "title": "Paprika",
+          "poster_path": "/bLUUr474Go1DfeN1HLjE3rnZXBq.jpg",
+          "backdrop_path": "/6oXn0037WWw4fTCc3Qczof71lSp.jpg",
+          "overview": "When a machine that allows therapists to enter their patient's dreams is stolen, all hell breaks loose. Only a young female therapist can stop it and recover it before damage is done: Paprika.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "54671",
+      {
+        "tmdbId": "54671",
+        "mediaType": "tv",
+        "movieDetails": {
+          "id": 54671,
+          "title": "Penny Dreadful",
+          "poster_path": "/hQSdrXBYTbLGHYDIseHkBOPXTgL.jpg",
+          "backdrop_path": "/3bViM60LioKQJwsExm5oyLRYagC.jpg",
+          "overview": "Some of literature's most terrifying characters, including Dr. Frankenstein, Dorian Gray, and iconic figures from the novel Dracula are lurking in the darkest corners of Victorian London. Penny Dreadful is a frightening psychological thriller that weaves together these classic horror origin stories into a new adult drama.",
+          "media_type": "tv"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "115004",
+      {
+        "tmdbId": "115004",
+        "mediaType": "tv",
+        "movieDetails": {
+          "id": 115004,
+          "title": "Mare of Easttown",
+          "poster_path": "/78aK4Msbr22A5PGa6PZV0pAvdwf.jpg",
+          "backdrop_path": "/7X1IGIl1JMJ9YFzJymCVoqZbvTR.jpg",
+          "overview": "A detective in a small Pennsylvania town investigates a local murder while trying to keep her life from falling apart.",
+          "media_type": "tv"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "241639",
+      {
+        "tmdbId": "241639",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 241639,
+          "title": "The Nightingale",
+          "poster_path": "/wBt1XRuxdzKjZeCQtJiBfp9u95O.jpg",
+          "backdrop_path": "/2uhNo1iz9iWatpFg31zPPAMwYOg.jpg",
+          "overview": "In order to keep a promise he made to his wife, an old man sets off to her native village with a bird in a cage. Along the road, together with his granddaughter, he discovers new values, particularly those related to the heart.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "1018",
+      {
+        "tmdbId": "1018",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 1018,
+          "title": "Mulholland Drive",
+          "poster_path": "/x7A59t6ySylr1L7aubOQEA480vM.jpg",
+          "backdrop_path": "/g9ClaS5EqU0Hk8WIbMNhld0Bk6f.jpg",
+          "overview": "Blonde Betty Elms has only just arrived in Hollywood to become a movie star when she meets an enigmatic brunette with amnesia. Meanwhile, as the two set off to solve the second woman's identity, filmmaker Adam Kesher runs into ominous trouble while casting his latest project.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "93812",
+      {
+        "tmdbId": "93812",
+        "mediaType": "tv",
+        "movieDetails": {
+          "id": 93812,
+          "title": "The Great",
+          "poster_path": "/tpz9UQ3hUwYufNcKWVW00FCjWyc.jpg",
+          "backdrop_path": "/2K84O2cr0jRH7ROeeHJ3zbTR8Uf.jpg",
+          "overview": "A genre-bending, anti-historical ride through 18th century Russia following the rise of Catherine the Nothing to Catherine the Great and her explosive relationship with husband Peter, the emperor of Russia.",
+          "media_type": "tv"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "40008",
+      {
+        "tmdbId": "40008",
+        "mediaType": "tv",
+        "movieDetails": {
+          "id": 40008,
+          "title": "Hannibal",
+          "poster_path": "/pbV2eLnKSIm1epSZt473UYfqaeZ.jpg",
+          "backdrop_path": "/vlG182ZY2WMzD5bjFZNnhyvv5V4.jpg",
+          "overview": "Both a gift and a curse, Graham has the extraordinary ability to think like his prey—he sees what they see, feels what they feel. But while Graham is pursuing an especially troubling, cannibalistic murderer, Special Agent Jack Crawford teams him with a highly respected psychiatrist – a man with a taste for the criminal minded – Dr. Hannibal Lecter.",
+          "media_type": "tv"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "75191",
+      {
+        "tmdbId": "75191",
+        "mediaType": "tv",
+        "movieDetails": {
+          "id": 75191,
+          "title": "The Terror",
+          "poster_path": "/fUVn5mScv83FfwrRUUR694yA7bd.jpg",
+          "backdrop_path": "/ssyZgYScV9eClakZDwu4sPrgMmy.jpg",
+          "overview": "A chilling anthology series featuring stories of people in terrifying situations inspired by true historical events.",
+          "media_type": "tv"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "107463",
+      {
+        "tmdbId": "107463",
+        "mediaType": "tv",
+        "movieDetails": {
+          "id": 107463,
+          "title": "Blades of the Guardians",
+          "poster_path": "/ck4VbauqthkMldF661byC693ify.jpg",
+          "backdrop_path": "/r56087oqO4gJrK5HI0Lxu07mMXQ.jpg",
+          "overview": "A extraordinary guard walks in the desert of the Western regions. On the way escaping the killing by the government, he took a guarding task with destination to the capital Chang 'an. The task was thought as just a simple one, but actually it is a road full of crisis and danger. A journey affecting the fate of the world begins......",
+          "media_type": "tv"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "60622",
+      {
+        "tmdbId": "60622",
+        "mediaType": "tv",
+        "movieDetails": {
+          "id": 60622,
+          "title": "Fargo",
+          "poster_path": "/a3VW6khsyUVKrG0GBCWFG3NzWPX.jpg",
+          "backdrop_path": "/4jrSbRpLqpvYJtLKncaxZVC47EW.jpg",
+          "overview": "A close-knit anthology series dealing with stories involving malice, violence and murder based in and around Minnesota.",
+          "media_type": "tv"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "454639",
+      {
+        "tmdbId": "454639",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 454639,
+          "title": "Masters of the Universe",
+          "poster_path": "/3YMd9Ogae4rDKLWuAZFuse9xhc5.jpg",
+          "backdrop_path": "/eQySd26OW7UmCuaeBOL7qy6foMn.jpg",
+          "overview": "After being separated for 15 years, the Sword of Power leads Prince Adam back to Eternia, where he discovers his home shattered under the fiendish rule of Skeletor. To save his family and his world, Adam must join forces with his closest allies, Teela and Duncan/Man-At-Arms, and embrace his true destiny as He-Man — the most powerful man in the universe.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "1275779",
+      {
+        "tmdbId": "1275779",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 1275779,
+          "title": "Disclosure Day",
+          "poster_path": "/3o5YPjDGDTcTDL5ftDA9NwN9dLd.jpg",
+          "backdrop_path": "/s6ly8laenkHWlIBRkLSfIuEMLC6.jpg",
+          "overview": "If you found out we weren’t alone, if someone showed you, proved it to you, would that frighten you?",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "1273221",
+      {
+        "tmdbId": "1273221",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 1273221,
+          "title": "Scary Movie",
+          "poster_path": "/reZ8NInXjMkkaOpUHcI3Pn7iaRN.jpg",
+          "backdrop_path": "/lj6AaDqDUbzm2XJltFNHeAm2uXN.jpg",
+          "overview": "Twenty-six years after outrunning a suspiciously familiar masked killer, the Core Four are back in the killer's crosshairs and no horror movie IP is safe.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "1083381",
+      {
+        "tmdbId": "1083381",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 1083381,
+          "title": "Backrooms",
+          "poster_path": "/rhGx6E3qRNMgj3i5su2oukNHwIQ.jpg",
+          "backdrop_path": "/oUozq2XHWifwAVOoS1qHU0qfXqM.jpg",
+          "overview": "A strange doorway appears in the basement of a furniture showroom.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "931285",
+      {
+        "tmdbId": "931285",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 931285,
+          "title": "Mortal Kombat II",
+          "poster_path": "/hwRdDFIhaEmpRgoki805YvyyjZf.jpg",
+          "backdrop_path": "/laR2dpcNpbv83jdlRUNAYPPjH90.jpg",
+          "overview": "The fan favorite champions—now joined by Johnny Cage himself—are pitted against one another in the ultimate, no-holds barred, gory battle to defeat the dark rule of Shao Kahn that threatens the very existence of the Earthrealm and its defenders.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "1339713",
+      {
+        "tmdbId": "1339713",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 1339713,
+          "title": "Obsession",
+          "poster_path": "/bRwnj8WEKBCvmfeUNOukJPwB43K.jpg",
+          "backdrop_path": "/4k99kV4R1bbbrsnjR205v91Xbin.jpg",
+          "overview": "After breaking the mysterious \"One Wish Willow\" to win his crush's heart, a hopeless romantic finds himself getting exactly what he asked for but soon discovers that some desires come at a dark, sinister price.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ],
+    [
+      "15999",
+      {
+        "tmdbId": "15999",
+        "mediaType": "movie",
+        "movieDetails": {
+          "id": 15999,
+          "title": "Vampire Hunter D: Bloodlust",
+          "poster_path": "/9ipbQRgOq6Ilxpwagfa98ikgR9v.jpg",
+          "backdrop_path": "/lwkwVTNdNeG0a1FT06wr1Ylm1OV.jpg",
+          "overview": "D, a legendary dhampir competes with a motley family of bounty hunters to track down Charlotte Elbourne, a young woman who has seemingly been abducted by vampire nobleman Meier Link.",
+          "media_type": "movie"
+        },
+        "addedAt": 1700000000000
+      }
+    ]
+  ]
+}

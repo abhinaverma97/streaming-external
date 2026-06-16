@@ -14,17 +14,16 @@ interface LogItemModalProps {
 }
 
 export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalProps) {
-    const movieDetails = item.movieDetails;
-    const initialRating = item.rating || 0;
-    const initialThoughts = item.thoughts || "";
-    
-    const [rating, setRating] = useState(initialRating);
-    const [thoughts, setThoughts] = useState(initialThoughts);
+    const [rating, setRating] = useState(item?.rating || 0);
+    const [thoughts, setThoughts] = useState(item?.thoughts || "");
 
     useEffect(() => {
-        setRating(item.rating || 0);
-        setThoughts(item.thoughts || "");
+        setRating(item?.rating || 0);
+        setThoughts(item?.thoughts || "");
     }, [item]);
+
+    if (!item || !item.movieDetails) return null;
+    const movieDetails = item.movieDetails;
 
     const handleSave = () => {
         if (rating > 0) {
@@ -38,14 +37,12 @@ export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalPr
         onClose();
     };
 
-    if (!item || !movieDetails) return null;
-
     const bgImage = movieDetails.backdrop_path ? getBackdropUrl(movieDetails.backdrop_path) : (movieDetails.poster_path ? getPosterUrl(movieDetails.poster_path) : null);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
             <div className="relative w-full max-w-lg bg-[#090b14]/40 backdrop-blur-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                
+
                 {/* Banner Header */}
                 <div className="relative w-full h-40 md:h-56 bg-transparent shrink-0">
                     {bgImage && (
@@ -57,7 +54,7 @@ export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalPr
                         />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/80 via-transparent to-transparent" />
-                    
+
                     <button
                         onClick={onClose}
                         className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white/80 transition-colors z-10"
@@ -110,7 +107,7 @@ export function LogItemModal({ item, onClose, onRate, onDelete }: LogItemModalPr
                         <Trash2 className="w-3.5 h-3.5" />
                         Delete Log
                     </button>
-                    
+
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onClose}

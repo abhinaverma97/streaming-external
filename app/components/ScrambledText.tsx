@@ -31,7 +31,6 @@ export default function ScrambledText({ text, speed = 35 }: ScrambledTextProps) 
             }
 
             setDisplayedText(prev => {
-                const chars = prev.split("");
                 const newChars = text.split("").map((targetChar, index) => {
                     if (targetChar === " ") return " ";
                     if (index < iterationRef.current) return targetChar;

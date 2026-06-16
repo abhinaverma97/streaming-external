@@ -40,6 +40,11 @@ function HeroSectionInner({
     const heroIframeRef = useRef<HTMLIFrameElement>(null);
     const [heroTrailerMuted, setHeroTrailerMuted] = useState(true);
     const [showHeroTrailer, setShowHeroTrailer] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
+
+    useEffect(() => {
+        setImageLoaded(false);
+    }, [selectedMovie?.id]);
 
     useEffect(() => {
         setShowHeroTrailer(false);
@@ -55,20 +60,21 @@ function HeroSectionInner({
             {selectedMovie && (
                 <div
                     key={selectedMovie.id}
-                    className="absolute inset-0 z-0 transition-opacity duration-700 ease-out will-animate"
+                    className="absolute inset-0 z-0 transition-opacity duration-200 ease-out will-animate"
                     style={{ opacity: 1 }}
                 >
                     <Image
-                        src={getBackdropUrl(selectedMovie.backdrop_path)}
+                        src={getBackdropUrl(selectedMovie.backdrop_path || selectedMovie.poster_path)}
                         alt={selectedMovie.title || selectedMovie.name || "Movie Backdrop"}
                         fill
                         priority
-                        className={`object-cover object-center pointer-events-none transition-opacity duration-700 ease-out ${
-                            showHeroTrailer ? 'opacity-0' : 'opacity-100'
+                        onLoad={() => setImageLoaded(true)}
+                        className={`object-cover object-center pointer-events-none transition-opacity duration-200 ease-out ${
+                            !imageLoaded || showHeroTrailer ? 'opacity-0' : 'opacity-100'
                         }`}
                     />
                     {heroTrailerUrl && !activeStream && (
-                        <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-700 ease-out pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
+                        <div className={`absolute inset-0 z-0 bg-black transition-opacity duration-500 ease-out pointer-events-none flex items-center justify-center overflow-hidden ${showHeroTrailer ? 'opacity-100' : 'opacity-0'}`}>
                             <div className="w-[170%] h-[170%] md:w-[140%] md:h-[140%] relative scale-105 md:scale-110">
                                 <iframe
                                     key={heroTrailerUrl}
@@ -94,7 +100,6 @@ function HeroSectionInner({
                 </div>
             )}
 
-            {/* Hero Content Overlay */}
             <div className="absolute inset-0 z-10 flex flex-col justify-end p-5 pb-8 md:p-14 gap-3 md:gap-5">
                 {selectedMovie && (
                     <FadeContent key={selectedMovie.id} className="max-w-2xl flex flex-col gap-2 md:gap-4">
@@ -104,7 +109,6 @@ function HeroSectionInner({
                             </h1>
                         </div>
 
-                        {/* Meta details */}
                         <div className="flex items-center gap-3.5 text-xs md:text-sm text-slate-300 font-medium">
                             <span className="flex items-center gap-1 text-slate-100">
                                 <Star className="w-3.5 h-3.5 fill-white text-white" />
@@ -124,7 +128,10 @@ function HeroSectionInner({
                                             e.stopPropagation();
                                             const iframe = heroIframeRef.current;
                                             if (iframe && iframe.contentWindow) {
-                                                iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: heroTrailerMuted ? 'unMute' : 'mute', args: [] }), '*');
+                                                iframe.contentWindow.postMessage(
+                                                    JSON.stringify({ event: 'command', func: heroTrailerMuted ? 'unMute' : 'mute', args: [] }),
+                                                    'https://www.youtube.com'
+                                                );
                                             }
                                             setHeroTrailerMuted(!heroTrailerMuted);
                                         }}
@@ -136,12 +143,10 @@ function HeroSectionInner({
                             )}
                         </div>
 
-                        {/* Synopsis */}
                         <p className="text-slate-300 text-[11px] md:text-sm line-clamp-2 md:line-clamp-3 leading-relaxed max-w-xl">
                             {selectedMovie.overview}
                         </p>
 
-                        {/* Minimalist Action Buttons */}
                         <div className="flex items-center gap-2 md:gap-3.5 mt-1 md:mt-2">
                             <button
                                 onClick={() => {
@@ -156,11 +161,7 @@ function HeroSectionInner({
                                 className="px-4 py-2 md:px-6 md:py-2.5 rounded-full bg-white hover:bg-slate-200 text-slate-950 font-bold text-[11px] md:text-sm flex items-center gap-1.5 transition-all duration-300 shadow-md active:scale-95"
                             >
                                 <Play className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
-                                {cwPlayContext && cwPlayContext.movieId === selectedMovie.id ? (
-                                    <>Resume</>
-                                ) : (
-                                    <>Play</>
-                                )}
+                                {cwPlayContext && cwPlayContext.movieId === selectedMovie.id ? <>Resume</> : <>Play</>}
                             </button>
                             <button
                                 onClick={() => onToggleWatchlist(selectedMovie)}
@@ -170,13 +171,9 @@ function HeroSectionInner({
                                     const wlId = getWatchlistId(selectedMovie);
                                     return wlId && watchlist.some(item => item.tmdbId === wlId);
                                 })() ? (
-                                    <>
-                                        <Check className="w-3.5 h-3.5 text-slate-200" /> Watchlist
-                                    </>
+                                    <><Check className="w-3.5 h-3.5 text-slate-200" /> Watchlist</>
                                 ) : (
-                                    <>
-                                        <Plus className="w-3.5 h-3.5" /> Watchlist
-                                    </>
+                                    <><Plus className="w-3.5 h-3.5" /> Watchlist</>
                                 )}
                             </button>
 

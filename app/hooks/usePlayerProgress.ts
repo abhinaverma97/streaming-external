@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { KNOWN_ORIGINS, SOURCES, getSource } from "../lib/sources-config";
-
-const DEBUG = false;
+import { KNOWN_ORIGINS } from "../lib/sources-config";
 
 let messageHandler: ((event: MessageEvent) => void) | null = null;
-let listeners: Set<{
+const listeners: Set<{
     activeStreamRef: React.MutableRefObject<any>;
     selectedSourceRef: React.MutableRefObject<string>;
     lastProgressRef: React.MutableRefObject<number>;
     onProgressSavedRef?: React.MutableRefObject<(() => void) | undefined>;
 }> = new Set();
 let latestProgressPayload: any = null;
+
 function ensureMessageHandler() {
     if (typeof window === "undefined" || messageHandler) return;
 
@@ -28,10 +27,8 @@ function ensureMessageHandler() {
                 if (!msg) return;
 
                 if (msg.timestamp !== undefined && msg.duration) {
-                    if (DEBUG) console.log(`[${event.origin}] Flat message: ${JSON.stringify(msg)}`);
                     const mediaId = msg.id || msg.tmdbId;
                     if (mediaId && String(mediaId) === String(stream.details?.id)) {
-                        if (DEBUG) console.log(`[${event.origin}] timeupdate: ${msg.timestamp}/${msg.duration}`);
                         reportProgress(stream, selectedSourceRef.current, lastProgressRef, msg.timestamp, msg.duration, onProgressSavedRef);
                     }
                     return;
@@ -41,9 +38,6 @@ function ensureMessageHandler() {
 
                 const dtype = msg.type;
                 const d = msg.data;
-
-                const sourceName = (() => { const s = SOURCES.find((x) => x.origins.includes(event.origin)); return s ? s.name : event.origin; })();
-                if (DEBUG) console.log(`[${sourceName}] Event: ${dtype}${dtype === "PLAYER_EVENT" ? ` (${d.event})` : ""}`);
 
                 let evt: string | undefined;
                 let currentTime: number | undefined;
@@ -76,6 +70,19 @@ function ensureMessageHandler() {
                     }
                     if (!found && d?.id && d?.progress?.watched && d?.progress?.duration && String(d.id) === String(stream.details?.id)) {
                         reportProgress(stream, selectedSourceRef.current, lastProgressRef, d.progress.watched, d.progress.duration, onProgressSavedRef);
+                    }
+                    return;
+                }
+
+                // Cinezo sends WATCH_PROGRESS instead of PLAYER_EVENT/MEDIA_DATA.
+                // mediaId format: "movie_12345" or "show_67890" — strip prefix to get numeric ID.
+                if (dtype === "WATCH_PROGRESS") {
+                    const wd = msg.data;
+                    if (wd?.currentTime && wd?.duration && wd?.mediaId) {
+                        const numericId = String(wd.mediaId).replace(/^(movie_|show_)/, "");
+                        if (numericId === String(stream.details?.id)) {
+                            reportProgress(stream, selectedSourceRef.current, lastProgressRef, wd.currentTime, wd.duration, onProgressSavedRef);
+                        }
                     }
                     return;
                 }
@@ -123,7 +130,6 @@ async function reportProgress(
 
     try {
         const resolvedMediaType = stream.details.media_type || stream.details.mediaType || (stream.tmdbId.startsWith("tv-") ? "tv" : "movie");
-        if (DEBUG) console.log(`[${getSource(source).name}] Progress: ${Math.round(currentTime)}s / ${Math.round(duration)}s (${Math.round((currentTime / duration) * 100)}%)`);
         if (currentProgressAbort) currentProgressAbort.abort();
         currentProgressAbort = new AbortController();
         const res = await fetch(`/api/progress`, {
@@ -148,8 +154,8 @@ async function reportProgress(
             })
         });
         if (res.ok) onProgressSavedRef?.current?.();
-    } catch (err) {
-        if (DEBUG) console.log(`[Progress] Report failed: ${err}`);
+    } catch {
+        // ignore fetch errors (aborted, network, etc.)
     }
 }
 

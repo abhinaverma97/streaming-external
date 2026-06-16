@@ -1,3 +1,13 @@
 spicy.sytes.net {
+    route /api/* {
+        rate_limit {
+            zone api_zone {
+                key {remote_host}
+                events 20
+                window 1s
+            }
+        }
+        reverse_proxy app:3000
+    }
     reverse_proxy app:3000
 }
