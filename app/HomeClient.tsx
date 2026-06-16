@@ -22,7 +22,7 @@ import { Movie } from "./lib/types";
 import { useSearch } from "./hooks/useSearch";
 import { useSourcePrefs } from "./hooks/useSourcePrefs";
 import { useUserLists } from "./hooks/useUserLists";
-import { usePlayerProgress } from "./hooks/usePlayerProgress";
+import { usePlayerProgress, flushGlobalProgress } from "./hooks/usePlayerProgress";
 
 const DEBUG = false;
 
@@ -328,6 +328,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     };
 
     const closePlayer = () => {
+        flushGlobalProgress();
         setActiveStream(null);
         setPlayerError(null);
         setPlayerSource(null); // Reset ephemeral player source; future plays use the default

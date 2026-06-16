@@ -39,12 +39,16 @@ async function tmdbGet(path, params, noCache = false) {
     return data;
 }
 
-async function searchMovies(query, page) {
-    return tmdbGet("/search/movie", { query, page }, true);
+async function searchMovies(query, year = null, page = 1) {
+    const params = { query, page };
+    if (year) params.primary_release_year = year;
+    return tmdbGet("/search/movie", params, true);
 }
 
-async function searchTv(query, page) {
-    return tmdbGet("/search/tv", { query, page }, true);
+async function searchTv(query, year = null, page = 1) {
+    const params = { query, page };
+    if (year) params.first_air_date_year = year;
+    return tmdbGet("/search/tv", params, true);
 }
 
 async function movieDetails(tmdbId) {

@@ -66,9 +66,13 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
         // ── Progress ───────────────────────────────────────────────────
         if (s0 === "progress" && method === "POST") {
             const body = await req.json();
-            if (!body.tmdbId || body.timestamp === undefined) return error("Missing required fields", 400);
-            if (!body.duration) return error("Duration unavailable", 400);
-            await saveProgress(body.tmdbId, Number(body.timestamp), Number(body.duration), body.movieDetails, body.mediaType, body.source);
+            if (!body.tmdbId || typeof body.timestamp !== "number" || isNaN(body.timestamp)) {
+                return error("Missing or invalid required fields", 400);
+            }
+            if (typeof body.duration !== "number" || isNaN(body.duration)) {
+                return error("Duration unavailable or invalid", 400);
+            }
+            await saveProgress(body.tmdbId, body.timestamp, body.duration, body.movieDetails, body.mediaType, body.source);
             return json({ ok: true });
         }
 
@@ -97,7 +101,7 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             if (method === "GET") return json(await getRatings());
             if (method === "POST" && s1) {
                 const body = await req.json();
-                if (typeof body.rating !== "number" || body.rating < 1 || body.rating > 5) {
+                if (typeof body.rating !== "number" || isNaN(body.rating) || body.rating < 1 || body.rating > 5) {
                     return error("Invalid rating", 400);
                 }
                 await saveRating(s1, body.rating, body.movieDetails, body.thoughts);

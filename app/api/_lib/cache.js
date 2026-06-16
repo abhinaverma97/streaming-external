@@ -20,6 +20,9 @@ function getFromMemory(key) {
         memory.delete(key);
         return null;
     }
+    // LRU: Move to end of insertion order
+    memory.delete(key);
+    memory.set(key, entry);
     return entry.value;
 }
 

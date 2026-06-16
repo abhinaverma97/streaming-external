@@ -5,6 +5,8 @@ import { defaultAiModel } from "./config.js";
 const DATA_DIR = path.join(process.cwd(), ".cache");
 const DATA_FILE = path.join(DATA_DIR, "user-data.json");
 
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
 const store = {
   watchlist: new Map(),
   progress: new Map(),
@@ -44,10 +46,9 @@ function load() {
 
 function persist() {
   if (store._saveTimeout) clearTimeout(store._saveTimeout);
-  store._saveTimeout = setTimeout(() => {
+  store._saveTimeout = setTimeout(async () => {
     try {
-      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-      fs.writeFileSync(
+      await fs.promises.writeFile(
         DATA_FILE,
         JSON.stringify({
           watchlist: [...store.watchlist],

@@ -10,15 +10,16 @@ let listeners: Set<{
     activeStreamRef: React.MutableRefObject<any>;
     selectedSourceRef: React.MutableRefObject<string>;
     lastProgressRef: React.MutableRefObject<number>;
-    onProgressSaved?: () => void;
+    onProgressSavedRef?: React.MutableRefObject<(() => void) | undefined>;
 }> = new Set();
+let latestProgressPayload: any = null;
 function ensureMessageHandler() {
     if (typeof window === "undefined" || messageHandler) return;
 
     messageHandler = (event: MessageEvent) => {
         if (!KNOWN_ORIGINS.includes(event.origin)) return;
 
-        listeners.forEach(({ activeStreamRef, selectedSourceRef, lastProgressRef, onProgressSaved }) => {
+        listeners.forEach(({ activeStreamRef, selectedSourceRef, lastProgressRef, onProgressSavedRef }) => {
             const stream = activeStreamRef.current;
             if (!stream) return;
 
@@ -31,7 +32,7 @@ function ensureMessageHandler() {
                     const mediaId = msg.id || msg.tmdbId;
                     if (mediaId && String(mediaId) === String(stream.details?.id)) {
                         if (DEBUG) console.log(`[${event.origin}] timeupdate: ${msg.timestamp}/${msg.duration}`);
-                        reportProgress(stream, selectedSourceRef.current, lastProgressRef, msg.timestamp, msg.duration, onProgressSaved);
+                        reportProgress(stream, selectedSourceRef.current, lastProgressRef, msg.timestamp, msg.duration, onProgressSavedRef);
                     }
                     return;
                 }
@@ -67,14 +68,14 @@ function ensureMessageHandler() {
                             currentTime = entry.progress.watched;
                             duration = entry.progress.duration;
                             if (currentTime && duration) {
-                                reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSaved);
+                                reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSavedRef);
                             }
                             found = true;
                             break;
                         }
                     }
                     if (!found && d?.id && d?.progress?.watched && d?.progress?.duration && String(d.id) === String(stream.details?.id)) {
-                        reportProgress(stream, selectedSourceRef.current, lastProgressRef, d.progress.watched, d.progress.duration, onProgressSaved);
+                        reportProgress(stream, selectedSourceRef.current, lastProgressRef, d.progress.watched, d.progress.duration, onProgressSavedRef);
                     }
                     return;
                 }
@@ -84,11 +85,11 @@ function ensureMessageHandler() {
                 if (String(mediaId) !== String(stream.details?.id)) return;
 
                 if (evt === "timeupdate" && currentTime >= 0 && duration > 0) {
-                    reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSaved);
+                    reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSavedRef);
                 } else if (evt === "ended") {
-                    reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime || duration, duration, onProgressSaved);
+                    reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime || duration, duration, onProgressSavedRef);
                 } else if (evt === "play" && currentTime >= 2 && duration > 0) {
-                    reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSaved);
+                    reportProgress(stream, selectedSourceRef.current, lastProgressRef, currentTime, duration, onProgressSavedRef);
                 }
             } catch {
                 // ignore parse errors
@@ -109,13 +110,15 @@ async function reportProgress(
     lastProgressRef: React.MutableRefObject<number>,
     currentTime: number,
     duration: number,
-    onProgressSaved?: () => void
+    onProgressSavedRef?: React.MutableRefObject<(() => void) | undefined>,
+    force: boolean = false
 ) {
     if (!stream || !duration || currentTime < 2) return;
     lastProgressRef.current = currentTime;
+    latestProgressPayload = { stream, source, lastProgressRef, currentTime, duration, onProgressSavedRef };
 
     const now = Date.now();
-    if (now - lastReportTime < THROTTLE_MS) return;
+    if (!force && now - lastReportTime < THROTTLE_MS) return;
     lastReportTime = now;
 
     try {
@@ -144,9 +147,24 @@ async function reportProgress(
                 }
             })
         });
-        if (res.ok) onProgressSaved?.();
+        if (res.ok) onProgressSavedRef?.current?.();
     } catch (err) {
         if (DEBUG) console.log(`[Progress] Report failed: ${err}`);
+    }
+}
+
+export function flushGlobalProgress() {
+    if (latestProgressPayload && latestProgressPayload.stream) {
+        reportProgress(
+            latestProgressPayload.stream,
+            latestProgressPayload.source,
+            latestProgressPayload.lastProgressRef,
+            latestProgressPayload.currentTime,
+            latestProgressPayload.duration,
+            latestProgressPayload.onProgressSavedRef,
+            true
+        );
+        latestProgressPayload = null;
     }
 }
 
@@ -156,22 +174,20 @@ export function usePlayerProgress(
     lastProgressRef: React.MutableRefObject<number>,
     onProgressSaved?: () => void,
 ) {
+    const onProgressSavedRef = useRef(onProgressSaved);
+    useEffect(() => { onProgressSavedRef.current = onProgressSaved; }, [onProgressSaved]);
+
     ensureMessageHandler();
 
     useEffect(() => {
-        const key = { activeStreamRef, selectedSourceRef, lastProgressRef, onProgressSaved };
+        const key = { activeStreamRef, selectedSourceRef, lastProgressRef, onProgressSavedRef };
         listeners.add(key);
         return () => {
             listeners.delete(key);
-        };
-    }, [onProgressSaved]);
-
-    useEffect(() => {
-        return () => {
-            if (messageHandler) {
+            if (listeners.size === 0 && messageHandler) {
                 window.removeEventListener("message", messageHandler);
                 messageHandler = null;
             }
         };
-    }, []);
+    }, []); // Empty dependency array to avoid thrashing
 }

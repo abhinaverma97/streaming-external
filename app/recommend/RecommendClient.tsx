@@ -12,7 +12,7 @@ import { getBackdropUrl, extractTrailerUrl } from "../lib/tmdb-utils";
 import { getWatchlistId } from "../lib/watchlist";
 import { useSourcePrefs } from "../hooks/useSourcePrefs";
 import { useUserLists } from "../hooks/useUserLists";
-import { usePlayerProgress } from "../hooks/usePlayerProgress";
+import { usePlayerProgress, flushGlobalProgress } from "../hooks/usePlayerProgress";
 import { useSearch } from "../hooks/useSearch";
 import { SearchInput } from "../components/SearchInput";
 import { useRouter } from "next/navigation";
@@ -156,6 +156,11 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     };
 
     const playRecommendation = async (item: any) => {
+        if (!item.id) {
+            setError("Media not found in database.");
+            return;
+        }
+        
         const isTv = item.media_type === "tv" || item._type === "tv";
         const tmdbId = isTv ? `tv-${item.id}-1-1` : String(item.id);
         const title = item.title || item.name || "Untitled";
@@ -191,6 +196,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     };
 
     const closePlayer = () => {
+        flushGlobalProgress();
         setActiveStream(null);
         setPlayerError(null);
         setPlayerSource(null); // Reset ephemeral source

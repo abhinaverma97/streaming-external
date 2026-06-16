@@ -134,6 +134,14 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
     throw new Error("Could not parse OpenRouter response as JSON:\n" + content);
   }
 
+  // Fallback if LLM returned an Array instead of an Object
+  if (Array.isArray(parsed)) {
+    console.log("[Recommend] LLM returned an array, restructuring to object.");
+    const movies = parsed.filter(i => !i.type || i.type === "movie" || i.isMovie);
+    const shows = parsed.filter(i => i.type === "tv" || i.isTv);
+    parsed = { recommendedMovies: movies, recommendedTvShows: shows };
+  }
+
   const movieCount = (parsed.recommendedMovies || []).length;
   const tvCount = (parsed.recommendedTvShows || []).length;
   console.log(`[Recommend] Parsed ${movieCount} movies, ${tvCount} TV shows`);
@@ -146,8 +154,15 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
 async function enrichItem(item, searchFn, mediaType) {
   try {
     const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
-    let data = await searchFn(searchTitle);
+    let data = await searchFn(searchTitle, item.year);
     let result = findBestMatch(data.results || [], searchTitle, item.year);
+
+    // Fallback: If no results when searching with year, try without year
+    if (!result || data.results?.length === 0) {
+      console.log(`[Recommend] No matches for "${searchTitle}" with year ${item.year}, falling back to title-only search...`);
+      data = await searchFn(searchTitle);
+      result = findBestMatch(data.results || [], searchTitle, null);
+    }
 
     if (!result && data.results?.length > 0) {
       result = data.results[0];
@@ -208,10 +223,12 @@ function findBestMatch(results, title, year) {
   if (!results || results.length === 0) return null;
 
   if (year && year !== "Unknown") {
-    const yearStr = String(year);
+    const targetYear = parseInt(String(year), 10);
     const exact = results.find((r) => {
       const date = r.release_date || r.first_air_date || "";
-      return date.startsWith(yearStr);
+      const rYear = parseInt(date.substring(0, 4), 10);
+      if (isNaN(rYear)) return false;
+      return Math.abs(rYear - targetYear) <= 1; // Fuzzy match: +/- 1 year
     });
     if (exact) return exact;
   }
