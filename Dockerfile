@@ -12,7 +12,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/data ./data
-RUN chown -R node:node /app
+    RUN mkdir -p /app/.cache && chown -R node:node /app
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]
