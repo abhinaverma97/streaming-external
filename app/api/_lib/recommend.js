@@ -1,4 +1,4 @@
-import { searchMulti } from "./tmdb.js";
+import { searchMovies, searchTv } from "./tmdb.js";
 import { buildRecommendationPrompt } from "../../lib/format-ratings";
 
 let activeController = null;
@@ -83,13 +83,16 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
     let parsed;
     const tryParse = (s) => { try { return JSON.parse(s) } catch { return null } };
 
-    parsed = tryParse(content);
+    // Strip <think>...</think> blocks which are common in reasoning models
+    const strippedContent = content.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+
+    parsed = tryParse(strippedContent);
     if (!parsed) {
-      const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+      const cleaned = strippedContent.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
       parsed = tryParse(cleaned);
     }
     if (!parsed) {
-      const match = content.match(/\{[\s\S]*\}/) || content.match(/\[[\s\S]*\]/);
+      const match = strippedContent.match(/\{[\s\S]*\}/) || strippedContent.match(/\[[\s\S]*\]/);
       if (match) parsed = tryParse(match[0]);
     }
     if (!parsed) {
@@ -117,16 +120,15 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
   }
 }
 
-async function enrichItem(item, requestedMediaType) {
+async function enrichItem(item, searchFn, mediaType) {
   try {
     const searchTitle = item.title.replace(/\(\d{4}\)/g, "").trim();
-    let data = await searchMulti(searchTitle);
-    let results = (data.results || []).filter(r => r.media_type === "movie" || r.media_type === "tv");
+    let data = await searchFn(searchTitle);
     
-    let result = findBestMatch(results, item.year, requestedMediaType);
+    let result = data.results?.[0];
 
     if (result) {
-      const isTv = result.media_type === "tv";
+      const isTv = mediaType === "tv";
       return {
         ...item,
         id: result.id,
@@ -136,24 +138,24 @@ async function enrichItem(item, requestedMediaType) {
         overview: result.overview,
         vote_average: result.vote_average,
         ...(isTv ? { first_air_date: result.first_air_date } : { release_date: result.release_date }),
-        media_type: result.media_type,
+        media_type: mediaType,
       };
     }
-    return { ...item, id: null, media_type: requestedMediaType };
+    return { ...item, id: null, media_type: mediaType };
   } catch (err) {
     console.error(`[Recommend] Failed to enrich "${item.title}": ${err}`);
-    return { ...item, id: null, media_type: requestedMediaType };
+    return { ...item, id: null, media_type: mediaType };
   }
 }
 
 const CONCURRENCY = 5;
 
-async function enrichBatch(items, mediaType) {
+async function enrichBatch(items, searchFn, mediaType) {
   const results = [];
   for (let i = 0; i < items.length; i += CONCURRENCY) {
     const batch = items.slice(i, i + CONCURRENCY);
     const batchResults = await Promise.allSettled(
-      batch.map(item => enrichItem(item, mediaType))
+      batch.map(item => enrichItem(item, searchFn, mediaType))
     );
     batchResults.forEach((r, idx) => {
       results.push(r.status === "fulfilled" ? r.value : { ...batch[idx], id: null, media_type: mediaType });
@@ -167,41 +169,13 @@ export async function enrichWithTmdb(recommendations) {
   console.log(`[Recommend] Enriching ${recommendations.recommendedMovies.length} movies and ${recommendations.recommendedTvShows.length} TV shows with TMDB data (concurrency ${CONCURRENCY})`);
 
   const [enrichedMovies, enrichedTvShows] = await Promise.all([
-    enrichBatch(recommendations.recommendedMovies || [], "movie"),
-    enrichBatch(recommendations.recommendedTvShows || [], "tv"),
+    enrichBatch(recommendations.recommendedMovies || [], searchMovies, "movie"),
+    enrichBatch(recommendations.recommendedTvShows || [], searchTv, "tv"),
   ]);
 
   console.log(`[Recommend] Enrichment complete in ${Date.now() - t0}ms. Final: ${enrichedMovies.length} movies, ${enrichedTvShows.length} TV shows`);
 
   return { recommendedMovies: enrichedMovies, recommendedTvShows: enrichedTvShows };
-}
-
-function findBestMatch(results, year, preferredMediaType) {
-  if (!results || results.length === 0) return null;
-
-  if (year && year !== "Unknown") {
-    const targetYear = parseInt(String(year), 10);
-    
-    let match = results.find((r) => {
-      if (r.media_type !== preferredMediaType) return false;
-      const date = r.release_date || r.first_air_date || "";
-      const rYear = parseInt(date.substring(0, 4), 10);
-      return !isNaN(rYear) && Math.abs(rYear - targetYear) <= 1;
-    });
-    if (match) return match;
-    
-    match = results.find((r) => {
-      const date = r.release_date || r.first_air_date || "";
-      const rYear = parseInt(date.substring(0, 4), 10);
-      return !isNaN(rYear) && Math.abs(rYear - targetYear) <= 1;
-    });
-    if (match) return match;
-  }
-
-  const typeMatch = results.find(r => r.media_type === preferredMediaType);
-  if (typeMatch) return typeMatch;
-
-  return results[0];
 }
 
 export async function runFullGenerationPipeline() {
