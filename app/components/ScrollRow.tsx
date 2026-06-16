@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, Children } from "react";
 
 interface ScrollRowProps {
     children: React.ReactNode;
@@ -13,7 +13,7 @@ export default function ScrollRow({ children }: ScrollRowProps) {
         if (rowRef.current) {
             rowRef.current.scrollLeft = 0;
         }
-    }, []);
+    }, [Children.count(children)]);
 
     const scroll = useCallback((direction: 'left' | 'right') => {
         if (rowRef.current) {
