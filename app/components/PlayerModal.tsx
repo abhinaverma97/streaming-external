@@ -276,8 +276,8 @@ export function PlayerModal({
     return (
         <>
             {activeStream && (
-                <div className="modal-panel fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-y-auto w-full h-full">
-                    <div className="w-full max-w-7xl flex items-center justify-between mb-4">
+                <div className="modal-panel fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-hidden w-full h-full">
+                    <div className="w-full max-w-7xl flex items-center justify-between mb-4 flex-shrink-0">
                         <div>
                             <h2 className="text-base md:text-lg font-light tracking-wide text-white/95 flex items-center gap-2">
                                 <ScrambledText text={displayTitle} />
@@ -293,7 +293,7 @@ export function PlayerModal({
                         </div>
                     </div>
 
-                    <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
+                    <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center flex-1 min-h-0 lg:h-[62vh] xl:h-[66vh]">
                         <div className={`flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl ${isExitingFullscreen ? 'animate-exit-fullscreen' : ''}`}>
                             {activeTab === "controls" ? (
                                 <>
@@ -333,7 +333,7 @@ export function PlayerModal({
                                                 <iframe
                                                     ref={trailerIframeRef}
                                                     src={detailsEmbedUrl}
-                                                    className="w-full h-full"
+                                                    className="w-full h-full pointer-events-none"
                                                     style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
                                                     allow="autoplay; encrypted-media; fullscreen *"
                                                     allowFullScreen
@@ -382,7 +382,7 @@ export function PlayerModal({
                                                 <iframe
                                                     ref={trailerIframeRef}
                                                     src={similarTrailerUrl}
-                                                    className="w-full h-full"
+                                                    className="w-full h-full pointer-events-none"
                                                     style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
                                                     allow="autoplay; encrypted-media; fullscreen *"
                                                     allowFullScreen

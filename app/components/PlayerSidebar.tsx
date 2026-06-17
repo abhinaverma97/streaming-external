@@ -140,7 +140,7 @@ function PlayerSidebarInner({
     const currentVote = detailsFullData?.vote_average;
 
     return (
-        <GlassSurface className="w-full lg:w-80 xl:w-96 p-5 flex flex-col gap-5 !border-white/[0.03] !bg-transparent !backdrop-blur-none h-auto lg:max-h-full overflow-y-visible lg:overflow-y-auto no-scrollbar rounded-2xl !shadow-none">
+        <GlassSurface className="w-full lg:w-80 xl:w-96 p-5 flex flex-col gap-5 !border-white/[0.03] !bg-transparent !backdrop-blur-none flex-1 min-h-0 lg:max-h-full overflow-y-auto no-scrollbar rounded-2xl !shadow-none">
             {/* Tab Toggle */}
             <div className="flex gap-0.5 p-0.5 bg-white/[0.02] border border-white/[0.05] rounded-lg">
                 {(["controls", "details", "similar"] as const).map((tab) => (
