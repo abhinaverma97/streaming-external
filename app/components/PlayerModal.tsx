@@ -284,7 +284,6 @@ export function PlayerModal({
                                             src={activeStream.embedUrl}
                                             className="w-full h-full"
                                             allow="autoplay; encrypted-media; fullscreen"
-                                            allowFullScreen
                                         />
                                     )}
                                     {playerError && (
@@ -318,7 +317,6 @@ export function PlayerModal({
                                                     className="w-full h-full"
                                                     style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
                                                     allow="autoplay; encrypted-media; fullscreen"
-                                                    allowFullScreen
                                                 />
                                             </div>
                                             <button
@@ -367,7 +365,6 @@ export function PlayerModal({
                                                     className="w-full h-full"
                                                     style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
                                                     allow="autoplay; encrypted-media; fullscreen"
-                                                    allowFullScreen
                                                 />
                                             </div>
                                             <button
@@ -394,7 +391,7 @@ export function PlayerModal({
                                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent h-1/3" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-                                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+                                    <div className="hidden lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:p-8">
                                         <h3 className="text-base md:text-xl font-medium text-white">
                                             {similarTitle}
                                             {similarYear && <span className="text-white/50 font-light ml-2">({similarYear})</span>}
@@ -422,6 +419,34 @@ export function PlayerModal({
                                 </div>
                             )}
                         </div>
+
+                        {activeTab === "similar" && (
+                            <div className="block lg:hidden w-full rounded-2xl border border-white/[0.06] bg-black/60 shadow-2xl p-4">
+                                <h3 className="text-base font-medium text-white">
+                                    {similarTitle}
+                                    {similarYear && <span className="text-white/50 font-light ml-2">({similarYear})</span>}
+                                    {similarPct && <span className="ml-3 text-sm text-white/60 font-medium">{similarPct}% Match</span>}
+                                </h3>
+                                <p className="text-[10px] text-white/70 mt-2 line-clamp-3 leading-relaxed">
+                                    {similarOverview || "No overview available."}
+                                </p>
+                                <div className="flex gap-3 mt-4">
+                                    <button
+                                        onClick={handleToggleWatchlistForSimilar}
+                                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
+                                    >
+                                        {isSelectedInWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                                        {isSelectedInWatchlist ? "In Watchlist" : "Watchlist"}
+                                    </button>
+                                    <button
+                                        onClick={handlePlaySimilar}
+                                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
+                                    >
+                                        <Play className="w-3.5 h-3.5" /> Play
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         <PlayerSidebar
                             selectedSource={effectiveSource}

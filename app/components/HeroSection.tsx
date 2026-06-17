@@ -88,7 +88,7 @@ function HeroSectionInner({
                                             return v ? `https://www.youtube.com/embed/${v}?autoplay=1&mute=1&controls=0&disablekb=1&modestbranding=1&enablejsapi=1&loop=1&playlist=${v}` : "";
                                         } catch { return ""; }
                                     })()}
-                                    allow="autoplay; encrypted-media"
+                                    allow="autoplay; encrypted-media; fullscreen"
                                     frameBorder="0"
                                     className="w-full h-full pointer-events-none"
                                 />

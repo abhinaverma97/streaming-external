@@ -24,7 +24,7 @@ async function tmdbGet(path, params, noCache = false) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(new Error("TMDB timeout after 10s")), 10000);
     let response;
-    let retries = 3;
+    let retries = 5;
     let attempt = 0;
 
     while (attempt < retries) {
@@ -32,20 +32,22 @@ async function tmdbGet(path, params, noCache = false) {
         try {
             response = await fetch(url, { signal: controller.signal });
             if (response.status === 429) {
-                console.warn(`[TMDB] 429 Rate limit hit for ${path}. Retrying in ${attempt * 1000}ms...`);
-                await new Promise(r => setTimeout(r, attempt * 1000));
+                const delay = Math.min(attempt * 2000, 10000) + Math.random() * 500;
+                console.warn(`[TMDB] 429 Rate limit hit for ${path}. Retrying in ${delay}ms...`);
+                await new Promise(r => setTimeout(r, delay));
                 continue;
             }
             if (!response.ok) {
                 const text = await response.text();
                 throw new Error(`TMDB error ${response.status}: ${text}`);
             }
-            break; // Success
+            break;
         } catch (e) {
             if (e.name === 'AbortError') throw e;
             if (attempt === retries) throw e;
-            console.warn(`[TMDB] Network error for ${path}: ${e.message}. Retrying in ${attempt * 1000}ms...`);
-            await new Promise(r => setTimeout(r, attempt * 1000));
+            const delay = Math.min(attempt * 2000, 10000) + Math.random() * 500;
+            console.warn(`[TMDB] Network error for ${path}: ${e.message}. Retrying in ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
         } finally {
             if (attempt === retries || (response && response.ok)) {
                 clearTimeout(timeoutId);
@@ -53,6 +55,9 @@ async function tmdbGet(path, params, noCache = false) {
         }
     }
 
+    if (!response) {
+        throw new Error(`TMDB rate limited after ${retries} retries for ${path}`);
+    }
     const data = await response.json();
     if (!noCache) await setCached(tmdbCacheDir, url, data, tmdbCacheTtlMs);
     return data;
