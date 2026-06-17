@@ -110,3 +110,49 @@
     }
   }
 }
+
+/* ── Fullscreen Transitions ─────────────────────── */
+/* Smooth fade entrance for fullscreen element (avoids scaling artifacts) */
+iframe:fullscreen {
+  animation: enterFullscreenAnim 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Smooth fade entrance for native backdrop */
+iframe::backdrop {
+  background-color: black;
+  animation: backdropFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Re-entrance slide-up + fade transition when returning to container */
+@keyframes enterFullscreenAnim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes exitFullscreenAnim {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-exit-fullscreen {
+  animation: exitFullscreenAnim 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

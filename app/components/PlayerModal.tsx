@@ -51,6 +51,7 @@ export function PlayerModal({
     onPlaySimilar,
 }: PlayerModalProps) {
     const [activeTab, setActiveTab] = useState<"controls" | "details" | "similar">("controls");
+    const [isExitingFullscreen, setIsExitingFullscreen] = useState(false);
 
     const [similarItems, setSimilarItems] = useState<any[]>([]);
     const [similarLoading, setSimilarLoading] = useState(false);
@@ -188,6 +189,23 @@ export function PlayerModal({
             .finally(() => setDetailsLoading(false));
     }, [activeTab, activeStream?.details?.id]);
 
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement) {
+                setIsExitingFullscreen(true);
+                const timer = setTimeout(() => {
+                    setIsExitingFullscreen(false);
+                }, 250);
+                return () => clearTimeout(timer);
+            }
+        };
+
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () => {
+            document.removeEventListener("fullscreenchange", handleFullscreenChange);
+        };
+    }, []);
+
     const handlePlaySimilar = useCallback(() => {
         const item = similarItems[selectedSimilarIdx];
         const full = selectedSimilarDetails;
@@ -276,14 +294,15 @@ export function PlayerModal({
                     </div>
 
                     <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center h-auto lg:h-[62vh] xl:h-[66vh]">
-                        <div className="flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl">
+                        <div className={`flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl ${isExitingFullscreen ? 'animate-exit-fullscreen' : ''}`}>
                             {activeTab === "controls" ? (
                                 <>
                                     {activeStream?.embedUrl && (
                                         <iframe
                                             src={activeStream.embedUrl}
                                             className="w-full h-full"
-                                            allow="autoplay; encrypted-media; fullscreen"
+                                            allow="autoplay; encrypted-media; fullscreen *"
+                                            allowFullScreen
                                         />
                                     )}
                                     {playerError && (
@@ -310,13 +329,14 @@ export function PlayerModal({
                                         </div>
                                     ) : detailsEmbedUrl ? (
                                         <>
-                                            <div className="w-full h-full overflow-hidden">
+                                            <div className="w-full h-full overflow-hidden bg-black">
                                                 <iframe
                                                     ref={trailerIframeRef}
                                                     src={detailsEmbedUrl}
                                                     className="w-full h-full"
                                                     style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
-                                                    allow="autoplay; encrypted-media; fullscreen"
+                                                    allow="autoplay; encrypted-media; fullscreen *"
+                                                    allowFullScreen
                                                 />
                                             </div>
                                             <button
@@ -340,8 +360,8 @@ export function PlayerModal({
                                         </div>
                                     )}
 
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent h-1/3" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent h-1/3" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent" />
 
                                     <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
                                         <h3 className="text-base md:text-xl font-medium text-white">
@@ -358,13 +378,14 @@ export function PlayerModal({
                                         </div>
                                     ) : similarTrailerUrl ? (
                                         <>
-                                            <div className="w-full h-full overflow-hidden">
+                                            <div className="w-full h-full overflow-hidden bg-black">
                                                 <iframe
                                                     ref={trailerIframeRef}
                                                     src={similarTrailerUrl}
                                                     className="w-full h-full"
                                                     style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
-                                                    allow="autoplay; encrypted-media; fullscreen"
+                                                    allow="autoplay; encrypted-media; fullscreen *"
+                                                    allowFullScreen
                                                 />
                                             </div>
                                             <button
@@ -388,8 +409,8 @@ export function PlayerModal({
                                         </div>
                                     )}
 
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent h-1/3" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent h-1/3" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent" />
 
                                     <div className="hidden lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:p-8">
                                         <h3 className="text-base md:text-xl font-medium text-white">

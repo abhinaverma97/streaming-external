@@ -88,15 +88,16 @@ function HeroSectionInner({
                                             return v ? `https://www.youtube.com/embed/${v}?autoplay=1&mute=1&controls=0&disablekb=1&modestbranding=1&enablejsapi=1&loop=1&playlist=${v}` : "";
                                         } catch { return ""; }
                                     })()}
-                                    allow="autoplay; encrypted-media; fullscreen"
+                                    allow="autoplay; encrypted-media; fullscreen *"
+                                    allowFullScreen
                                     frameBorder="0"
                                     className="w-full h-full pointer-events-none"
                                 />
                             </div>
                         </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/50 via-[#090b14]/20 to-transparent pointer-events-none z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/40 via-[#090b14]/10 to-transparent pointer-events-none z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#090b14]/65 to-transparent pointer-events-none z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#090b14]/55 to-transparent pointer-events-none z-10" />
                 </div>
             )}
 

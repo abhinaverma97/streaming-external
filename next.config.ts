@@ -8,20 +8,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
     output: "standalone",
 
-    async headers() {
-        return [
-            {
-                source: '/(.*)',
-                headers: [
-                    {
-                        key: 'Permissions-Policy',
-                        value: 'fullscreen=(self "https://player.videasy.net" "https://player.videasy.to" "https://vidfast.pro" "https://player.cinezo.live" "https://vidlink.pro" "https://vidnest.fun" "https://vidrock.ru")',
-                    },
-                ],
-            },
-        ];
-    },
-
     images: {
         remotePatterns: [
             {
