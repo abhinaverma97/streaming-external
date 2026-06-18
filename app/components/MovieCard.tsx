@@ -41,7 +41,7 @@ function MovieCardInner({ item, onClick, isActive, progressPercent, label, showP
     return (
         <div
             onClick={onClick}
-            className="flex-none cursor-pointer group snap-start w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]"
+            className="cursor-pointer group snap-start w-full"
         >
             <div
                 ref={imageRef}

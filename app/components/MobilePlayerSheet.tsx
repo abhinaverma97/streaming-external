@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Film, Loader2, Plus, Check, Play, Star, Settings2, Layers, Info, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Film, Loader2, Plus, Check, Play, Star, Layers, Info, Sparkles } from "lucide-react";
 import { StarRating } from "./StarRating";
 import { SOURCES } from "../lib/sources-config";
 import { getPosterUrl } from "../lib/tmdb-utils";
@@ -83,15 +83,13 @@ function MobilePlayerSheetInner({
     onToggleWatchlistForSimilar,
     onPlaySimilar,
 }: MobilePlayerSheetProps) {
-    const [sourceSheetOpen, setSourceSheetOpen] = useState(false);
     const [thoughts, setThoughts] = useState(
         () => ratings[activeStreamDetails?.id]?.thoughts || ""
     );
 
     const isTv = !!selectedShowDetails;
     const currentRating = ratings[activeStreamDetails?.id]?.rating || 0;
-    const currentSourceName =
-        SOURCES.find((s) => s.id === selectedSource)?.name || selectedSource;
+    const enabledSources = SOURCES.filter((s) => effectiveEnabledSources.includes(s.id));
 
     const handleThoughtsBlur = () => {
         if (activeStreamDetails && currentRating > 0) {
@@ -148,11 +146,10 @@ function MobilePlayerSheetInner({
     const validSeasons =
         selectedShowDetails?.seasons?.filter((s: any) => s.season_number > 0) || [];
 
-    const genres = detailsFullData?.genres || activeStreamDetails?.genres || [];
-    const runtime = detailsFullData?.runtime;
     const tmdbVote = detailsFullData?.vote_average ?? activeStreamDetails?.vote_average;
-
     const remainingCount = Math.max(0, similarItems.length - similarDisplayCount);
+
+    const displayItems = similarItems.slice(0, similarDisplayCount);
 
     const tabs: { id: MobileTab; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
         { id: "controls", label: isTv ? "EPISODES" : "PLAYER", Icon: isTv ? Layers : Play },
@@ -160,105 +157,62 @@ function MobilePlayerSheetInner({
         { id: "similar", label: "RELATED", Icon: Sparkles },
     ];
 
+    // Selected similar item data
+    const selectedItem = similarItems[selectedSimilarIdx];
+    const selectedTitle =
+        selectedSimilarDetails?.title || selectedSimilarDetails?.name ||
+        selectedItem?.title || selectedItem?.name || "";
+    const selectedOverview =
+        selectedSimilarDetails?.overview || selectedItem?.overview || "";
+    const selectedYear = (
+        selectedSimilarDetails?.release_date || selectedSimilarDetails?.first_air_date ||
+        selectedItem?.release_date || selectedItem?.first_air_date || ""
+    ).split("-")[0];
+    const selectedVote = selectedSimilarDetails?.vote_average ?? selectedItem?.vote_average;
+    const selectedPct = selectedItem?.similarity;
+    const selectedMediaType = selectedItem?.media_type || "movie";
+
     return (
-        <div className="lg:hidden w-full flex flex-col gap-4 pb-8">
+        <div className="lg:hidden w-full flex flex-col">
             {/* ── Title & Meta ─────────────────────────────────────── */}
-            <div className="px-5 pt-4 flex flex-col gap-2">
-                <h1 className="text-xl font-medium tracking-tight text-white leading-tight">
+            <div className="px-5 pt-4 pb-3 flex flex-col gap-1">
+                <h1 className="text-[17px] font-semibold tracking-tight text-white leading-tight truncate">
                     {activeStreamTitle}
                 </h1>
-                <div className="flex items-center gap-2 text-[11px] text-white/50 flex-wrap">
+                <div className="flex items-center gap-2 text-[11px] text-white/40 flex-wrap">
                     {currentYear && <span>{currentYear}</span>}
-                    {currentYear && (tmdbVote || runtime) && (
-                        <span className="w-1 h-1 rounded-full bg-white/20" />
-                    )}
+                    {currentYear && tmdbVote > 0 && <span className="w-0.5 h-0.5 rounded-full bg-white/20" />}
                     {tmdbVote > 0 && (
-                        <span className="flex items-center gap-1 text-white/70">
-                            <Star className="w-3 h-3 fill-amber-300/80 text-amber-300/80" />
+                        <span className="flex items-center gap-1 text-white/50">
+                            <Star className="w-2.5 h-2.5 fill-white/50 text-white/50" />
                             {tmdbVote.toFixed(1)}
                         </span>
                     )}
-                    {runtime && (
-                        <>
-                            <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span>{runtime}m</span>
-                        </>
-                    )}
                     {isTv && (
                         <>
-                            <span className="w-1 h-1 rounded-full bg-white/20" />
-                            <span className="font-mono text-white/60">
-                                S{String(selectedSeason).padStart(2, "0")}E
-                                {String(selectedEpisode).padStart(2, "0")}
+                            <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                            <span className="font-mono">
+                                S{String(selectedSeason).padStart(2, "0")}E{String(selectedEpisode).padStart(2, "0")}
                             </span>
                         </>
                     )}
                 </div>
-                {genres.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                        {genres.slice(0, 4).map((g: any) => (
-                            <span
-                                key={g.id || g.name}
-                                className="text-[10px] uppercase tracking-wider text-white/60 px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.06]"
-                            >
-                                {g.name}
-                            </span>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* ── Action Tiles ─────────────────────────────────────── */}
-            <div className="px-5 grid grid-cols-3 gap-2">
-                <button
-                    onClick={() => onTabChange("details")}
-                    className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] active:scale-95 active:bg-white/[0.06] transition-all cursor-pointer"
-                >
-                    <Star
-                        className={`w-5 h-5 ${
-                            currentRating > 0
-                                ? "fill-amber-300/90 text-amber-300/90"
-                                : "text-white/70"
-                        }`}
-                    />
-                    <span className="text-[10px] uppercase tracking-wider text-white/70 font-medium">
-                        {currentRating > 0 ? `${currentRating}/5` : "Rate"}
-                    </span>
-                </button>
-                <button
-                    onClick={() => setSourceSheetOpen(true)}
-                    className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] active:scale-95 active:bg-white/[0.06] transition-all cursor-pointer min-w-0"
-                >
-                    <Settings2 className="w-5 h-5 text-white/70" />
-                    <span className="text-[10px] uppercase tracking-wider text-white/70 font-medium truncate max-w-full px-1">
-                        {currentSourceName}
-                    </span>
-                </button>
-                <button
-                    onClick={() => onTabChange("similar")}
-                    className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] active:scale-95 active:bg-white/[0.06] transition-all cursor-pointer"
-                >
-                    <Sparkles className="w-5 h-5 text-white/70" />
-                    <span className="text-[10px] uppercase tracking-wider text-white/70 font-medium">
-                        Related
-                    </span>
-                </button>
             </div>
 
             {/* ── Tab Bar ──────────────────────────────────────────── */}
-            <div className="px-5">
-                <div className="flex p-1 bg-white/[0.03] border border-white/[0.05] rounded-xl">
+            <div className="px-5 pb-3">
+                <div className="flex p-0.5 bg-white/[0.04] rounded-xl">
                     {tabs.map(({ id, label, Icon }) => (
                         <button
                             key={id}
                             onClick={() => onTabChange(id)}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[11px] font-medium tracking-wider transition-all cursor-pointer ${
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[10px] text-[11px] font-medium tracking-wide transition-all cursor-pointer ${
                                 activeTab === id
-                                    ? "bg-white/10 text-white shadow-sm"
-                                    : "text-white/45 hover:text-white/70"
+                                    ? "bg-white/[0.12] text-white"
+                                    : "text-white/35"
                             }`}
                         >
-                            <Icon className="w-3.5 h-3.5" />
+                            <Icon className="w-3 h-3" />
                             {label}
                         </button>
                     ))}
@@ -266,368 +220,247 @@ function MobilePlayerSheetInner({
             </div>
 
             {/* ── Tab Panels ───────────────────────────────────────── */}
-            <div className="px-5">
-                {activeTab === "controls" && (
-                    <div className="flex flex-col gap-4">
-                        {isTv ? (
-                            <>
-                                {/* Season chip scroller */}
-                                <div className="flex flex-col gap-2">
-                                    <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">
-                                        Season
-                                    </span>
-                                    <div className="flex gap-2 overflow-x-auto no-scrollbar snap-x snap-mandatory -mx-1 px-1 pb-1">
-                                        {validSeasons.map((s: any) => {
-                                            const isActive = s.season_number === selectedSeason;
-                                            return (
-                                                <button
-                                                    key={s.season_number}
-                                                    onClick={() =>
-                                                        onChangeEpisode(s.season_number, 1)
-                                                    }
-                                                    className={`snap-start flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium border transition-all active:scale-95 cursor-pointer ${
-                                                        isActive
-                                                            ? "bg-white text-black border-white"
-                                                            : "bg-white/[0.03] text-white/70 border-white/[0.08] hover:bg-white/[0.06]"
-                                                    }`}
-                                                >
-                                                    {s.name || `Season ${s.season_number}`}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
 
-                                {/* Episode grid */}
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">
-                                            Episode
-                                        </span>
-                                        <span className="text-[10px] text-white/30 font-mono">
-                                            {selectedEpisode} / {episodesList.length || 1}
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-5 gap-2">
-                                        {episodesList.map((ep) => {
-                                            const isActive = ep === selectedEpisode;
-                                            return (
-                                                <button
-                                                    key={ep}
-                                                    onClick={() =>
-                                                        onChangeEpisode(selectedSeason, ep)
-                                                    }
-                                                    className={`aspect-square rounded-lg text-xs font-medium border transition-all active:scale-95 cursor-pointer ${
-                                                        isActive
-                                                            ? "bg-white text-black border-white shadow-[0_0_0_2px_rgba(255,255,255,0.15)]"
-                                                            : "bg-white/[0.03] text-white/70 border-white/[0.06] hover:bg-white/[0.06]"
-                                                    }`}
-                                                >
-                                                    {ep}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Prev/Next */}
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={goToPrevEpisode}
-                                        disabled={prevDisabled}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/80 text-xs font-medium disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-                                    >
-                                        <ChevronLeft className="w-4 h-4" /> Previous
-                                    </button>
-                                    <button
-                                        onClick={goToNextEpisode}
-                                        disabled={nextDisabled}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-xl bg-white text-black text-xs font-semibold disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-                                    >
-                                        Next Episode <ChevronRight className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex flex-col items-center gap-3 py-10">
-                                <div className="w-12 h-12 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
-                                    <Play className="w-5 h-5 text-white/60" />
-                                </div>
-                                <span className="text-xs text-white/50 text-center">
-                                    Playing on{" "}
-                                    <span className="text-white/80 font-medium">
-                                        {currentSourceName}
-                                    </span>
-                                </span>
-                                <button
-                                    onClick={() => setSourceSheetOpen(true)}
-                                    className="text-[10px] uppercase tracking-wider text-white/40 hover:text-white/70 underline-offset-4 hover:underline cursor-pointer"
-                                >
-                                    Change source
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeTab === "details" && (
-                    <div className="flex flex-col gap-5">
-                        {detailsLoading ? (
-                            <div className="flex items-center justify-center py-16">
-                                <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
-                            </div>
-                        ) : (
-                            <>
-                                {/* Overview */}
-                                <div className="flex flex-col gap-2">
-                                    <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">
-                                        Overview
-                                    </span>
-                                    <p className="text-sm text-white/75 leading-relaxed">
-                                        {detailsFullData?.overview ||
-                                            activeStreamDetails?.overview ||
-                                            "No overview available."}
-                                    </p>
-                                </div>
-
-                                {/* Metadata grid */}
-                                {detailsFullData && (
-                                    <div className="flex flex-col gap-2 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                                        {detailsFullData.release_date && (
-                                            <MetaRow
-                                                label="Released"
-                                                value={detailsFullData.release_date}
-                                            />
-                                        )}
-                                        {detailsFullData.first_air_date &&
-                                            !detailsFullData.release_date && (
-                                                <MetaRow
-                                                    label="First Aired"
-                                                    value={detailsFullData.first_air_date}
-                                                />
-                                            )}
-                                        {runtime && (
-                                            <MetaRow label="Runtime" value={`${runtime} min`} />
-                                        )}
-                                        {detailsFullData.vote_average > 0 && (
-                                            <MetaRow
-                                                label="TMDB"
-                                                value={`${detailsFullData.vote_average.toFixed(1)} / 10`}
-                                            />
-                                        )}
-                                        {detailsFullData.status && (
-                                            <MetaRow
-                                                label="Status"
-                                                value={detailsFullData.status}
-                                            />
-                                        )}
-                                        {detailsFullData.seasons && (
-                                            <MetaRow
-                                                label="Seasons"
-                                                value={String(
-                                                    detailsFullData.seasons.filter(
-                                                        (s: any) => s.season_number > 0
-                                                    ).length
-                                                )}
-                                            />
-                                        )}
-                                        {detailsFullData.number_of_episodes && (
-                                            <MetaRow
-                                                label="Episodes"
-                                                value={String(detailsFullData.number_of_episodes)}
-                                            />
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Rate & Thoughts */}
-                                <div className="flex flex-col gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">
-                                            Your Rating
-                                        </span>
-                                        <StarRating
-                                            value={currentRating}
-                                            onChange={(val) =>
-                                                activeStreamDetails &&
-                                                onRate(activeStreamDetails, val, thoughts)
-                                            }
-                                        />
-                                    </div>
-                                    <textarea
-                                        value={thoughts}
-                                        onChange={(e) => setThoughts(e.target.value)}
-                                        onBlur={handleThoughtsBlur}
-                                        disabled={currentRating === 0}
-                                        placeholder={
-                                            currentRating === 0
-                                                ? "Rate first to add thoughts..."
-                                                : "Share your thoughts..."
-                                        }
-                                        className="w-full min-h-[96px] px-3 py-3 text-sm text-white/85 bg-white/[0.02] border border-white/[0.06] focus:border-white/15 rounded-xl resize-none outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors placeholder:text-white/25"
-                                    />
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {activeTab === "similar" && (
-                    <div className="flex flex-col gap-4">
-                        {/* Selected similar action card */}
-                        {similarItems.length > 0 && similarItems[selectedSimilarIdx] && (
-                            <div className="flex flex-col gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">
-                                        Selected
-                                    </span>
-                                    <h3 className="text-sm font-medium text-white/95 leading-snug">
-                                        {selectedSimilarDetails?.title ||
-                                            selectedSimilarDetails?.name ||
-                                            similarItems[selectedSimilarIdx]?.title ||
-                                            similarItems[selectedSimilarIdx]?.name}
-                                        {similarItems[selectedSimilarIdx]?.similarity && (
-                                            <span className="ml-2 text-[10px] text-white/50 font-normal">
-                                                {similarItems[selectedSimilarIdx].similarity}% match
-                                            </span>
-                                        )}
-                                    </h3>
-                                </div>
-                                <p className="text-xs text-white/60 leading-relaxed line-clamp-3">
-                                    {selectedSimilarDetails?.overview ||
-                                        similarItems[selectedSimilarIdx]?.overview ||
-                                        "No overview available."}
-                                </p>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={onPlaySimilar}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-white text-black text-xs font-semibold active:scale-95 transition-all cursor-pointer"
-                                    >
-                                        <Play className="w-3.5 h-3.5 fill-black" /> Play
-                                    </button>
-                                    <button
-                                        onClick={onToggleWatchlistForSimilar}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-white/80 text-xs font-medium active:scale-95 transition-all cursor-pointer"
-                                    >
-                                        {isSelectedSimilarInWatchlist ? (
-                                            <>
-                                                <Check className="w-3.5 h-3.5" /> In List
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Plus className="w-3.5 h-3.5" /> Watchlist
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Grid */}
-                        <div className="flex flex-col gap-2">
-                            <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">
-                                More Like This
-                            </span>
-                            {similarLoading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
-                                </div>
-                            ) : similarError ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <span className="text-[10px] text-rose-400/80 text-center max-w-xs">
-                                        {similarError}
-                                    </span>
-                                </div>
-                            ) : similarItems.length === 0 ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <span className="text-[10px] text-white/30">
-                                        No similar titles found
-                                    </span>
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {similarItems
-                                            .slice(0, similarDisplayCount)
-                                            .map((item, i) => (
-                                                <SimilarGridCard
-                                                    key={item.id || i}
-                                                    item={item}
-                                                    isSelected={i === selectedSimilarIdx}
-                                                    onSelect={() => onSelectSimilar(i)}
-                                                />
-                                            ))}
-                                    </div>
-                                    {remainingCount > 0 && (
-                                        <button
-                                            onClick={onLoadMore}
-                                            className="w-full py-3 mt-1 text-[10px] font-medium tracking-wider uppercase text-white/50 hover:text-white/80 bg-white/[0.02] border border-white/[0.05] hover:border-white/10 rounded-xl transition-all cursor-pointer"
-                                        >
-                                            Load More ({remainingCount} remaining)
-                                        </button>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* ── Source Bottom Sheet ──────────────────────────────── */}
-            {sourceSheetOpen && (
-                <div
-                    onClick={() => setSourceSheetOpen(false)}
-                    className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end animate-[fadeIn_0.2s_ease-out]"
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-full bg-[#0b0c10] border-t border-white/10 rounded-t-3xl p-5 pb-[calc(env(safe-area-inset-bottom,1rem)+1.25rem)] animate-[slideUp_0.25s_cubic-bezier(0.16,1,0.3,1)]"
-                    >
-                        <div className="w-12 h-1 rounded-full bg-white/15 mx-auto mb-5" />
-                        <h3 className="text-sm font-medium text-white mb-4">Streaming source</h3>
-                        <div className="flex flex-col gap-1.5">
-                            {SOURCES.filter((s) =>
-                                effectiveEnabledSources.includes(s.id)
-                            ).map((s) => {
+            {/* CONTROLS */}
+            {activeTab === "controls" && (
+                <div className="px-5 pb-8 flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                        <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Source</span>
+                        <div className="flex flex-col gap-1">
+                            {enabledSources.map((s) => {
                                 const isActive = s.id === selectedSource;
                                 return (
                                     <button
                                         key={s.id}
-                                        onClick={() => {
-                                            onSourceChange(s.id);
-                                            setSourceSheetOpen(false);
-                                        }}
-                                        className={`flex items-center justify-between px-4 py-3.5 rounded-xl border text-sm active:scale-[0.98] transition-all cursor-pointer ${
+                                        onClick={() => onSourceChange(s.id)}
+                                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs active:scale-[0.98] transition-all cursor-pointer ${
                                             isActive
-                                                ? "bg-white/10 border-white/20 text-white"
-                                                : "bg-white/[0.02] border-white/[0.06] text-white/70 hover:bg-white/[0.05]"
+                                                ? "bg-white/[0.08] border-white/15 text-white"
+                                                : "bg-transparent border-white/[0.05] text-white/50"
                                         }`}
                                     >
                                         <span className="font-medium">{s.name}</span>
-                                        {isActive && (
-                                            <Check className="w-4 h-4 text-white" />
-                                        )}
+                                        {isActive && <Check className="w-3 h-3 text-white/70" />}
                                     </button>
                                 );
                             })}
                         </div>
                     </div>
+
+                    {isTv && (
+                        <>
+                            <div className="h-px bg-white/[0.05]" />
+                            <div className="flex flex-col gap-1.5">
+                                <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Season</span>
+                                <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                                    {validSeasons.map((s: any) => {
+                                        const isActive = s.season_number === selectedSeason;
+                                        return (
+                                            <button
+                                                key={s.season_number}
+                                                onClick={() => onChangeEpisode(s.season_number, 1)}
+                                                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all active:scale-95 cursor-pointer ${
+                                                    isActive
+                                                        ? "bg-white text-black border-white"
+                                                        : "bg-transparent text-white/50 border-white/[0.08]"
+                                                }`}
+                                            >
+                                                {s.name || `S${s.season_number}`}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Episode</span>
+                                    <span className="text-[10px] text-white/25 font-mono">{selectedEpisode} / {episodesList.length || 1}</span>
+                                </div>
+                                <div className="grid grid-cols-6 gap-1.5">
+                                    {episodesList.map((ep) => {
+                                        const isActive = ep === selectedEpisode;
+                                        return (
+                                            <button
+                                                key={ep}
+                                                onClick={() => onChangeEpisode(selectedSeason, ep)}
+                                                className={`aspect-square rounded-lg text-xs font-medium border transition-all active:scale-95 cursor-pointer ${
+                                                    isActive
+                                                        ? "bg-white text-black border-white"
+                                                        : "bg-white/[0.03] text-white/50 border-white/[0.05]"
+                                                }`}
+                                            >
+                                                {ep}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={goToPrevEpisode}
+                                    disabled={prevDisabled}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/70 text-xs font-medium disabled:opacity-25 active:scale-95 transition-all cursor-pointer"
+                                >
+                                    <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                                </button>
+                                <button
+                                    onClick={goToNextEpisode}
+                                    disabled={nextDisabled}
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-black text-xs font-semibold disabled:opacity-25 active:scale-95 transition-all cursor-pointer"
+                                >
+                                    Next <ChevronRight className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* DETAILS */}
+            {activeTab === "details" && (
+                <div className="px-5 pb-8 flex flex-col gap-4">
+                    {detailsLoading ? (
+                        <div className="flex items-center justify-center py-14">
+                            <Loader2 className="w-5 h-5 text-white/30 animate-spin" />
+                        </div>
+                    ) : (
+                        <>
+                            <p className="text-sm text-white/60 leading-relaxed">
+                                {detailsFullData?.overview || activeStreamDetails?.overview || "No overview available."}
+                            </p>
+                            <div className="h-px bg-white/[0.05]" />
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Your Rating</span>
+                                    <StarRating
+                                        value={currentRating}
+                                        onChange={(val) => activeStreamDetails && onRate(activeStreamDetails, val, thoughts)}
+                                    />
+                                </div>
+                                <textarea
+                                    value={thoughts}
+                                    onChange={(e) => setThoughts(e.target.value)}
+                                    onBlur={handleThoughtsBlur}
+                                    disabled={currentRating === 0}
+                                    placeholder={currentRating === 0 ? "Rate first to add thoughts..." : "Share your thoughts..."}
+                                    className="w-full min-h-[80px] px-3 py-2.5 text-sm text-white/70 bg-white/[0.03] border border-white/[0.06] focus:border-white/15 rounded-xl resize-none outline-none disabled:opacity-40 transition-colors placeholder:text-white/20"
+                                />
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* SIMILAR — full-height layout: info panel + horizontal scroll strip */}
+            {activeTab === "similar" && (
+                <div className="flex flex-col flex-1 min-h-0">
+                    {similarLoading ? (
+                        <div className="flex flex-col items-center justify-center py-16 gap-2">
+                            <Loader2 className="w-5 h-5 text-white/30 animate-spin" />
+                            <span className="text-[10px] text-white/25 uppercase tracking-widest">Finding similar</span>
+                        </div>
+                    ) : similarError ? (
+                        <div className="flex items-center justify-center py-12 px-5">
+                            <span className="text-[11px] text-rose-400/70 text-center">{similarError}</span>
+                        </div>
+                    ) : similarItems.length === 0 ? (
+                        <div className="flex items-center justify-center py-12">
+                            <span className="text-[11px] text-white/25">No similar titles found</span>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Selected item info — fills available space */}
+                            {selectedItem && (
+                                <div className="px-5 pb-4 flex flex-col gap-3">
+                                    {/* Title row */}
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-base font-semibold text-white leading-snug truncate">
+                                                {selectedTitle}
+                                            </h3>
+                                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-white/35">
+                                                {selectedYear && <span>{selectedYear}</span>}
+                                                {selectedYear && selectedVote > 0 && <span className="w-0.5 h-0.5 rounded-full bg-white/20" />}
+                                                {selectedVote > 0 && (
+                                                    <span className="flex items-center gap-1">
+                                                        <Star className="w-2.5 h-2.5 fill-white/35 text-white/35" />
+                                                        {selectedVote.toFixed(1)}
+                                                    </span>
+                                                )}
+                                                {selectedPct && (
+                                                    <>
+                                                        <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                                                        <span className="text-white/50">{selectedPct}% match</span>
+                                                    </>
+                                                )}
+                                                <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                                                <span className="uppercase tracking-wide">{selectedMediaType === "tv" ? "Series" : "Film"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Overview */}
+                                    {selectedOverview ? (
+                                        <p className="text-xs text-white/45 leading-relaxed line-clamp-2">
+                                            {selectedOverview}
+                                        </p>
+                                    ) : null}
+
+                                    {/* Actions */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={onPlaySimilar}
+                                            className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-white text-black text-xs font-semibold active:scale-95 transition-all cursor-pointer"
+                                        >
+                                            <Play className="w-3 h-3 fill-black" /> Play
+                                        </button>
+                                        <button
+                                            onClick={onToggleWatchlistForSimilar}
+                                            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-white/[0.12] text-white/60 text-xs font-medium active:scale-95 transition-all cursor-pointer"
+                                        >
+                                            {isSelectedSimilarInWatchlist
+                                                ? <><Check className="w-3 h-3" /> Saved</>
+                                                : <><Plus className="w-3 h-3" /> Watchlist</>
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Horizontal scroll strip - Mathematically locked symmetric layout */}
+                            <div className="border-t border-white/[0.05] pt-2 pb-4 px-5">
+                                <div className="grid grid-flow-col auto-cols-[calc((100%-1rem)/2)] sm:auto-cols-[calc((100%-2rem)/3)] md:auto-cols-[calc((100%-3rem)/4)] lg:auto-cols-[calc((100%-4rem)/5)] gap-4 overflow-x-auto py-2 no-scrollbar snap-x snap-mandatory scroll-smooth relative z-10">
+                                    {displayItems.map((item, i) => (
+                                        <SimilarHCard
+                                            key={item.id || i}
+                                            item={item}
+                                            isSelected={i === selectedSimilarIdx}
+                                            onSelect={() => onSelectSimilar(i)}
+                                        />
+                                    ))}
+                                    {remainingCount > 0 && (
+                                        <button
+                                            onClick={onLoadMore}
+                                            className="snap-start w-full flex flex-col items-center justify-center gap-1 rounded-xl border border-white/[0.06] text-white/30 text-[10px] cursor-pointer active:scale-95 transition-all"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            <span>{remainingCount} more</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
         </div>
     );
 }
 
-function MetaRow({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="flex justify-between items-baseline text-xs">
-            <span className="text-white/40">{label}</span>
-            <span className="text-white/80 text-right">{value}</span>
-        </div>
-    );
-}
-
-function SimilarGridCard({
+// Horizontal strip card — fixed width, poster-style
+function SimilarHCard({
     item,
     isSelected,
     onSelect,
@@ -644,36 +477,39 @@ function SimilarGridCard({
     return (
         <button
             onClick={onSelect}
-            className={`relative flex flex-col gap-1.5 text-left rounded-xl overflow-hidden transition-all active:scale-95 cursor-pointer ${
-                isSelected ? "ring-2 ring-white/40" : ""
-            }`}
+            className={`snap-start w-full flex flex-col gap-1.5 text-left cursor-pointer active:scale-95 transition-all`}
         >
-            <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-950 border border-white/[0.06]">
+            <div className={`relative w-full rounded-xl overflow-hidden bg-black border transition-all ${
+                isSelected ? "border-white/40 shadow-[0_0_0_1px_rgba(255,255,255,0.15)]" : "border-white/[0.07]"
+            }`} style={{ aspectRatio: "16/9" }}>
                 {hasImage ? (
                     <Image
                         src={getPosterUrl(item.backdrop_path || item.poster_path)}
                         alt={title}
                         fill
                         onLoad={() => setLoaded(true)}
-                        className={`object-cover transition-opacity duration-500 ${
-                            loaded ? "opacity-100" : "opacity-0"
-                        }`}
+                        className={`object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
                         sizes="50vw"
                     />
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-600">
-                        <Film className="w-5 h-5" />
+                    <div className="absolute inset-0 flex items-center justify-center text-white/10">
+                        <Film className="w-6 h-6" />
                     </div>
                 )}
+                {isSelected && (
+                    <div className="absolute inset-0 bg-white/[0.06]" />
+                )}
                 {item.similarity && (
-                    <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[9px] font-semibold text-white">
+                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/80 text-[9px] font-semibold text-white/80">
                         {item.similarity}%
                     </div>
                 )}
             </div>
-            <div className="px-1 pb-1">
-                <div className="text-xs font-medium text-white/90 truncate">{title}</div>
-                {year && <div className="text-[10px] text-white/40">{year}</div>}
+            <div className="px-0.5">
+                <div className={`text-[11px] font-medium leading-tight truncate transition-colors ${isSelected ? "text-white" : "text-white/55"}`}>
+                    {title}
+                </div>
+                {year && <div className="text-[10px] text-white/25 mt-0.5">{year}</div>}
             </div>
         </button>
     );

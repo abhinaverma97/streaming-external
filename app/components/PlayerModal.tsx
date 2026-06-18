@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { X, AlertCircle, Play, Plus, Check, Loader2, Volume2, VolumeX } from "lucide-react";
+import type { TouchEvent as ReactTouchEvent } from "react";
 import ScrambledText from "./ScrambledText";
 import { PlayerSidebar } from "./PlayerSidebar";
 import { MobilePlayerSheet } from "./MobilePlayerSheet";
@@ -263,6 +264,11 @@ export function PlayerModal({
         });
     }, [similarItems, selectedSimilarIdx, selectedSimilarDetails, onToggleWatchlist]);
 
+    // Reset mute state whenever the similar trailer changes (new item selected)
+    useEffect(() => {
+        setTrailerMuted(true);
+    }, [similarTrailerUrl]);
+
     const handleToggleMute = useCallback(() => {
         const iframe = trailerIframeRef.current;
         if (!iframe?.contentWindow) return;
@@ -373,55 +379,39 @@ export function PlayerModal({
             </div>
 
             {/* ── MOBILE LAYOUT (<lg) ──────────────────────────────── */}
-            <div className="modal-panel lg:hidden fixed inset-0 z-50 bg-black flex flex-col overflow-hidden w-full h-full">
-                {/* Sticky player at top */}
-                <div className="relative flex-shrink-0 w-full bg-black">
-                    <div className={`relative w-full aspect-video bg-black ${isExitingFullscreen ? 'animate-exit-fullscreen' : ''}`}>
-                        <PlayerArea {...playerAreaProps} showSimilarOverlay={false} isMobile />
-                        <button
-                            onClick={onClose}
-                            className="absolute top-3 left-3 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-90 transition-all cursor-pointer"
-                            aria-label="Close player"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Scrollable mobile sheet */}
-                <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar bg-black">
-                    <MobilePlayerSheet
-                        activeStreamDetails={activeStream?.details}
-                        activeStreamTitle={displayTitle}
-                        currentYear={currentYear}
-                        selectedSource={effectiveSource}
-                        effectiveEnabledSources={effectiveEnabledSources}
-                        onSourceChange={onSourceChange}
-                        ratings={ratings}
-                        onRate={onRate}
-                        selectedShowDetails={selectedShowDetails}
-                        selectedSeason={selectedSeason}
-                        selectedEpisode={selectedEpisode}
-                        episodesList={episodesList}
-                        onChangeEpisode={onChangeEpisode}
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
-                        detailsFullData={detailsFullData}
-                        detailsLoading={detailsLoading}
-                        similarItems={similarItems}
-                        similarLoading={similarLoading}
-                        similarError={similarError}
-                        similarDisplayCount={similarDisplayCount}
-                        onLoadMore={() => setSimilarDisplayCount((p) => Math.min(p + 10, similarItems.length))}
-                        selectedSimilarIdx={selectedSimilarIdx}
-                        onSelectSimilar={setSelectedSimilarIdx}
-                        selectedSimilarDetails={selectedSimilarDetails}
-                        isSelectedSimilarInWatchlist={isSelectedInWatchlist}
-                        onToggleWatchlistForSimilar={handleToggleWatchlistForSimilar}
-                        onPlaySimilar={handlePlaySimilar}
-                    />
-                </div>
-            </div>
+            <MobileModal
+                activeStream={activeStream}
+                playerAreaProps={playerAreaProps}
+                isExitingFullscreen={isExitingFullscreen}
+                displayTitle={displayTitle}
+                currentYear={currentYear}
+                effectiveSource={effectiveSource}
+                effectiveEnabledSources={effectiveEnabledSources}
+                onSourceChange={onSourceChange}
+                ratings={ratings}
+                onRate={onRate}
+                selectedShowDetails={selectedShowDetails}
+                selectedSeason={selectedSeason}
+                selectedEpisode={selectedEpisode}
+                episodesList={episodesList}
+                onChangeEpisode={onChangeEpisode}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                detailsFullData={detailsFullData}
+                detailsLoading={detailsLoading}
+                similarItems={similarItems}
+                similarLoading={similarLoading}
+                similarError={similarError}
+                similarDisplayCount={similarDisplayCount}
+                onLoadMore={() => setSimilarDisplayCount((p) => Math.min(p + 10, similarItems.length))}
+                selectedSimilarIdx={selectedSimilarIdx}
+                onSelectSimilar={setSelectedSimilarIdx}
+                selectedSimilarDetails={selectedSimilarDetails}
+                isSelectedInWatchlist={isSelectedInWatchlist}
+                onToggleWatchlistForSimilar={handleToggleWatchlistForSimilar}
+                onPlaySimilar={handlePlaySimilar}
+                onClose={onClose}
+            />
         </>
     );
 }
@@ -453,7 +443,7 @@ interface PlayerAreaProps {
     handleToggleWatchlistForSimilar: () => void;
     handlePlaySimilar: () => void;
     onClose: () => void;
-    showSimilarOverlay: boolean;
+    showSimilarOverlay?: boolean;
     isMobile?: boolean;
 }
 
@@ -465,7 +455,7 @@ function PlayerArea(props: PlayerAreaProps) {
         isSelectedInWatchlist,
         trailerIframeRef, trailerMuted, handleToggleMute,
         handleToggleWatchlistForSimilar, handlePlaySimilar,
-        onClose, showSimilarOverlay, isMobile,
+        onClose, showSimilarOverlay = false, isMobile,
     } = props;
 
     if (activeTab === "controls") {
@@ -507,6 +497,7 @@ function PlayerArea(props: PlayerAreaProps) {
                     </div>
                 ) : detailsEmbedUrl ? (
                     <TrailerFrame
+                        key={detailsEmbedUrl}
                         innerRef={trailerIframeRef}
                         src={detailsEmbedUrl}
                         muted={trailerMuted}
@@ -550,6 +541,7 @@ function PlayerArea(props: PlayerAreaProps) {
                 </div>
             ) : similarTrailerUrl ? (
                 <TrailerFrame
+                    key={similarTrailerUrl}
                     innerRef={trailerIframeRef}
                     src={similarTrailerUrl}
                     muted={trailerMuted}
@@ -638,6 +630,195 @@ function TrailerFrame({ src, muted, onToggleMute, innerRef }: {
             >
                 {muted ? <VolumeX className="w-[18px] h-[18px]" /> : <Volume2 className="w-[18px] h-[18px]" />}
             </button>
+        </>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MobileModal: handles swipe-to-close, rounded top corners, safe-area
+// ─────────────────────────────────────────────────────────────────────
+function MobileModal({
+    activeStream,
+    playerAreaProps,
+    isExitingFullscreen,
+    displayTitle,
+    currentYear,
+    effectiveSource,
+    effectiveEnabledSources,
+    onSourceChange,
+    ratings,
+    onRate,
+    selectedShowDetails,
+    selectedSeason,
+    selectedEpisode,
+    episodesList,
+    onChangeEpisode,
+    activeTab,
+    onTabChange,
+    detailsFullData,
+    detailsLoading,
+    similarItems,
+    similarLoading,
+    similarError,
+    similarDisplayCount,
+    onLoadMore,
+    selectedSimilarIdx,
+    onSelectSimilar,
+    selectedSimilarDetails,
+    isSelectedInWatchlist,
+    onToggleWatchlistForSimilar,
+    onPlaySimilar,
+    onClose,
+}: {
+    activeStream: any;
+    playerAreaProps: PlayerAreaProps;
+    isExitingFullscreen: boolean;
+    displayTitle: string;
+    currentYear: string;
+    effectiveSource: string;
+    effectiveEnabledSources: string[];
+    onSourceChange: (s: string) => void;
+    ratings: Record<string, any>;
+    onRate: (movie: any, rating: number, thoughts?: string) => void;
+    selectedShowDetails: any;
+    selectedSeason: number;
+    selectedEpisode: number;
+    episodesList: number[];
+    onChangeEpisode: (season: number, episode: number) => void;
+    activeTab: "controls" | "details" | "similar";
+    onTabChange: (tab: "controls" | "details" | "similar") => void;
+    detailsFullData: any;
+    detailsLoading: boolean;
+    similarItems: any[];
+    similarLoading: boolean;
+    similarError: string | null;
+    similarDisplayCount: number;
+    onLoadMore: () => void;
+    selectedSimilarIdx: number;
+    onSelectSimilar: (i: number) => void;
+    selectedSimilarDetails: any;
+    isSelectedInWatchlist: boolean;
+    onToggleWatchlistForSimilar: () => void;
+    onPlaySimilar: () => void;
+    onClose: () => void;
+}) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const sheetRef = useRef<HTMLDivElement>(null);
+    const touchStartYRef = useRef(0);
+    const deltaYRef = useRef(0);
+    const draggingRef = useRef(false);
+
+    const handleTouchStart = (e: ReactTouchEvent<HTMLDivElement>) => {
+        const sheetScrollTop = sheetRef.current?.scrollTop ?? 0;
+        // Only initiate swipe-to-close when sheet is scrolled to top
+        if (sheetScrollTop > 4) return;
+        touchStartYRef.current = e.touches[0].clientY;
+        deltaYRef.current = 0;
+        draggingRef.current = true;
+    };
+
+    const handleTouchMove = (e: ReactTouchEvent<HTMLDivElement>) => {
+        if (!draggingRef.current) return;
+        const delta = e.touches[0].clientY - touchStartYRef.current;
+        if (delta <= 0) {
+            // Upward swipe — cancel drag, let sheet scroll normally
+            draggingRef.current = false;
+            if (containerRef.current) containerRef.current.style.transform = "";
+            return;
+        }
+        deltaYRef.current = delta;
+        const capped = Math.min(delta, 220);
+        if (containerRef.current) {
+            containerRef.current.style.transition = "none";
+            containerRef.current.style.transform = `translateY(${capped}px)`;
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (!draggingRef.current) return;
+        draggingRef.current = false;
+        if (deltaYRef.current >= 80) {
+            // Dismiss
+            if (containerRef.current) {
+                containerRef.current.style.transition = "transform 0.25s cubic-bezier(0.16,1,0.3,1)";
+                containerRef.current.style.transform = "translateY(100%)";
+            }
+            setTimeout(onClose, 220);
+        } else {
+            // Snap back
+            if (containerRef.current) {
+                containerRef.current.style.transition = "transform 0.25s cubic-bezier(0.16,1,0.3,1)";
+                containerRef.current.style.transform = "";
+            }
+        }
+        deltaYRef.current = 0;
+    };
+
+    return (
+        <>
+            {/* Dim backdrop */}
+            <div
+                className="modal-backdrop lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+                onClick={onClose}
+            />
+
+            {/* Bottom sheet — 85vh, slides up from bottom */}
+            <div
+                ref={containerRef}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className="mobile-sheet lg:hidden fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col overflow-hidden w-full rounded-t-2xl border-t border-white/[0.06]"
+                style={{ height: "85vh" }}
+            >
+                {/* Video area — flush with rounded top corners */}
+                <div className="relative flex-shrink-0 w-full overflow-hidden rounded-t-2xl">
+                    <div className={`relative w-full aspect-video bg-black ${isExitingFullscreen ? "animate-exit-fullscreen" : ""}`}>
+                        <PlayerArea {...playerAreaProps} showSimilarOverlay={false} isMobile={true} />
+                        <button
+                            onClick={onClose}
+                            className="absolute top-3 left-3 z-30 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-90 transition-all cursor-pointer"
+                            aria-label="Close player"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Scrollable sheet content */}
+                <div ref={sheetRef} className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
+                    <MobilePlayerSheet
+                        activeStreamDetails={activeStream?.details}
+                        activeStreamTitle={displayTitle}
+                        currentYear={currentYear}
+                        selectedSource={effectiveSource}
+                        effectiveEnabledSources={effectiveEnabledSources}
+                        onSourceChange={onSourceChange}
+                        ratings={ratings}
+                        onRate={onRate}
+                        selectedShowDetails={selectedShowDetails}
+                        selectedSeason={selectedSeason}
+                        selectedEpisode={selectedEpisode}
+                        episodesList={episodesList}
+                        onChangeEpisode={onChangeEpisode}
+                        activeTab={activeTab}
+                        onTabChange={onTabChange}
+                        detailsFullData={detailsFullData}
+                        detailsLoading={detailsLoading}
+                        similarItems={similarItems}
+                        similarLoading={similarLoading}
+                        similarError={similarError}
+                        similarDisplayCount={similarDisplayCount}
+                        onLoadMore={onLoadMore}
+                        selectedSimilarIdx={selectedSimilarIdx}
+                        onSelectSimilar={onSelectSimilar}
+                        selectedSimilarDetails={selectedSimilarDetails}
+                        isSelectedSimilarInWatchlist={isSelectedInWatchlist}
+                        onToggleWatchlistForSimilar={onToggleWatchlistForSimilar}
+                        onPlaySimilar={onPlaySimilar}
+                    />
+                </div>
+            </div>
         </>
     );
 }

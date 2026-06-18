@@ -31,7 +31,7 @@ export default function ScrollRow({ children }: ScrollRowProps) {
                 aria-label="Scroll Left"
             />
             
-            <div ref={rowRef} className="flex gap-4 overflow-x-auto py-6 -my-4 px-2 -mx-2 no-scrollbar snap-x snap-mandatory scroll-smooth relative z-10">
+            <div ref={rowRef} className="grid grid-flow-col auto-cols-[calc((100%-1rem)/2)] sm:auto-cols-[calc((100%-2rem)/3)] md:auto-cols-[calc((100%-3rem)/4)] lg:auto-cols-[calc((100%-4rem)/5)] xl:auto-cols-[calc((100%-5rem)/6)] gap-4 overflow-x-auto py-6 -my-4 no-scrollbar snap-x snap-mandatory scroll-smooth relative z-10">
                 {children}
             </div>
 

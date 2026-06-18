@@ -25,9 +25,9 @@ function CardSkeletonInner({ count = 6, layout = "row" }: CardSkeletonProps) {
     }
 
     return (
-        <div className="flex gap-4 overflow-hidden py-6 -my-4 px-2 -mx-2">
+        <div className="grid grid-flow-col auto-cols-[calc((100%-1rem)/2)] sm:auto-cols-[calc((100%-2rem)/3)] md:auto-cols-[calc((100%-3rem)/4)] lg:auto-cols-[calc((100%-4rem)/5)] xl:auto-cols-[calc((100%-5rem)/6)] gap-4 overflow-hidden py-6 -my-4">
             {skeletons.map((_, i) => (
-                <div key={i} className="flex-none w-[calc((100%-1rem)/2)] sm:w-[calc((100%-2rem)/3)] md:w-[calc((100%-3rem)/4)] lg:w-[calc((100%-4rem)/5)] xl:w-[calc((100%-5rem)/6)]">
+                <div key={i} className="w-full">
                     <div className="aspect-[16/9] w-full rounded-xl bg-slate-900/60 border border-slate-800/30 animate-pulse" />
                     <div className="mt-2.5 h-3.5 bg-slate-900/60 rounded-full w-2/3 animate-pulse" />
                 </div>
