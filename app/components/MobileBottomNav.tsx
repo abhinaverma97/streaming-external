@@ -57,7 +57,7 @@ function MobileBottomNavInner({
                                 <div className="flex flex-col gap-2">
                                     {searchResults.map((movie) => (
                                         <div
-                                            key={movie.id}
+                                            key={`${movie.media_type || "movie"}-${movie.id}`}
                                             onClick={() => {
                                                 if (currentPath !== "/") {
                                                     sessionStorage.setItem("pendingStream", JSON.stringify(movie));

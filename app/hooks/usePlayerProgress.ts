@@ -178,10 +178,10 @@ export function usePlayerProgress(
     activeStreamRef: React.MutableRefObject<any>,
     selectedSourceRef: React.MutableRefObject<string>,
     lastProgressRef: React.MutableRefObject<number>,
-    onProgressSaved?: () => void,
+    onProgressSaved?: (() => void) | null,
 ) {
-    const onProgressSavedRef = useRef(onProgressSaved);
-    useEffect(() => { onProgressSavedRef.current = onProgressSaved; }, [onProgressSaved]);
+    const onProgressSavedRef = useRef<(() => void) | undefined>(onProgressSaved ?? undefined);
+    useEffect(() => { onProgressSavedRef.current = onProgressSaved ?? undefined; }, [onProgressSaved]);
 
     ensureMessageHandler();
 

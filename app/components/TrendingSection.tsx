@@ -45,7 +45,7 @@ function TrendingSectionInner({ trending, trendingType, selectedMovieId, onTrend
                 <ScrollRow>
                     {trending.map((movie, index) => (
                         <MovieCard
-                            key={movie.id}
+                            key={`${movie.media_type || trendingType}-${movie.id}`}
                             item={movie}
                             onClick={() => onCardClick(movie)}
                             isActive={selectedMovieId === movie.id}

@@ -16,6 +16,7 @@ import { buildEmbedUrl } from "./lib/sources-config";
 import { extractTrailerUrl } from "./lib/tmdb-utils";
 import { getWatchlistId } from "./lib/watchlist";
 import { Movie, CwPlayContext } from "./lib/types";
+import { getDetails } from "./lib/details-cache";
 
 import { useSearch } from "./hooks/useSearch";
 import { useSourcePrefs } from "./hooks/useSourcePrefs";
@@ -95,13 +96,26 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     const activeSourceRef = useRef(currentActiveSource);
     useEffect(() => { activeSourceRef.current = currentActiveSource; }, [currentActiveSource]);
 
-    usePlayerProgress(activeStreamRef, activeSourceRef, lastProgressRef, refreshContinueWatching);
+    // Player progress reporting. We intentionally do NOT pass a refresh
+    // callback here — refreshing the CW list on every 5-second progress
+    // tick is wasteful when the player modal is open over it. The list
+    // is re-synced when the player closes (closePlayer) and when the
+    // tab regains visibility (effect below).
+    usePlayerProgress(activeStreamRef, activeSourceRef, lastProgressRef);
 
-    // Bug 1 fix: re-sync CW from the API on every mount.
-    // Server component data may come from a stale RSC module instance;
-    // the API route is always authoritative.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { refreshContinueWatching(); refreshWatchlist(); }, []);
+    // Re-sync CW + watchlist when the tab becomes visible (bfcache /
+    // returning from another tab / mobile resume). The initial render
+    // already has fresh SSR data, so no mount-time refetch needed.
+    useEffect(() => {
+        const onVis = () => {
+            if (document.visibilityState === "visible") {
+                refreshContinueWatching();
+                refreshWatchlist();
+            }
+        };
+        document.addEventListener("visibilitychange", onVis);
+        return () => document.removeEventListener("visibilitychange", onVis);
+    }, [refreshContinueWatching, refreshWatchlist]);
 
     useEffect(() => {
         if (isSearching && !searchLoading && searchResults.length > 0 && !hasScrolledToSearch.current) {
@@ -132,38 +146,33 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     const loadMovieDetails = useCallback(async (tmdbId: number, mediaType: string = "movie") => {
         try {
             setHeroTrailerUrl(null);
+            const details = await getDetails(tmdbId, mediaType as "movie" | "tv");
+            if (!details) return;
+
             if (mediaType === "tv") {
-                const res = await fetch(`/api/tv/${tmdbId}`);
-                const data = await res.json();
-                if (data.tmdb) {
-                    const normalized: Movie = {
-                        ...data.tmdb,
-                        title: data.tmdb.name,
-                        release_date: data.tmdb.first_air_date || "",
-                        media_type: "tv"
-                    };
-                    setSelectedMovie(normalized);
-                    setSelectedShowDetails(data.tmdb);
-                    setHeroTrailerUrl(extractTrailerUrl(data.tmdb.videos));
-                    const validSeasons = (data.tmdb.seasons || []).filter((s: any) => s.season_number > 0);
-                    if (validSeasons.length > 0) {
-                        const initialSeason = validSeasons[0].season_number;
-                        setSelectedSeason(initialSeason);
-                        const epCount = validSeasons[0].episode_count || 1;
-                        setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
-                        setSelectedEpisode(1);
-                    } else {
-                        setEpisodesList([]);
-                    }
+                const normalized: Movie = {
+                    ...details,
+                    title: details.name,
+                    release_date: details.first_air_date || "",
+                    media_type: "tv",
+                };
+                setSelectedMovie(normalized);
+                setSelectedShowDetails(details);
+                setHeroTrailerUrl(extractTrailerUrl(details.videos));
+                const validSeasons = (details.seasons || []).filter((s: any) => s.season_number > 0);
+                if (validSeasons.length > 0) {
+                    const initialSeason = validSeasons[0].season_number;
+                    setSelectedSeason(initialSeason);
+                    const epCount = validSeasons[0].episode_count || 1;
+                    setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
+                    setSelectedEpisode(1);
+                } else {
+                    setEpisodesList([]);
                 }
             } else {
-                const res = await fetch(`/api/movie/${tmdbId}`);
-                const data = await res.json();
-                if (data.tmdb) {
-                    setSelectedMovie({ ...data.tmdb, media_type: "movie" });
-                    setSelectedShowDetails(null);
-                    setHeroTrailerUrl(extractTrailerUrl(data.tmdb.videos));
-                }
+                setSelectedMovie({ ...details, media_type: "movie" });
+                setSelectedShowDetails(null);
+                setHeroTrailerUrl(extractTrailerUrl(details.videos));
             }
         } catch (err) {
             console.error(`[HomeClient] Failed to load movie details: ${err}`);
@@ -254,9 +263,8 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
             setSelectedSeason(targetSeason);
             setSelectedEpisode(targetEpisode);
             if (!selectedShowDetails || selectedShowDetails.id !== movie.id) {
-                const res = await fetch(`/api/tv/${movie.id}`);
-                const data = await res.json();
-                const tmdbData = data.tmdb || data;
+                const tmdbData = await getDetails(movie.id, "tv");
+                if (!tmdbData) return;
                 showName = tmdbData.name || tmdbData.title;
                 setSelectedShowDetails(tmdbData);
 
@@ -452,7 +460,13 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                 onCardClick={handleCardClick}
             />
 
-            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
+            <SettingsOverlay
+                isOpen={showSettings}
+                onClose={() => setShowSettings(false)}
+                onSourcesChange={onSourcesChange}
+                initialEnabled={effectiveEnabledSources}
+                initialDefaultSource={currentDefaultSource}
+            />
 
         </div>
     );

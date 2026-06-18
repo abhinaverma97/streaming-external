@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Film, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Film, Loader2, Play, Sparkles } from "lucide-react";
 import GlassSurface from "./GlassSurface";
 import { CustomSelect } from "./CustomSelect";
 import { StarRating } from "./StarRating";
@@ -39,40 +39,74 @@ function SimilarCard({ item, isSelected = false }: { item: any; isSelected?: boo
     const hasImage = item.backdrop_path || item.poster_path;
     const title = item.title || item.name || "Untitled";
     const year = (item.release_date || item.first_air_date || "").split("-")[0];
+    const isTv = item.media_type === "tv";
+    const sim = typeof item.similarity === "number" ? Math.max(0, Math.min(100, item.similarity)) : null;
 
     return (
         <div
-            className={`flex gap-3 items-start p-3 rounded-xl border transition-all ${
+            className={`group relative flex flex-col gap-2 p-1.5 rounded-xl border transition-all duration-200 ${
                 isSelected
-                    ? "bg-white/[0.08] border-white/15"
-                    : "hover:bg-white/[0.03] border-transparent"
+                    ? "bg-white/[0.06] border-white/15"
+                    : "border-transparent hover:bg-white/[0.025] hover:border-white/[0.06]"
             }`}
         >
-            <div className="relative w-[96px] aspect-[16/9] rounded-lg overflow-hidden flex-shrink-0 bg-slate-950 border border-slate-800/40 shadow-sm">
+            {/* Thumbnail (full-width 16:9) */}
+            <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden bg-slate-950 border border-white/[0.06] shadow-sm">
                 {hasImage ? (
                     <Image
                         src={getPosterUrl(item.backdrop_path || item.poster_path)}
                         alt={title}
                         fill
                         onLoad={() => setLoaded(true)}
-                        className={`object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-                        sizes="96px"
+                        className={`object-cover transition-all duration-500 ${
+                            loaded ? "opacity-100" : "opacity-0"
+                        } ${isSelected ? "scale-[1.02]" : "group-hover:scale-[1.03]"}`}
+                        sizes="(min-width: 1280px) 360px, 320px"
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-slate-600">
-                        <Film className="w-4 h-4" />
+                        <Film className="w-5 h-5" />
                     </div>
                 )}
-            </div>
-            <div className="min-w-0 flex-1 flex flex-col justify-center">
-                <div className="text-sm font-medium truncate text-white/95">{title}</div>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {year && <span className="text-[10px] text-slate-400">{year}</span>}
-                    {year && <span className="w-1 h-1 rounded-full bg-slate-700" />}
-                    <span className="text-[10px] text-white/60 font-semibold">{item.similarity}%</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-700" />
-                    <span className="text-[10px] text-slate-500 uppercase">{item.media_type === "tv" ? "TV" : "Film"}</span>
+
+                {/* Play hint overlay */}
+                <div
+                    className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-200 ${
+                        isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    }`}
+                >
+                    <div className="w-9 h-9 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+                        <Play className="w-4 h-4 fill-black text-black ml-[1px]" />
+                    </div>
                 </div>
+
+                {/* Similarity badge */}
+                {sim !== null && (
+                    <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold tabular-nums text-white shadow-sm">
+                        {sim}%
+                    </div>
+                )}
+
+                {/* Media type tag */}
+                <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[8px] font-semibold uppercase tracking-[0.15em] text-white/85">
+                    {isTv ? "Series" : "Film"}
+                </div>
+            </div>
+
+            {/* Meta */}
+            <div className="min-w-0 px-1 pb-1">
+                <div
+                    className={`text-[13px] font-medium leading-snug line-clamp-2 transition-colors ${
+                        isSelected ? "text-white" : "text-white/85 group-hover:text-white"
+                    }`}
+                >
+                    {title}
+                </div>
+                {year && (
+                    <div className="text-[10px] text-white/40 mt-0.5 tracking-wide font-mono">
+                        {year}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -320,29 +354,49 @@ function PlayerSidebarInner({
                 </div>
             ) : (
                 <div className="flex flex-col gap-3 min-h-0">
-                    <span className="text-[9px] uppercase tracking-[0.25em] text-white/40">Similar Titles</span>
+                    <div className="flex items-center justify-between">
+                        <span className="text-[9px] uppercase tracking-[0.25em] text-white/40 flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3" /> Similar Titles
+                        </span>
+                        {similarItems.length > 0 && !similarLoading && !similarError && (
+                            <span className="text-[10px] text-white/30 font-mono tabular-nums">
+                                {Math.min(similarDisplayCount, similarItems.length)} / {similarItems.length}
+                            </span>
+                        )}
+                    </div>
 
                     {similarLoading ? (
-                        <div className="flex items-center justify-center py-12">
+                        <div className="flex flex-col items-center justify-center py-14 gap-2.5">
                             <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
+                            <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">
+                                Finding similar
+                            </span>
                         </div>
                     ) : similarError ? (
-                        <div className="flex items-center justify-center py-8">
-                            <span className="text-[10px] text-rose-400/80 text-center leading-relaxed max-w-xs">
+                        <div className="flex flex-col items-center justify-center py-10 gap-2">
+                            <div className="w-9 h-9 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                                <Film className="w-4 h-4 text-rose-400/70" />
+                            </div>
+                            <span className="text-[10px] text-rose-400/80 text-center leading-relaxed max-w-[18ch]">
                                 {similarError}
                             </span>
                         </div>
                     ) : similarItems.length === 0 ? (
-                        <div className="flex items-center justify-center py-8">
-                            <span className="text-[10px] text-white/30 text-center">No similar titles found</span>
+                        <div className="flex flex-col items-center justify-center py-10 gap-2">
+                            <div className="w-9 h-9 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+                                <Sparkles className="w-4 h-4 text-white/25" />
+                            </div>
+                            <span className="text-[10px] text-white/30 text-center tracking-wide">
+                                No similar titles found
+                            </span>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-2 overflow-y-auto no-scrollbar">
+                        <div className="flex flex-col gap-1.5 overflow-y-auto no-scrollbar -mx-1 px-1">
                             {similarItems.slice(0, similarDisplayCount).map((item, i) => (
                                 <button
                                     key={item.id || i}
                                     onClick={() => onSelectSimilar(i)}
-                                    className="w-full text-left transition-all cursor-pointer"
+                                    className="w-full text-left transition-all cursor-pointer rounded-xl focus:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
                                 >
                                     <SimilarCard item={item} isSelected={i === selectedSimilarIdx} />
                                 </button>
@@ -351,9 +405,12 @@ function PlayerSidebarInner({
                             {remainingCount > 0 && (
                                 <button
                                     onClick={onLoadMore}
-                                    className="w-full py-2.5 mt-1 text-[10px] font-medium tracking-wider uppercase text-white/40 hover:text-white/70 border border-white/[0.05] hover:border-white/10 rounded-lg transition-all cursor-pointer"
+                                    className="w-full py-3 mt-1 text-[10px] font-medium tracking-[0.2em] uppercase text-white/45 hover:text-white/85 bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.05] hover:border-white/15 rounded-xl transition-all active:scale-[0.99] cursor-pointer"
                                 >
-                                    Load More ({remainingCount} remaining)
+                                    Load {Math.min(10, remainingCount)} more
+                                    <span className="text-white/30 ml-1.5 normal-case tracking-normal font-mono">
+                                        ({remainingCount} left)
+                                    </span>
                                 </button>
                             )}
                         </div>

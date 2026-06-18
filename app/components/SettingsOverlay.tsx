@@ -9,9 +9,14 @@ interface SettingsOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onSourcesChange: (enabled: string[], defaultSource: string) => void;
+  // Optional: pre-seed from the parent's client state so we don't re-fetch
+  // /api/source-prefs every time the overlay opens. The parent already
+  // holds this state via useSourcePrefs(); pass it through here.
+  initialEnabled?: string[];
+  initialDefaultSource?: string;
 }
 
-export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: SettingsOverlayProps) {
+export default function SettingsOverlay({ isOpen, onClose, onSourcesChange, initialEnabled, initialDefaultSource }: SettingsOverlayProps) {
   const [enabled, setEnabled] = useState<string[]>([]);
   const [defaultSource, setDefaultSource] = useState("videasy");
   const [selectOpen, setSelectOpen] = useState(false);
@@ -54,24 +59,39 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange }: Se
 
   useEffect(() => {
     if (isOpen) {
-      fetch("/api/source-prefs")
-        .then(r => r.json())
-        .then(data => {
-          if (data.enabled && Array.isArray(data.enabled) && data.enabled.length > 0) {
-            setEnabled(data.enabled);
-          } else {
+      // Seed source prefs from parent state if provided; only fall back to
+      // the network when the parent didn't pass anything in (legacy callers).
+      if (initialEnabled && initialEnabled.length > 0) {
+        setEnabled(initialEnabled);
+        setDefaultSource(
+          initialDefaultSource && SOURCES.some((s) => s.id === initialDefaultSource)
+            ? initialDefaultSource
+            : (initialEnabled.includes("videasy") ? "videasy" : initialEnabled[0])
+        );
+      } else if (initialEnabled !== undefined) {
+        // Parent explicitly passed [] meaning "enable all".
+        setEnabled(SOURCES.map((s) => s.id));
+        setDefaultSource(initialDefaultSource || "videasy");
+      } else {
+        fetch("/api/source-prefs")
+          .then(r => r.json())
+          .then(data => {
+            if (data.enabled && Array.isArray(data.enabled) && data.enabled.length > 0) {
+              setEnabled(data.enabled);
+            } else {
+              setEnabled(SOURCES.map((s) => s.id));
+            }
+            if (data.defaultSource && SOURCES.some((s) => s.id === data.defaultSource)) {
+              setDefaultSource(data.defaultSource);
+            } else {
+              setDefaultSource("videasy");
+            }
+          })
+          .catch(() => {
             setEnabled(SOURCES.map((s) => s.id));
-          }
-          if (data.defaultSource && SOURCES.some((s) => s.id === data.defaultSource)) {
-            setDefaultSource(data.defaultSource);
-          } else {
             setDefaultSource("videasy");
-          }
-        })
-        .catch(() => {
-          setEnabled(SOURCES.map((s) => s.id));
-          setDefaultSource("videasy");
-        });
+          });
+      }
 
       fetch("/api/ai-settings")
         .then(r => r.json())

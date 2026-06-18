@@ -4,6 +4,28 @@ import { useState, useCallback, useEffect, useRef } from "react";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || "1070730380f5fee0d87cf0382670b255";
 
+// Module-scoped LRU cache of search queries -> results.
+// Persists across mounts within a session; cleared on full reload.
+const SEARCH_CACHE_MAX = 50;
+const searchCache = new Map<string, any[]>();
+
+function searchCacheGet(q: string): any[] | undefined {
+    const v = searchCache.get(q);
+    if (v) {
+        searchCache.delete(q);
+        searchCache.set(q, v);
+    }
+    return v;
+}
+
+function searchCacheSet(q: string, results: any[]) {
+    if (searchCache.size >= SEARCH_CACHE_MAX) {
+        const oldest = searchCache.keys().next().value;
+        if (oldest) searchCache.delete(oldest);
+    }
+    searchCache.set(q, results);
+}
+
 export function useSearch() {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -13,14 +35,25 @@ export function useSearch() {
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const doSearch = useCallback(async (query: string) => {
-        if (!query.trim()) {
+        const trimmed = query.trim();
+        if (!trimmed) {
             setSearchResults([]);
             setIsSearching(false);
             setSearchLoading(false);
             return;
         }
-        setSearchLoading(true);
         setIsSearching(true);
+
+        // Serve cached results immediately if we've seen this exact query.
+        const cacheKey = trimmed.toLowerCase();
+        const cached = searchCacheGet(cacheKey);
+        if (cached) {
+            setSearchResults(cached);
+            setSearchLoading(false);
+            return;
+        }
+
+        setSearchLoading(true);
 
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -49,7 +82,8 @@ export function useSearch() {
                     ...movie,
                     media_type: movie.media_type
                 }));
-                
+
+            searchCacheSet(cacheKey, tagged);
             setSearchResults(tagged);
         } catch (err: any) {
             if (err.name === "AbortError") return;

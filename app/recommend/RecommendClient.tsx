@@ -11,6 +11,7 @@ import { MobileBottomNav } from "../components/MobileBottomNav";
 import { buildEmbedUrl } from "../lib/sources-config";
 import { getBackdropUrl } from "../lib/tmdb-utils";
 import { getWatchlistId } from "../lib/watchlist";
+import { getDetails } from "../lib/details-cache";
 import { useSourcePrefs } from "../hooks/useSourcePrefs";
 import { useUserLists } from "../hooks/useUserLists";
 import { usePlayerProgress, flushGlobalProgress } from "../hooks/usePlayerProgress";
@@ -80,7 +81,8 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         refreshWatchlist,
     } = useUserLists({ watchlist: wl, ratings: rt });
 
-    usePlayerProgress(activeStreamRef, activeSourceRef, lastProgressRef, refreshContinueWatching);
+    // See HomeClient: we intentionally don't refresh CW on every progress tick.
+    usePlayerProgress(activeStreamRef, activeSourceRef, lastProgressRef);
 
     const [recommendations, setRecommendations] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -97,15 +99,54 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         }
     }, []);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => { refreshContinueWatching(); refreshWatchlist(); }, []);
+    // Re-sync user lists when the tab becomes visible (bfcache / tab return).
+    // SSR already delivered fresh data on the initial render.
+    useEffect(() => {
+        const onVis = () => {
+            if (document.visibilityState === "visible") {
+                refreshContinueWatching();
+                refreshWatchlist();
+            }
+        };
+        document.addEventListener("visibilitychange", onVis);
+        return () => document.removeEventListener("visibilitychange", onVis);
+    }, [refreshContinueWatching, refreshWatchlist]);
 
     useEffect(() => { fetchRecs(); }, [fetchRecs]);
 
+    // Poll while generating: back off from 10s → 30s, stop when tab is
+    // hidden, and resume when it becomes visible again.
     useEffect(() => {
         if (!recommendations?.isGenerating) return;
-        const id = setInterval(fetchRecs, 10000);
-        return () => clearInterval(id);
+        let cancelled = false;
+        let delay = 10000;
+        const maxDelay = 30000;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+
+        const tick = () => {
+            if (cancelled) return;
+            if (document.visibilityState === "hidden") {
+                timer = setTimeout(tick, 5000);
+                return;
+            }
+            fetchRecs();
+            delay = Math.min(delay + 5000, maxDelay);
+            timer = setTimeout(tick, delay);
+        };
+        timer = setTimeout(tick, delay);
+
+        const onVis = () => {
+            if (document.visibilityState === "visible" && recommendations?.isGenerating) {
+                fetchRecs();
+            }
+        };
+        document.addEventListener("visibilitychange", onVis);
+
+        return () => {
+            cancelled = true;
+            if (timer) clearTimeout(timer);
+            document.removeEventListener("visibilitychange", onVis);
+        };
     }, [recommendations?.isGenerating, fetchRecs]);
 
     const isRefreshingOrGenerating = refreshing || !!recommendations?.isGenerating;
@@ -170,14 +211,16 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         const resolvedTitle = isTv ? `${title} S01E01` : title;
         if (isTv) {
             try {
-                const res = await fetch(`/api/tv/${item.id}`);
-                const data = await res.json();
-                const tmdbData = data.tmdb || data;
-                setSelectedShowDetails(tmdbData);
-                const seasonObj = tmdbData.seasons?.find((s: any) => s.season_number === 1);
-                const epCount = seasonObj?.episode_count || 1;
-                setSelectedSeason(1); setSelectedEpisode(1);
-                setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
+                const tmdbData = await getDetails(item.id, "tv");
+                if (tmdbData) {
+                    setSelectedShowDetails(tmdbData);
+                    const seasonObj = tmdbData.seasons?.find((s: any) => s.season_number === 1);
+                    const epCount = seasonObj?.episode_count || 1;
+                    setSelectedSeason(1); setSelectedEpisode(1);
+                    setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
+                } else {
+                    setSelectedShowDetails(null); setEpisodesList([]);
+                }
             } catch (err) { console.error(`[RecommendClient] Failed to load TV details for playback: ${err}`); setSelectedShowDetails(null); setEpisodesList([]); }
         } else {
             setSelectedShowDetails(null); setEpisodesList([]); setSelectedSeason(1); setSelectedEpisode(1);
@@ -310,7 +353,8 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10">
                         {filteredItems.map((item: any) => {
-                            const key = item.id || item.title;
+                            // Combine media type + id so movie/TV with the same TMDB id don't collide.
+                            const key = `${item._type || "x"}-${item.id || item.title}`;
                             const inWatchlist = isInWatchlist(item);
                             const backdropPath = item.backdrop_path || item.poster_path;
                             const title = item.title || item.name || "Untitled";
@@ -374,7 +418,8 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                 onClose={closePlayer} onSourceChange={handleSourceChange}
                 onRate={handleRate} onChangeEpisode={changeEpisode}
                 onToggleWatchlist={handleToggleWatchlist}
-                onPlaySimilar={(movie: any) => playRecommendation(movie)} />
+                onPlaySimilar={(movie: any) => playRecommendation(movie)}
+                initialTab="details" />
 
             <MobileBottomNav
                 activeStream={activeStream}
@@ -394,7 +439,13 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                 }}
             />
 
-            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={onSourcesChange} />
+            <SettingsOverlay
+                isOpen={showSettings}
+                onClose={() => setShowSettings(false)}
+                onSourcesChange={onSourcesChange}
+                initialEnabled={effectiveEnabledSources}
+                initialDefaultSource={effectiveSource}
+            />
         </main>
     );
 }

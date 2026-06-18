@@ -5,8 +5,10 @@ import Image from "next/image";
 import { X, AlertCircle, Play, Plus, Check, Loader2, Volume2, VolumeX } from "lucide-react";
 import ScrambledText from "./ScrambledText";
 import { PlayerSidebar } from "./PlayerSidebar";
+import { MobilePlayerSheet } from "./MobilePlayerSheet";
 import { getBackdropUrl } from "../lib/tmdb-utils";
 import { getWatchlistId } from "../lib/watchlist";
+import { getDetails } from "../lib/details-cache";
 
 interface PlayerModalProps {
     activeStream: {
@@ -30,6 +32,12 @@ interface PlayerModalProps {
     onChangeEpisode: (season: number, episode: number) => void;
     onToggleWatchlist: (item: any) => void;
     onPlaySimilar: (movie: any) => void;
+    /**
+     * The tab the modal should open on for every new active stream.
+     * - "controls" (default) — used by the home page; player visible immediately.
+     * - "details" — used by the recommend page; metadata-first landing.
+     */
+    initialTab?: "controls" | "details" | "similar";
 }
 
 export function PlayerModal({
@@ -49,9 +57,25 @@ export function PlayerModal({
     onChangeEpisode,
     onToggleWatchlist,
     onPlaySimilar,
+    initialTab = "controls",
 }: PlayerModalProps) {
-    const [activeTab, setActiveTab] = useState<"controls" | "details" | "similar">("controls");
+    const [activeTab, setActiveTab] = useState<"controls" | "details" | "similar">(initialTab);
     const [isExitingFullscreen, setIsExitingFullscreen] = useState(false);
+
+    // Reset to the configured initial tab whenever a new title is opened in
+    // the player. Without this, switching titles would keep whatever tab was
+    // last active (e.g. "details" lingering after closing + reopening on a
+    // different movie).
+    const lastStreamIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        const id = activeStream?.tmdbId || null;
+        if (id && id !== lastStreamIdRef.current) {
+            lastStreamIdRef.current = id;
+            setActiveTab(initialTab);
+        } else if (!id) {
+            lastStreamIdRef.current = null;
+        }
+    }, [activeStream?.tmdbId, initialTab]);
 
     const [similarItems, setSimilarItems] = useState<any[]>([]);
     const [similarLoading, setSimilarLoading] = useState(false);
@@ -130,22 +154,21 @@ export function PlayerModal({
 
         const mt = item.media_type || "movie";
 
-        fetch(`/api/${mt}/${item.id}`)
-            .then((r) => r.json())
-            .then((data) => {
+        getDetails(item.id, mt)
+            .then((details) => {
                 const currentItem = similarItems[selectedSimilarIdx];
                 if (currentItem?.id !== item.id) return;
 
-                if (data.tmdb) {
-                    const videos = data.tmdb.videos?.results;
+                if (details) {
+                    const videos = details.videos?.results;
                     let trailerUrl: string | null = null;
                     if (videos) {
                         const trailer = videos.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || videos.find((v: any) => v.site === "YouTube");
                         trailerUrl = trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&enablejsapi=1` : null;
                     }
-                    setSelectedSimilarDetails(data.tmdb);
+                    setSelectedSimilarDetails(details);
                     setSimilarTrailerUrl(trailerUrl);
-                    similarDetailCache.current.set(item.id, { details: data.tmdb, trailerUrl });
+                    similarDetailCache.current.set(item.id, { details, trailerUrl });
                 } else {
                     setSelectedSimilarDetails(null);
                     setSimilarTrailerUrl(null);
@@ -169,12 +192,11 @@ export function PlayerModal({
         if (fetchedDetailsRef.current === cacheKey) return;
 
         setDetailsLoading(true);
-        fetch(`/api/${mt}/${id}`)
-            .then((r) => r.json())
-            .then((data) => {
-                if (data.tmdb) {
-                    setDetailsFullData(data.tmdb);
-                    const videos = data.tmdb.videos?.results;
+        getDetails(id, mt as "movie" | "tv")
+            .then((details) => {
+                if (details) {
+                    setDetailsFullData(details);
+                    const videos = details.videos?.results;
                     if (videos) {
                         const trailer = videos.find((v: any) => v.site === "YouTube" && v.type === "Trailer") || videos.find((v: any) => v.site === "YouTube");
                         setDetailsTrailerKey(trailer ? trailer.key : null);
@@ -225,8 +247,10 @@ export function PlayerModal({
         };
 
         onPlaySimilar(movie);
-        setActiveTab("controls");
-    }, [similarItems, selectedSimilarIdx, selectedSimilarDetails, onPlaySimilar]);
+        // Land on the same tab the parent prefers for new titles
+        // (home -> controls / start watching; recommend -> details).
+        setActiveTab(initialTab);
+    }, [similarItems, selectedSimilarIdx, selectedSimilarDetails, onPlaySimilar, initialTab]);
 
     const handleToggleWatchlistForSimilar = useCallback(() => {
         const item = similarItems[selectedSimilarIdx];
@@ -273,229 +297,347 @@ export function PlayerModal({
         ? similarTitle
         : activeStream?.title || "";
 
+    if (!activeStream) return null;
+
+    const playerAreaProps = {
+        activeTab,
+        activeStream,
+        playerError,
+        detailsLoading,
+        detailsEmbedUrl,
+        currentBackdrop,
+        currentTitle,
+        currentYear,
+        similarDetailLoading,
+        similarTrailerUrl,
+        similarBackdrop,
+        similarTitle,
+        similarYear,
+        similarPct,
+        similarOverview,
+        isSelectedInWatchlist,
+        trailerIframeRef,
+        trailerMuted,
+        handleToggleMute,
+        handleToggleWatchlistForSimilar,
+        handlePlaySimilar,
+        onClose,
+    };
+
     return (
         <>
-            {activeStream && (
-                <div className="modal-panel fixed inset-0 z-50 bg-black/40 backdrop-blur-2xl md:bg-black/60 flex flex-col items-center justify-start md:justify-center p-4 pt-10 pb-20 md:p-6 md:backdrop-blur-3xl overflow-hidden md:overflow-y-auto w-full h-full">
-                    <div className="w-full max-w-7xl flex items-center justify-between mb-4 flex-shrink-0">
-                        <div>
-                            <h2 className="text-base md:text-lg font-light tracking-wide text-white/95 flex items-center gap-2">
-                                <ScrambledText text={displayTitle} />
-                            </h2>
-                        </div>
-                        <div>
+            {/* ── DESKTOP LAYOUT (lg+) ─────────────────────────────── */}
+            <div className="modal-panel hidden lg:flex fixed inset-0 z-50 bg-black/60 backdrop-blur-3xl flex-col items-center justify-center p-6 overflow-y-auto w-full h-full">
+                <div className="w-full max-w-7xl flex items-center justify-between mb-4 flex-shrink-0">
+                    <h2 className="text-base md:text-lg font-light tracking-wide text-white/95 flex items-center gap-2">
+                        <ScrambledText text={displayTitle} />
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 duration-200 cursor-pointer"
+                    >
+                        <X className="w-[18px] h-[18px]" />
+                    </button>
+                </div>
+
+                <div className="w-full max-w-7xl flex flex-row gap-6 items-stretch justify-center flex-none h-[62vh] xl:h-[66vh]">
+                    <div className={`flex-grow w-[72%] relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl ${isExitingFullscreen ? 'animate-exit-fullscreen' : ''}`}>
+                        <PlayerArea {...playerAreaProps} showSimilarOverlay />
+                    </div>
+
+                    <PlayerSidebar
+                        selectedSource={effectiveSource}
+                        effectiveEnabledSources={effectiveEnabledSources}
+                        selectedShowDetails={selectedShowDetails}
+                        selectedSeason={selectedSeason}
+                        selectedEpisode={selectedEpisode}
+                        episodesList={episodesList}
+                        ratings={ratings}
+                        activeStreamDetails={activeStream?.details}
+                        onSourceChange={onSourceChange}
+                        onRate={onRate}
+                        onChangeEpisode={onChangeEpisode}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        detailsFullData={detailsFullData}
+                        detailsLoading={detailsLoading}
+                        similarItems={similarItems}
+                        similarLoading={similarLoading}
+                        similarError={similarError}
+                        similarDisplayCount={similarDisplayCount}
+                        onLoadMore={() => setSimilarDisplayCount((p) => Math.min(p + 10, similarItems.length))}
+                        selectedSimilarIdx={selectedSimilarIdx}
+                        onSelectSimilar={setSelectedSimilarIdx}
+                    />
+                </div>
+            </div>
+
+            {/* ── MOBILE LAYOUT (<lg) ──────────────────────────────── */}
+            <div className="modal-panel lg:hidden fixed inset-0 z-50 bg-black flex flex-col overflow-hidden w-full h-full">
+                {/* Sticky player at top */}
+                <div className="relative flex-shrink-0 w-full bg-black">
+                    <div className={`relative w-full aspect-video bg-black ${isExitingFullscreen ? 'animate-exit-fullscreen' : ''}`}>
+                        <PlayerArea {...playerAreaProps} showSimilarOverlay={false} isMobile />
+                        <button
+                            onClick={onClose}
+                            className="absolute top-3 left-3 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-90 transition-all cursor-pointer"
+                            aria-label="Close player"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Scrollable mobile sheet */}
+                <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar bg-black">
+                    <MobilePlayerSheet
+                        activeStreamDetails={activeStream?.details}
+                        activeStreamTitle={displayTitle}
+                        currentYear={currentYear}
+                        selectedSource={effectiveSource}
+                        effectiveEnabledSources={effectiveEnabledSources}
+                        onSourceChange={onSourceChange}
+                        ratings={ratings}
+                        onRate={onRate}
+                        selectedShowDetails={selectedShowDetails}
+                        selectedSeason={selectedSeason}
+                        selectedEpisode={selectedEpisode}
+                        episodesList={episodesList}
+                        onChangeEpisode={onChangeEpisode}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        detailsFullData={detailsFullData}
+                        detailsLoading={detailsLoading}
+                        similarItems={similarItems}
+                        similarLoading={similarLoading}
+                        similarError={similarError}
+                        similarDisplayCount={similarDisplayCount}
+                        onLoadMore={() => setSimilarDisplayCount((p) => Math.min(p + 10, similarItems.length))}
+                        selectedSimilarIdx={selectedSimilarIdx}
+                        onSelectSimilar={setSelectedSimilarIdx}
+                        selectedSimilarDetails={selectedSimilarDetails}
+                        isSelectedSimilarInWatchlist={isSelectedInWatchlist}
+                        onToggleWatchlistForSimilar={handleToggleWatchlistForSimilar}
+                        onPlaySimilar={handlePlaySimilar}
+                    />
+                </div>
+            </div>
+        </>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Player area: iframe / trailer / backdrop with corrected gradient.
+// Used by both desktop and mobile layouts.
+// ─────────────────────────────────────────────────────────────────────
+interface PlayerAreaProps {
+    activeTab: "controls" | "details" | "similar";
+    activeStream: { embedUrl: string; details: any; title: string } | null;
+    playerError: string | null;
+    detailsLoading: boolean;
+    detailsEmbedUrl: string | null;
+    currentBackdrop?: string;
+    currentTitle: string;
+    currentYear: string;
+    similarDetailLoading: boolean;
+    similarTrailerUrl: string | null;
+    similarBackdrop?: string;
+    similarTitle: string;
+    similarYear: string;
+    similarPct?: number;
+    similarOverview: string;
+    isSelectedInWatchlist: boolean;
+    trailerIframeRef: React.RefObject<HTMLIFrameElement | null>;
+    trailerMuted: boolean;
+    handleToggleMute: () => void;
+    handleToggleWatchlistForSimilar: () => void;
+    handlePlaySimilar: () => void;
+    onClose: () => void;
+    showSimilarOverlay: boolean;
+    isMobile?: boolean;
+}
+
+function PlayerArea(props: PlayerAreaProps) {
+    const {
+        activeTab, activeStream, playerError,
+        detailsLoading, detailsEmbedUrl, currentBackdrop, currentTitle, currentYear,
+        similarDetailLoading, similarTrailerUrl, similarBackdrop, similarTitle, similarYear, similarPct, similarOverview,
+        isSelectedInWatchlist,
+        trailerIframeRef, trailerMuted, handleToggleMute,
+        handleToggleWatchlistForSimilar, handlePlaySimilar,
+        onClose, showSimilarOverlay, isMobile,
+    } = props;
+
+    if (activeTab === "controls") {
+        return (
+            <>
+                {activeStream?.embedUrl && (
+                    <iframe
+                        src={activeStream.embedUrl}
+                        className="w-full h-full"
+                        allow="autoplay; encrypted-media; fullscreen *"
+                        allowFullScreen
+                    />
+                )}
+                {playerError && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center gap-4 bg-black/80">
+                        <div className="flex flex-col items-center gap-3 text-rose-500">
+                            <AlertCircle className="w-10 h-10 stroke-[1.5]" />
+                            <div className="text-white/90 font-light tracking-wider text-sm">Playback Error</div>
+                            <div className="text-xs text-white/50 max-w-md font-light">{playerError}</div>
                             <button
                                 onClick={onClose}
-                                className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.02] hover:bg-white/[0.08] hover:border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all active:scale-95 duration-200 cursor-pointer"
+                                className="px-5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white/95 rounded-full mt-2 text-xs font-medium active:scale-95 transition-all cursor-pointer"
                             >
-                                <X className="w-[18px] h-[18px]" />
+                                Go Back
                             </button>
                         </div>
                     </div>
+                )}
+            </>
+        );
+    }
 
-                    <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch justify-center flex-1 min-h-0 lg:flex-none lg:h-auto lg:h-[62vh] xl:h-[66vh]">
-                        <div className={`flex-none md:flex-grow w-full lg:w-[72%] aspect-video lg:aspect-auto relative rounded-2xl overflow-hidden border border-white/[0.06] bg-black shadow-2xl ${isExitingFullscreen ? 'animate-exit-fullscreen' : ''}`}>
-                            {activeTab === "controls" ? (
-                                <>
-                                    {activeStream?.embedUrl && (
-                                        <iframe
-                                            src={activeStream.embedUrl}
-                                            className="w-full h-full"
-                                            allow="autoplay; encrypted-media; fullscreen *"
-                                            allowFullScreen
-                                        />
-                                    )}
-                                    {playerError && (
-                                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center gap-4 bg-black/80">
-                                            <div className="flex flex-col items-center gap-3 text-rose-500">
-                                                <AlertCircle className="w-10 h-10 stroke-[1.5]" />
-                                                <div className="text-white/90 font-light tracking-wider text-sm">Playback Error</div>
-                                                <div className="text-xs text-white/50 max-w-md font-light">{playerError}</div>
-                                                <button
-                                                    onClick={onClose}
-                                                    className="px-5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white/95 rounded-full mt-2 text-xs font-medium active:scale-95 transition-all cursor-pointer"
-                                                >
-                                                    Go Back
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            ) : activeTab === "details" ? (
-                                <div className="w-full h-full relative">
-                                    {detailsLoading ? (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
-                                        </div>
-                                    ) : detailsEmbedUrl ? (
-                                        <>
-                                            <div className="w-full h-full overflow-hidden bg-black">
-                                                <iframe
-                                                    ref={trailerIframeRef}
-                                                    src={detailsEmbedUrl}
-                                                    className="w-full h-full pointer-events-none"
-                                                    style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
-                                                    allow="autoplay; encrypted-media; fullscreen *"
-                                                    allowFullScreen
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={handleToggleMute}
-                                                className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full border border-white/20 bg-black/50 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
-                                            >
-                                                {trailerMuted ? <VolumeX className="w-[18px] h-[18px]" /> : <Volume2 className="w-[18px] h-[18px]" />}
-                                            </button>
-                                        </>
-                                    ) : currentBackdrop ? (
-                                        <Image
-                                            src={getBackdropUrl(currentBackdrop)}
-                                            alt={currentTitle}
-                                            fill
-                                            className="object-cover"
-                                            sizes="72vw"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-white/20 text-[10px] uppercase tracking-widest">
-                                            No image available
-                                        </div>
-                                    )}
-
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent h-1/3" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent" />
-
-                                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
-                                        <h3 className="text-base md:text-xl font-medium text-white">
-                                            {currentTitle}
-                                            {currentYear && <span className="text-white/50 font-light ml-2">({currentYear})</span>}
-                                        </h3>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="w-full h-full relative">
-                                    {similarDetailLoading ? (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
-                                        </div>
-                                    ) : similarTrailerUrl ? (
-                                        <>
-                                            <div className="w-full h-full overflow-hidden bg-black">
-                                                <iframe
-                                                    ref={trailerIframeRef}
-                                                    src={similarTrailerUrl}
-                                                    className="w-full h-full pointer-events-none"
-                                                    style={{ transform: "scale(1.3)", transformOrigin: "50% 50%" }}
-                                                    allow="autoplay; encrypted-media; fullscreen *"
-                                                    allowFullScreen
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={handleToggleMute}
-                                                className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full border border-white/20 bg-black/50 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
-                                            >
-                                                {trailerMuted ? <VolumeX className="w-[18px] h-[18px]" /> : <Volume2 className="w-[18px] h-[18px]" />}
-                                            </button>
-                                        </>
-                                    ) : similarBackdrop ? (
-                                        <Image
-                                            src={getBackdropUrl(similarBackdrop)}
-                                            alt={similarTitle}
-                                            fill
-                                            className="object-cover"
-                                            sizes="72vw"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-white/20 text-[10px] uppercase tracking-widest">
-                                            No image available
-                                        </div>
-                                    )}
-
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent h-1/3" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 to-transparent" />
-
-                                    <div className="hidden lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:p-8">
-                                        <h3 className="text-base md:text-xl font-medium text-white">
-                                            {similarTitle}
-                                            {similarYear && <span className="text-white/50 font-light ml-2">({similarYear})</span>}
-                                            {similarPct && <span className="ml-3 text-sm text-white/60 font-medium">{similarPct}% Match</span>}
-                                        </h3>
-                                        <p className="text-[10px] md:text-xs text-white/70 mt-2 line-clamp-2 max-w-xl leading-relaxed">
-                                            {similarOverview || "No overview available."}
-                                        </p>
-                                        <div className="flex gap-3 mt-4">
-                                            <button
-                                                onClick={handleToggleWatchlistForSimilar}
-                                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
-                                            >
-                                                {isSelectedInWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                                                {isSelectedInWatchlist ? "In Watchlist" : "Watchlist"}
-                                            </button>
-                                            <button
-                                                onClick={handlePlaySimilar}
-                                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
-                                            >
-                                                <Play className="w-3.5 h-3.5" /> Play
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {activeTab === "similar" && (
-                            <div className="block lg:hidden w-full rounded-2xl border border-white/[0.06] bg-black/60 shadow-2xl p-4">
-                                <h3 className="text-base font-medium text-white">
-                                    {similarTitle}
-                                    {similarYear && <span className="text-white/50 font-light ml-2">({similarYear})</span>}
-                                    {similarPct && <span className="ml-3 text-sm text-white/60 font-medium">{similarPct}% Match</span>}
-                                </h3>
-                                <p className="text-[10px] text-white/70 mt-2 line-clamp-3 leading-relaxed">
-                                    {similarOverview || "No overview available."}
-                                </p>
-                                <div className="flex gap-3 mt-4">
-                                    <button
-                                        onClick={handleToggleWatchlistForSimilar}
-                                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
-                                    >
-                                        {isSelectedInWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                                        {isSelectedInWatchlist ? "In Watchlist" : "Watchlist"}
-                                    </button>
-                                    <button
-                                        onClick={handlePlaySimilar}
-                                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
-                                    >
-                                        <Play className="w-3.5 h-3.5" /> Play
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        <PlayerSidebar
-                            selectedSource={effectiveSource}
-                            effectiveEnabledSources={effectiveEnabledSources}
-                            selectedShowDetails={selectedShowDetails}
-                            selectedSeason={selectedSeason}
-                            selectedEpisode={selectedEpisode}
-                            episodesList={episodesList}
-                            ratings={ratings}
-                            activeStreamDetails={activeStream?.details}
-                            onSourceChange={onSourceChange}
-                            onRate={onRate}
-                            onChangeEpisode={onChangeEpisode}
-                            activeTab={activeTab}
-                            onTabChange={setActiveTab}
-                            detailsFullData={detailsFullData}
-                            detailsLoading={detailsLoading}
-                            similarItems={similarItems}
-                            similarLoading={similarLoading}
-                            similarError={similarError}
-                            similarDisplayCount={similarDisplayCount}
-                            onLoadMore={() => setSimilarDisplayCount((p) => Math.min(p + 10, similarItems.length))}
-                            selectedSimilarIdx={selectedSimilarIdx}
-                            onSelectSimilar={setSelectedSimilarIdx}
+    if (activeTab === "details") {
+        return (
+            <div className="w-full h-full relative">
+                {detailsLoading ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
+                    </div>
+                ) : detailsEmbedUrl ? (
+                    <TrailerFrame
+                        innerRef={trailerIframeRef}
+                        src={detailsEmbedUrl}
+                        muted={trailerMuted}
+                        onToggleMute={handleToggleMute}
+                    />
+                ) : currentBackdrop ? (
+                    <>
+                        <Image
+                            src={getBackdropUrl(currentBackdrop)}
+                            alt={currentTitle}
+                            fill
+                            className="object-cover"
+                            sizes={isMobile ? "100vw" : "72vw"}
                         />
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                    </>
+                ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-white/20 text-[10px] uppercase tracking-widest">
+                        No image available
+                    </div>
+                )}
+
+                {!isMobile && !detailsEmbedUrl && (
+                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+                        <h3 className="text-base md:text-xl font-medium text-white">
+                            {currentTitle}
+                            {currentYear && <span className="text-white/50 font-light ml-2">({currentYear})</span>}
+                        </h3>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // similar
+    return (
+        <div className="w-full h-full relative">
+            {similarDetailLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
+                </div>
+            ) : similarTrailerUrl ? (
+                <TrailerFrame
+                    innerRef={trailerIframeRef}
+                    src={similarTrailerUrl}
+                    muted={trailerMuted}
+                    onToggleMute={handleToggleMute}
+                />
+            ) : similarBackdrop ? (
+                <>
+                    <Image
+                        src={getBackdropUrl(similarBackdrop)}
+                        alt={similarTitle}
+                        fill
+                        className="object-cover"
+                        sizes={isMobile ? "100vw" : "72vw"}
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                </>
+            ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-white/20 text-[10px] uppercase tracking-widest">
+                    No image available
+                </div>
+            )}
+
+            {showSimilarOverlay && !similarTrailerUrl && (
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+                    <h3 className="text-base md:text-xl font-medium text-white">
+                        {similarTitle}
+                        {similarYear && <span className="text-white/50 font-light ml-2">({similarYear})</span>}
+                        {similarPct && <span className="ml-3 text-sm text-white/60 font-medium">{similarPct}% Match</span>}
+                    </h3>
+                    <p className="text-[10px] md:text-xs text-white/70 mt-2 line-clamp-2 max-w-xl leading-relaxed">
+                        {similarOverview || "No overview available."}
+                    </p>
+                    <div className="flex gap-3 mt-4">
+                        <button
+                            onClick={handleToggleWatchlistForSimilar}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
+                        >
+                            {isSelectedInWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                            {isSelectedInWatchlist ? "In Watchlist" : "Watchlist"}
+                        </button>
+                        <button
+                            onClick={handlePlaySimilar}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
+                        >
+                            <Play className="w-3.5 h-3.5" /> Play
+                        </button>
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// TrailerFrame: hides YouTube top/bottom chrome by clipping a 160%
+// overscaled wrapper. Replaces the previous scale(1.3) + split top &
+// bottom gradients that produced a visible horizontal seam mid-image.
+// ─────────────────────────────────────────────────────────────────────
+function TrailerFrame({ src, muted, onToggleMute, innerRef }: {
+    src: string;
+    muted: boolean;
+    onToggleMute: () => void;
+    innerRef?: React.Ref<HTMLIFrameElement>;
+}) {
+    return (
+        <>
+            <div className="absolute inset-0 overflow-hidden bg-black">
+                <div
+                    className="absolute"
+                    style={{ top: "-30%", left: "-30%", width: "160%", height: "160%" }}
+                >
+                    <iframe
+                        ref={innerRef}
+                        src={src}
+                        className="w-full h-full pointer-events-none block"
+                        allow="autoplay; encrypted-media; fullscreen *"
+                        allowFullScreen
+                    />
+                </div>
+            </div>
+            {/* Single bottom-up gradient (no mid-image seam) */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/55 to-transparent" />
+            <button
+                onClick={onToggleMute}
+                className="absolute top-4 right-4 z-30 w-9 h-9 rounded-full border border-white/20 bg-black/50 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
+            >
+                {muted ? <VolumeX className="w-[18px] h-[18px]" /> : <Volume2 className="w-[18px] h-[18px]" />}
+            </button>
         </>
     );
 }

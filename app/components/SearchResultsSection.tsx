@@ -29,7 +29,7 @@ function SearchResultsSectionInner({ isSearching, searchLoading, searchQuery, se
                 <ScrollRow>
                     {searchResults.map((movie, index) => (
                         <MovieCard
-                            key={movie.id}
+                            key={`${movie.media_type || "movie"}-${movie.id}`}
                             item={movie}
                             onClick={() => onCardClick(movie)}
                             priority={index < 4}

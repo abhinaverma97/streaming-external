@@ -156,3 +156,22 @@ iframe::backdrop {
 .animate-exit-fullscreen {
   animation: exitFullscreenAnim 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ── Mobile Bottom Sheet ─────────────────────────── */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
