@@ -564,7 +564,7 @@ function PlayerArea(props: PlayerAreaProps) {
                 </div>
             )}
 
-            {showSimilarOverlay && !similarTrailerUrl && (
+            {showSimilarOverlay && (
                 <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
                     <h3 className="text-base md:text-xl font-medium text-white">
                         {similarTitle}
