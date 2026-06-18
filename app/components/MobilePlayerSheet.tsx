@@ -172,6 +172,11 @@ function MobilePlayerSheetInner({
     const selectedPct = selectedItem?.similarity;
     const selectedMediaType = selectedItem?.media_type || "movie";
 
+    const headerYear = activeTab === "similar" ? selectedYear : currentYear;
+    const headerVote = activeTab === "similar" ? selectedVote : tmdbVote;
+    const headerPct = activeTab === "similar" ? selectedPct : null;
+    const headerMediaType = activeTab === "similar" ? selectedMediaType : (isTv ? "tv" : "movie");
+
     return (
         <div className="lg:hidden w-full flex flex-col">
             {/* ── Title & Meta ─────────────────────────────────────── */}
@@ -180,21 +185,32 @@ function MobilePlayerSheetInner({
                     {activeStreamTitle}
                 </h1>
                 <div className="flex items-center gap-2 text-[11px] text-white/40 flex-wrap">
-                    {currentYear && <span>{currentYear}</span>}
-                    {currentYear && tmdbVote > 0 && <span className="w-0.5 h-0.5 rounded-full bg-white/20" />}
-                    {tmdbVote > 0 && (
+                    {headerYear && <span>{headerYear}</span>}
+                    {headerYear && ((headerVote > 0) || headerPct) && <span className="w-0.5 h-0.5 rounded-full bg-white/20" />}
+                    {headerVote > 0 && (
                         <span className="flex items-center gap-1 text-white/50">
                             <Star className="w-2.5 h-2.5 fill-white/50 text-white/50" />
-                            {tmdbVote.toFixed(1)}
+                            {headerVote.toFixed(1)}
                         </span>
                     )}
-                    {isTv && (
+                    {headerVote > 0 && headerPct && <span className="w-0.5 h-0.5 rounded-full bg-white/20" />}
+                    {headerPct && (
+                        <span className="text-white/50">{headerPct}% match</span>
+                    )}
+                    {activeTab === "similar" ? (
                         <>
                             <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
-                            <span className="font-mono">
-                                S{String(selectedSeason).padStart(2, "0")}E{String(selectedEpisode).padStart(2, "0")}
-                            </span>
+                            <span className="uppercase tracking-wide">{headerMediaType === "tv" ? "Series" : "Film"}</span>
                         </>
+                    ) : (
+                        isTv && (
+                            <>
+                                <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                                <span className="font-mono">
+                                    S{String(selectedSeason).padStart(2, "0")}E{String(selectedEpisode).padStart(2, "0")}
+                                </span>
+                            </>
+                        )
                     )}
                 </div>
             </div>
@@ -374,13 +390,6 @@ function MobilePlayerSheetInner({
                             {/* Selected item info — fills available space */}
                             {selectedItem && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
-                                    {/* Match Percentage */}
-                                    {selectedPct && (
-                                        <div className="text-[11px] font-medium text-[#4ade80]">
-                                            {selectedPct}% match
-                                        </div>
-                                    )}
-
                                     {/* Overview */}
                                     {selectedOverview ? (
                                         <p className="text-xs text-white/45 leading-relaxed line-clamp-2">
