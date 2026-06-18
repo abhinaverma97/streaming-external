@@ -374,32 +374,12 @@ function MobilePlayerSheetInner({
                             {/* Selected item info — fills available space */}
                             {selectedItem && (
                                 <div className="px-5 pb-4 flex flex-col gap-3">
-                                    {/* Title row */}
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-base font-semibold text-white leading-snug truncate">
-                                                {selectedTitle}
-                                            </h3>
-                                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-white/35">
-                                                {selectedYear && <span>{selectedYear}</span>}
-                                                {selectedYear && selectedVote > 0 && <span className="w-0.5 h-0.5 rounded-full bg-white/20" />}
-                                                {selectedVote > 0 && (
-                                                    <span className="flex items-center gap-1">
-                                                        <Star className="w-2.5 h-2.5 fill-white/35 text-white/35" />
-                                                        {selectedVote.toFixed(1)}
-                                                    </span>
-                                                )}
-                                                {selectedPct && (
-                                                    <>
-                                                        <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
-                                                        <span className="text-white/50">{selectedPct}% match</span>
-                                                    </>
-                                                )}
-                                                <span className="w-0.5 h-0.5 rounded-full bg-white/20" />
-                                                <span className="uppercase tracking-wide">{selectedMediaType === "tv" ? "Series" : "Film"}</span>
-                                            </div>
+                                    {/* Match Percentage */}
+                                    {selectedPct && (
+                                        <div className="text-[11px] font-medium text-[#4ade80]">
+                                            {selectedPct}% match
                                         </div>
-                                    </div>
+                                    )}
 
                                     {/* Overview */}
                                     {selectedOverview ? (

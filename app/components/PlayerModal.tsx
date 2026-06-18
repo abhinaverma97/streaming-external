@@ -762,14 +762,14 @@ function MobileModal({
                 onClick={onClose}
             />
 
-            {/* Bottom sheet — 85vh, slides up from bottom */}
+            {/* Bottom sheet — 75vh, slides up from bottom */}
             <div
                 ref={containerRef}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 className="mobile-sheet lg:hidden fixed inset-x-0 bottom-0 z-50 bg-black flex flex-col overflow-hidden w-full rounded-t-2xl border-t border-white/[0.06]"
-                style={{ height: "85vh" }}
+                style={{ height: "75vh" }}
             >
                 {/* Video area — flush with rounded top corners */}
                 <div className="relative flex-shrink-0 w-full overflow-hidden rounded-t-2xl">
