@@ -754,12 +754,20 @@ function MobileModal({
         deltaYRef.current = 0;
     };
 
+    const handleClose = () => {
+        if (containerRef.current) {
+            containerRef.current.style.transition = "transform 0.28s cubic-bezier(0.16,1,0.3,1)";
+            containerRef.current.style.transform = "translateY(100%)";
+        }
+        setTimeout(onClose, 250);
+    };
+
     return (
         <>
             {/* Dim backdrop */}
             <div
                 className="modal-backdrop lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-                onClick={onClose}
+                onClick={handleClose}
             />
 
             {/* Bottom sheet — 75vh, slides up from bottom */}
@@ -776,7 +784,7 @@ function MobileModal({
                     <div className={`relative w-full aspect-video bg-black ${isExitingFullscreen ? "animate-exit-fullscreen" : ""}`}>
                         <PlayerArea {...playerAreaProps} showSimilarOverlay={false} isMobile={true} />
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="absolute top-3 left-3 z-30 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 active:scale-90 transition-all cursor-pointer"
                             aria-label="Close player"
                         >

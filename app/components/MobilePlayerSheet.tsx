@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Film, Loader2, Plus, Check, Play, Star, Layers, Info, Sparkles } from "lucide-react";
 import { StarRating } from "./StarRating";
@@ -86,6 +86,15 @@ function MobilePlayerSheetInner({
     const [thoughts, setThoughts] = useState(
         () => ratings[activeStreamDetails?.id]?.thoughts || ""
     );
+
+    const similarScrollRef = useRef<HTMLDivElement>(null);
+    const scrollSimilar = (direction: 'left' | 'right') => {
+        if (similarScrollRef.current) {
+            const { clientWidth } = similarScrollRef.current;
+            const scrollAmount = direction === 'left' ? -clientWidth * 0.7 : clientWidth * 0.7;
+            similarScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+    };
 
     const isTv = !!selectedShowDetails;
     const currentRating = ratings[activeStreamDetails?.id]?.rating || 0;
@@ -420,24 +429,36 @@ function MobilePlayerSheetInner({
 
                             {/* Horizontal scroll strip - Mathematically locked symmetric layout */}
                             <div className="border-t border-white/[0.05] pt-2 pb-4 px-5">
-                                <div className="grid grid-flow-col auto-cols-[calc((100%-1rem)/2)] sm:auto-cols-[calc((100%-2rem)/3)] md:auto-cols-[calc((100%-3rem)/4)] lg:auto-cols-[calc((100%-4rem)/5)] gap-4 overflow-x-auto py-2 no-scrollbar snap-x snap-mandatory scroll-smooth relative z-10">
-                                    {displayItems.map((item, i) => (
-                                        <SimilarHCard
-                                            key={item.id || i}
-                                            item={item}
-                                            isSelected={i === selectedSimilarIdx}
-                                            onSelect={() => onSelectSimilar(i)}
-                                        />
-                                    ))}
-                                    {remainingCount > 0 && (
-                                        <button
-                                            onClick={onLoadMore}
-                                            className="snap-start w-full flex flex-col items-center justify-center gap-1 rounded-xl border border-white/[0.06] text-white/30 text-[10px] cursor-pointer active:scale-95 transition-all"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            <span>{remainingCount} more</span>
-                                        </button>
-                                    )}
+                                <div className="relative w-full group/row">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); scrollSimilar('left'); }}
+                                        className="absolute left-0 top-0 bottom-0 w-12 z-20 cursor-pointer"
+                                        aria-label="Scroll Left"
+                                    />
+                                    <div ref={similarScrollRef} className="grid grid-flow-col auto-cols-[calc((100%-1rem)/2)] sm:auto-cols-[calc((100%-2rem)/3)] md:auto-cols-[calc((100%-3rem)/4)] lg:auto-cols-[calc((100%-4rem)/5)] gap-4 overflow-x-auto py-2 no-scrollbar snap-x snap-mandatory scroll-smooth relative z-10">
+                                        {displayItems.map((item, i) => (
+                                            <SimilarHCard
+                                                key={item.id || i}
+                                                item={item}
+                                                isSelected={i === selectedSimilarIdx}
+                                                onSelect={() => onSelectSimilar(i)}
+                                            />
+                                        ))}
+                                        {remainingCount > 0 && (
+                                            <button
+                                                onClick={onLoadMore}
+                                                className="snap-start w-full flex flex-col items-center justify-center gap-1 rounded-xl border border-white/[0.06] text-white/30 text-[10px] cursor-pointer active:scale-95 transition-all"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                                <span>{remainingCount} more</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); scrollSimilar('right'); }}
+                                        className="absolute right-0 top-0 bottom-0 w-12 z-20 cursor-pointer"
+                                        aria-label="Scroll Right"
+                                    />
                                 </div>
                             </div>
                         </>
