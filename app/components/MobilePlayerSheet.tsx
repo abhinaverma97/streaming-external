@@ -4,6 +4,7 @@ import { memo, useState, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Film, Loader2, Plus, Check, Play, Star, Layers, Info, Sparkles } from "lucide-react";
 import { StarRating } from "./StarRating";
+import { CustomSelect } from "./CustomSelect";
 import { SOURCES } from "../lib/sources-config";
 import { getPosterUrl } from "../lib/tmdb-utils";
 
@@ -251,25 +252,33 @@ function MobilePlayerSheetInner({
                 <div className="px-5 pb-8 flex flex-col gap-4">
                     <div className="flex flex-col gap-1.5">
                         <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Source</span>
-                        <div className="flex flex-col gap-1">
-                            {enabledSources.map((s) => {
-                                const isActive = s.id === selectedSource;
-                                return (
-                                    <button
-                                        key={s.id}
-                                        onClick={() => onSourceChange(s.id)}
-                                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs active:scale-[0.98] transition-all cursor-pointer ${
-                                            isActive
-                                                ? "bg-white/[0.08] border-white/15 text-white"
-                                                : "bg-transparent border-white/[0.05] text-white/50"
-                                        }`}
-                                    >
-                                        <span className="font-medium">{s.name}</span>
-                                        {isActive && <Check className="w-3 h-3 text-white/70" />}
-                                    </button>
-                                );
-                            })}
-                        </div>
+                        {isTv ? (
+                            <CustomSelect
+                                value={selectedSource}
+                                onChange={(val: string) => onSourceChange(val)}
+                                options={enabledSources.map((s) => ({ value: s.id, label: s.name }))}
+                            />
+                        ) : (
+                            <div className="flex flex-col gap-1">
+                                {enabledSources.map((s) => {
+                                    const isActive = s.id === selectedSource;
+                                    return (
+                                        <button
+                                            key={s.id}
+                                            onClick={() => onSourceChange(s.id)}
+                                            className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs active:scale-[0.98] transition-all cursor-pointer ${
+                                                isActive
+                                                    ? "bg-white/[0.08] border-white/15 text-white"
+                                                    : "bg-transparent border-white/[0.05] text-white/50"
+                                            }`}
+                                        >
+                                            <span className="font-medium">{s.name}</span>
+                                            {isActive && <Check className="w-3 h-3 text-white/70" />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     {isTv && (
