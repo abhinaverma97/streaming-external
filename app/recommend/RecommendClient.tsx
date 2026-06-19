@@ -29,8 +29,6 @@ interface RecommendClientProps {
 
 export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSource, enabledSources }: RecommendClientProps) {
     const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
-    const [mfyFilter, setMfyFilter] = useState<"movies" | "tv">("movies");
-    const [ntyFilter, setNtyFilter] = useState<"movies" | "tv">("movies");
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSettings, setShowSettings] = useState(false);
@@ -336,16 +334,28 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     const generatedAt = recommendations?.generatedAt;
     const formattedDate = generatedAt ? new Date(generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
     const madeForYouItems = useMemo(() => {
-        const items = recommendations?.madeForYou?.[mfyFilter] || [];
-        const type = mfyFilter === "tv" ? "tv" : "movie";
+        if (filter === "all") {
+            const movies = (recommendations?.madeForYou?.movies || []).filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: "movie" as const }));
+            const tv = (recommendations?.madeForYou?.tv || []).filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: "tv" as const }));
+            return [...movies, ...tv];
+        }
+        const key = filter === "movie" ? "movies" : "tv";
+        const items = recommendations?.madeForYou?.[key] || [];
+        const type = filter === "movie" ? "movie" : "tv";
         return items.filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: type }));
-    }, [recommendations, mfyFilter, ratings]);
+    }, [recommendations, filter, ratings]);
 
     const newToYouItems = useMemo(() => {
-        const items = recommendations?.newToYou?.[ntyFilter] || [];
-        const type = ntyFilter === "tv" ? "tv" : "movie";
+        if (filter === "all") {
+            const movies = (recommendations?.newToYou?.movies || []).filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: "movie" as const }));
+            const tv = (recommendations?.newToYou?.tv || []).filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: "tv" as const }));
+            return [...movies, ...tv];
+        }
+        const key = filter === "movie" ? "movies" : "tv";
+        const items = recommendations?.newToYou?.[key] || [];
+        const type = filter === "movie" ? "movie" : "tv";
         return items.filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: type }));
-    }, [recommendations, ntyFilter, ratings]);
+    }, [recommendations, filter, ratings]);
 
     const allMovies = (recommendations?.madeForYou?.movies?.length || 0)
         + (recommendations?.newToYou?.movies?.length || 0)
@@ -449,17 +459,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                             <div className="mb-10 space-y-10">
                                 {madeForYouItems.length > 0 && (
                                     <div>
-                                        <div className="flex items-end justify-between mb-3">
-                                            <div>
-                                                <h2 className="text-base md:text-lg font-semibold text-slate-100">Made for You</h2>
-                                                <p className="text-[10px] text-slate-500 mt-0.5 tracking-wide">Picks tailored to your taste</p>
-                                            </div>
-                                            <div className="flex items-center backdrop-blur-xl bg-white/[0.04] rounded-full p-0.5 border border-white/[0.06]">
-                                                <button onClick={() => setMfyFilter("movies")}
-                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${mfyFilter === "movies" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>Movies</button>
-                                                <button onClick={() => setMfyFilter("tv")}
-                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${mfyFilter === "tv" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>TV</button>
-                                            </div>
+                                        <div className="mb-3">
+                                            <h2 className="text-base md:text-lg font-semibold text-slate-100">Made for You</h2>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 tracking-wide">Picks tailored to your taste</p>
                                         </div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 md:gap-x-5">
                                             {madeForYouItems.map(renderCard)}
@@ -469,17 +471,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
 
                                 {newToYouItems.length > 0 && (
                                     <div>
-                                        <div className="flex items-end justify-between mb-3">
-                                            <div>
-                                                <h2 className="text-base md:text-lg font-semibold text-slate-100">New to You</h2>
-                                                <p className="text-[10px] text-slate-500 mt-0.5 tracking-wide">Step outside your comfort zone</p>
-                                            </div>
-                                            <div className="flex items-center backdrop-blur-xl bg-white/[0.04] rounded-full p-0.5 border border-white/[0.06]">
-                                                <button onClick={() => setNtyFilter("movies")}
-                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${ntyFilter === "movies" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>Movies</button>
-                                                <button onClick={() => setNtyFilter("tv")}
-                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${ntyFilter === "tv" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>TV</button>
-                                            </div>
+                                        <div className="mb-3">
+                                            <h2 className="text-base md:text-lg font-semibold text-slate-100">New to You</h2>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 tracking-wide">Step outside your comfort zone</p>
                                         </div>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 md:gap-x-5">
                                             {newToYouItems.map(renderCard)}
