@@ -12,6 +12,7 @@ import {
     getSourcePrefs, saveSourcePrefs,
     getAiSettings, saveAiSettings
 } from "../_lib/store.js";
+import { verifySession } from "../_lib/auth.js";
 
 function json(data: any, status = 200) {
     return NextResponse.json(data, { status });
@@ -19,6 +20,14 @@ function json(data: any, status = 200) {
 
 function error(msg: string, status = 500) {
     return NextResponse.json({ error: msg }, { status });
+}
+
+async function getUserId(req: NextRequest): Promise<number> {
+    const token = req.cookies.get("token")?.value;
+    if (!token) throw new Error("Unauthorized");
+    const session = await verifySession(token);
+    if (!session) throw new Error("Unauthorized");
+    return session.userId;
 }
 
 async function handle(req: NextRequest, segments: string[]): Promise<NextResponse> {
@@ -41,62 +50,70 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
         }
 
         if (s0 === "watchlist") {
-            if (method === "GET") return json(await getWatchlist());
+            const userId = await getUserId(req);
+            if (method === "GET") return json(await getWatchlist(userId));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
-                await addToWatchlist(body.tmdbId, body.movieDetails, body.mediaType);
+                await addToWatchlist(userId, body.tmdbId, body.movieDetails, body.mediaType);
                 return json({ ok: true });
             }
             if (method === "DELETE" && s1) {
-                await removeFromWatchlist(s1);
+                await removeFromWatchlist(userId, s1);
                 return json({ ok: true });
             }
         }
 
         if (s0 === "progress" && method === "POST") {
+            const userId = await getUserId(req);
             const body = await req.json();
             if (!body.tmdbId || typeof body.timestamp !== "number" || isNaN(body.timestamp))
                 return error("Missing or invalid required fields", 400);
             if (typeof body.duration !== "number" || isNaN(body.duration))
                 return error("Duration unavailable or invalid", 400);
-            await saveProgress(body.tmdbId, body.timestamp, body.duration, body.movieDetails, body.mediaType, body.source);
+            await saveProgress(userId, body.tmdbId, body.timestamp, body.duration, body.movieDetails, body.mediaType, body.source);
             return json({ ok: true });
         }
 
-        if (s0 === "continue-watching") return json(await getProgress());
+        if (s0 === "continue-watching") {
+            const userId = await getUserId(req);
+            return json(await getProgress(userId));
+        }
 
         if (s0 === "history") {
-            if (method === "GET") return json(await getHistory());
+            const userId = await getUserId(req);
+            if (method === "GET") return json(await getHistory(userId));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.tmdbId) return error("Missing tmdbId", 400);
-                await addToHistory(body.tmdbId, body.movieDetails);
+                await addToHistory(userId, body.tmdbId, body.movieDetails);
                 return json({ ok: true });
             }
             if (method === "DELETE" && s1) {
-                await removeFromHistory(s1);
+                await removeFromHistory(userId, s1);
                 return json({ ok: true });
             }
         }
 
         if (s0 === "ratings") {
-            if (method === "GET") return json(await getRatings());
+            const userId = await getUserId(req);
+            if (method === "GET") return json(await getRatings(userId));
             if (method === "POST" && s1) {
                 const body = await req.json();
                 if (typeof body.rating !== "number" || isNaN(body.rating) || body.rating < 1 || body.rating > 5)
                     return error("Invalid rating", 400);
-                await saveRating(s1, body.rating, body.movieDetails, body.thoughts);
+                await saveRating(userId, s1, body.rating, body.movieDetails, body.thoughts);
                 return json({ ok: true });
             }
             if (method === "DELETE" && s1) {
-                await deleteRating(s1);
+                await deleteRating(userId, s1);
                 return json({ ok: true });
             }
         }
 
         if (s0 === "source-prefs") {
-            if (method === "GET") return json(await getSourcePrefs());
+            const userId = await getUserId(req);
+            if (method === "GET") return json(await getSourcePrefs(userId));
             if (method === "POST") {
                 const body = await req.json();
                 if (!body.enabled || !body.defaultSource) return error("Missing enabled or defaultSource", 400);
@@ -104,24 +121,24 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
                 const validIds = SOURCES.map((s: any) => s.id);
                 const isValid = body.enabled.every((id: string) => validIds.includes(id)) && validIds.includes(body.defaultSource);
                 if (!isValid) return error("Invalid source ID", 400);
-                await saveSourcePrefs(body.enabled, body.defaultSource);
+                await saveSourcePrefs(userId, body.enabled, body.defaultSource);
                 return json({ ok: true });
             }
         }
 
-        // Single-user self-hosted app: return real key.
-        // Masking removed because it overwrote the stored key on blur.
         if (s0 === "ai-settings") {
-            if (method === "GET") return json(await getAiSettings());
+            const userId = await getUserId(req);
+            if (method === "GET") return json(await getAiSettings(userId));
             if (method === "POST") {
                 const body = await req.json();
-                await saveAiSettings({ apiKey: body.apiKey, model: body.model });
+                await saveAiSettings(userId, { apiKey: body.apiKey, model: body.model });
                 return json({ ok: true });
             }
         }
 
         return error("Not found", 404);
     } catch (e: any) {
+        if (e.message === "Unauthorized") return error("Unauthorized", 401);
         return error(e.message || "Internal error");
     }
 }

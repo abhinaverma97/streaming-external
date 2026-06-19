@@ -2,14 +2,20 @@ import { searchMovies, searchTv } from "./tmdb.js";
 import { buildRecommendationPrompt } from "../../lib/format-ratings";
 
 let activeController = null;
+let activeUserId = null;
 
 export function cancelGeneration() {
   if (activeController) {
     activeController.abort(new Error("User cancelled generation"));
     activeController = null;
+    activeUserId = null;
     return true;
   }
   return false;
+}
+
+export function getActiveUserId() {
+  return activeUserId;
 }
 
 export async function generateRecommendations(ratings, watchlist, aiSettings) {
@@ -122,7 +128,8 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
     };
   } finally {
     activeController = null;
-    clearTimeout(timeout);
+    if (!activeUserId) clearTimeout(timeout);
+    else clearTimeout(timeout);
   }
 }
 
@@ -196,26 +203,29 @@ export async function enrichWithTmdb(recommendations) {
   };
 }
 
-export async function runFullGenerationPipeline() {
+export async function runFullGenerationPipeline(userId) {
   const { setGenerationStatus, setGenerationError, getRatings, getWatchlist, getAiSettings, saveRecommendations } = await import("./store.js");
 
-  await setGenerationStatus(true);
+  await setGenerationStatus(userId, true);
+  activeUserId = userId;
   try {
-    const ratings = await getRatings();
-    const watchlist = await getWatchlist();
-    const aiSettings = await getAiSettings();
+    const ratings = await getRatings(userId);
+    const watchlist = await getWatchlist(userId);
+    const aiSettings = await getAiSettings(userId);
 
     const raw = await generateRecommendations(ratings, watchlist, aiSettings);
-    if (!raw) return; // already in progress — exit without recording an error
+    if (!raw) return;
     const enriched = await enrichWithTmdb(raw);
-    await saveRecommendations(enriched);
+    await saveRecommendations(userId, enriched);
   } catch (err) {
     console.error("[Recommend] Error generating:", err);
     if (err.message === "User cancelled generation") {
-      await setGenerationStatus(false);
+      await setGenerationStatus(userId, false);
     } else {
-      await setGenerationError(err.message || "Failed to generate recommendations.");
+      await setGenerationError(userId, err.message || "Failed to generate recommendations.");
     }
     throw err;
+  } finally {
+    activeUserId = null;
   }
 }

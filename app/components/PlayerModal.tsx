@@ -606,8 +606,7 @@ function PlayerArea(props: PlayerAreaProps) {
                         </button>
                         <button
                             onClick={handlePlaySimilar}
-                            disabled={similarDetailLoading}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
                         >
                             <Play className="w-3.5 h-3.5" /> Play
                         </button>

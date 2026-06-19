@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { verifySession } from "./api/_lib/auth.js";
 import { getWatchlist, getProgress, getHistory, getRatings, getSourcePrefs } from "./api/_lib/store.js";
 import { getTrendingMovies, getTrendingTv } from "./api/_lib/tmdb.js";
 import HomeClient from "./HomeClient";
@@ -5,10 +7,15 @@ import HomeClient from "./HomeClient";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+    const session = token ? await verifySession(token) : null;
+    const userId = session?.userId;
+
     const [[wl, cw, hist, rt], [trendingMovies, trendingTv], prefs] = await Promise.all([
-        Promise.all([getWatchlist(), getProgress(), getHistory(), getRatings()]),
+        userId ? Promise.all([getWatchlist(userId), getProgress(userId), getHistory(userId), getRatings(userId)]) : Promise.resolve([[], [], [], {}]),
         Promise.all([getTrendingMovies(), getTrendingTv()]).catch(() => [[], []]),
-        getSourcePrefs().catch(() => ({ enabled: [], defaultSource: "videasy" })),
+        userId ? getSourcePrefs(userId).catch(() => ({ enabled: [], defaultSource: "videasy" })) : Promise.resolve({ enabled: [], defaultSource: "videasy" }),
     ]);
 
     return (

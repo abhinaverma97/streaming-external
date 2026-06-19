@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cancelGeneration } from "../../_lib/recommend.js";
+import { cancelGeneration, getActiveUserId } from "../../_lib/recommend.js";
 import { setGenerationStatus } from "../../_lib/store.js";
 
 export async function POST(req: NextRequest) {
   try {
+    const activeUserId = getActiveUserId();
     const cancelled = cancelGeneration();
-    await setGenerationStatus(false);
+    if (activeUserId != null) {
+      await setGenerationStatus(activeUserId, false);
+    }
 
     return NextResponse.json({ success: true, cancelled });
   } catch (e: any) {

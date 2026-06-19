@@ -1,7 +1,8 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface NavbarProps {
   onSettingsClick: () => void;
@@ -10,6 +11,35 @@ interface NavbarProps {
 }
 
 function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
+  const [username, setUsername] = useState<string | null>(null);
+  const [showSignOut, setShowSignOut] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => setUsername(data.username || null))
+      .catch(() => setUsername(null));
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowSignOut(false);
+      }
+    };
+    if (showSignOut) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSignOut]);
+
+  const handleLogout = useCallback(async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setShowSignOut(false);
+    setUsername(null);
+    router.push("/login");
+  }, [router]);
+
   return (
     <header className="hidden md:flex py-3 items-center justify-between text-[10px] tracking-[0.28em] text-slate-300">
       <div className="flex items-center flex-1">
@@ -48,7 +78,35 @@ function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
         </Link>
       </nav>
 
-      <div className="flex items-center justify-end gap-4 flex-1">
+      <div className="flex items-center justify-end gap-3 flex-1 ml-6" ref={containerRef}>
+        {username ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowSignOut((v) => !v)}
+              className="capitalize text-white/80 hover:text-white transition-colors duration-200 cursor-pointer"
+            >
+              {username}
+            </button>
+            {showSignOut && (
+              <>
+                <span className="text-white/15">·</span>
+                <button
+                  onClick={handleLogout}
+                  className="hover:text-white transition-colors duration-200 cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </>
+            )}
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="hover:text-white transition-colors duration-200 cursor-pointer"
+          >
+            Sign Up
+          </Link>
+        )}
         {children}
       </div>
     </header>
