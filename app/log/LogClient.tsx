@@ -22,9 +22,10 @@ interface LogClientProps {
     ratings: Record<string, any>;
     defaultSource: string;
     enabledSources: string[];
+    username?: string;
 }
 
-export default function LogClient({ ratings: initialRatings, defaultSource, enabledSources }: LogClientProps) {
+export default function LogClient({ ratings: initialRatings, defaultSource, enabledSources, username }: LogClientProps) {
     const [sortBy, setSortBy] = useState<"rating" | "time" | "release">("time");
     const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
     const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
@@ -146,7 +147,7 @@ export default function LogClient({ ratings: initialRatings, defaultSource, enab
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
-                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/log">
+                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/log" username={username}>
                     <SearchInput
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
@@ -269,7 +270,7 @@ export default function LogClient({ ratings: initialRatings, defaultSource, enab
                 currentPath="/log"
             />
 
-            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={() => {}} />
+            <SettingsOverlay isOpen={showSettings} onClose={() => setShowSettings(false)} onSourcesChange={() => {}} username={username} />
         </main>
     );
 }

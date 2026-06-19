@@ -354,16 +354,16 @@ function MobilePlayerSheetInner({
                                 <button
                                     onClick={goToPrevEpisode}
                                     disabled={prevDisabled}
-                                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/70 text-xs font-medium disabled:opacity-25 active:scale-95 transition-all cursor-pointer"
+                                    className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/70 text-[10px] font-medium disabled:opacity-25 active:scale-95 transition-all cursor-pointer"
                                 >
-                                    <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                                    <ChevronLeft className="w-3 h-3" /> Prev
                                 </button>
                                 <button
                                     onClick={goToNextEpisode}
                                     disabled={nextDisabled}
-                                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-black text-xs font-semibold disabled:opacity-25 active:scale-95 transition-all cursor-pointer"
+                                    className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-white text-black text-[10px] font-semibold disabled:opacity-25 active:scale-95 transition-all cursor-pointer"
                                 >
-                                    Next <ChevronRight className="w-3.5 h-3.5" />
+                                    Next <ChevronRight className="w-3 h-3" />
                                 </button>
                             </div>
                         </>

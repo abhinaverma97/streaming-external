@@ -8,10 +8,11 @@ interface NavbarProps {
   onSettingsClick: () => void;
   currentPath: string;
   children?: React.ReactNode;
+  username?: string;
 }
 
-function NavbarInner({ onSettingsClick, currentPath, children }: NavbarProps) {
-  const [username, setUsername] = useState<string | null>(null);
+function NavbarInner({ onSettingsClick, currentPath, children, username: ssrUsername }: NavbarProps) {
+  const [username, setUsername] = useState<string | null>(ssrUsername ?? null);
   const [showSignOut, setShowSignOut] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();

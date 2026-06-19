@@ -25,9 +25,10 @@ interface RecommendClientProps {
     ratings: Record<string, any>;
     defaultSource: string;
     enabledSources: string[];
+    username?: string;
 }
 
-export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSource, enabledSources }: RecommendClientProps) {
+export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSource, enabledSources, username }: RecommendClientProps) {
     const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -149,6 +150,18 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
             document.removeEventListener("visibilitychange", onVis);
         };
     }, [recommendations?.isGenerating, fetchRecs]);
+
+    // Periodically check if recommendations are stale (>2h old) and re-fetch
+    useEffect(() => {
+        if (!recommendations?.generatedAt || recommendations?.isGenerating) return;
+        const checkStale = setInterval(() => {
+            const age = Date.now() - recommendations.generatedAt * 1000;
+            if (age > 2 * 60 * 60 * 1000) {
+                fetchRecs();
+            }
+        }, 5 * 60 * 1000);
+        return () => clearInterval(checkStale);
+    }, [recommendations?.generatedAt, recommendations?.isGenerating, fetchRecs]);
 
     const isRefreshingOrGenerating = refreshing || !!recommendations?.isGenerating;
     const displayError = recommendations?.error || error;
@@ -371,7 +384,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
-                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/recommend">
+                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/recommend" username={username}>
                     <SearchInput
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
@@ -430,17 +443,10 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                             <X className="w-6 h-6 text-rose-500" />
                         </div>
                         <div className="text-[11px] text-rose-400/80 uppercase tracking-widest font-light max-w-md mx-auto px-4 leading-relaxed mt-2">{displayError}</div>
-                        {displayError.toLowerCase().includes("api key") ? (
-                            <button onClick={() => setShowSettings(true)}
-                                className="mt-2 flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all active:scale-95 cursor-pointer">
-                                Configure Settings
-                            </button>
-                        ) : (
-                            <button onClick={handleRefresh} disabled={isRefreshingOrGenerating}
-                                className="mt-2 flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all active:scale-95 cursor-pointer disabled:opacity-50">
-                                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingOrGenerating ? "animate-spin" : ""}`} /> Try Again
-                            </button>
-                        )}
+                        <button onClick={() => setShowSettings(true)}
+                            className="mt-2 flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all active:scale-95 cursor-pointer">
+                            Configure Settings
+                        </button>
                     </div>
                 ) : !hasAnyItems ? (
                     <div className="text-center py-32 flex flex-col items-center gap-4">
@@ -537,6 +543,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                 onSourcesChange={onSourcesChange}
                 initialEnabled={effectiveEnabledSources}
                 initialDefaultSource={effectiveSource}
+                username={username}
             />
         </main>
     );

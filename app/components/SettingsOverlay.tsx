@@ -9,14 +9,12 @@ interface SettingsOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onSourcesChange: (enabled: string[], defaultSource: string) => void;
-  // Optional: pre-seed from the parent's client state so we don't re-fetch
-  // /api/source-prefs every time the overlay opens. The parent already
-  // holds this state via useSourcePrefs(); pass it through here.
   initialEnabled?: string[];
   initialDefaultSource?: string;
+  username?: string;
 }
 
-export default function SettingsOverlay({ isOpen, onClose, onSourcesChange, initialEnabled, initialDefaultSource }: SettingsOverlayProps) {
+export default function SettingsOverlay({ isOpen, onClose, onSourcesChange, initialEnabled, initialDefaultSource, username }: SettingsOverlayProps) {
   const [enabled, setEnabled] = useState<string[]>([]);
   const [defaultSource, setDefaultSource] = useState("videasy");
   const [selectOpen, setSelectOpen] = useState(false);
@@ -33,6 +31,7 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange, init
   const [copiedPayload, setCopiedPayload] = useState(false);
   const [modelSelectOpen, setModelSelectOpen] = useState(false);
   const modelSelectRef = useRef<HTMLDivElement>(null);
+  const [adminStats, setAdminStats] = useState<{ userCount: number; ratingCount: number; watchlistCount: number } | null>(null);
   const [aiModels, setAiModels] = useState<{ id: string; name: string; context: string }[]>([
     { id: "google/gemini-2.0-pro-exp-02-05:free", name: "Gemini 2.0 Pro Exp", context: "2000k Context" },
     { id: "google/gemini-2.0-flash-thinking-exp:free", name: "Gemini 2.0 Flash Thinking", context: "1000k Context" },
@@ -127,8 +126,15 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange, init
           }
         })
         .catch(() => {});
+
+      if (username === "abhi") {
+        fetch("/api/admin/stats")
+          .then(r => r.json())
+          .then(data => setAdminStats(data))
+          .catch(() => {});
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, username]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -176,6 +182,25 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange, init
         </div>
 
         <div className="flex flex-col gap-6">
+          {/* Admin Section */}
+          {username === "abhi" && adminStats && (
+            <div className="flex flex-col gap-3 pb-2">
+              <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400">Admin</h3>
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                <span className="text-xs text-white/50">Total Users</span>
+                <span className="text-xs font-medium text-white/80">{adminStats.userCount}</span>
+              </div>
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                <span className="text-xs text-white/50">Total Ratings</span>
+                <span className="text-xs font-medium text-white/80">{adminStats.ratingCount}</span>
+              </div>
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                <span className="text-xs text-white/50">Watchlist Entries</span>
+                <span className="text-xs font-medium text-white/80">{adminStats.watchlistCount}</span>
+              </div>
+            </div>
+          )}
+
           {/* Source Toggles */}
           <div className="flex flex-col gap-3">
             <h3 className="text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-400">Sources</h3>

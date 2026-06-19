@@ -1,10 +1,10 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Search, Home as HomeIcon, Book, Settings as SettingsIcon, Film, Star, Sparkles } from "lucide-react";
+import { Search, Home as HomeIcon, Book, User, Film, Star, Sparkles } from "lucide-react";
 import { getPosterUrl } from "../lib/tmdb-utils";
 
 interface MobileBottomNavProps {
@@ -38,6 +38,34 @@ function MobileBottomNavInner({
 }: MobileBottomNavProps) {
     const router = useRouter();
     const showResults = isMobileSearchOpen && isSearching && searchQuery;
+
+    const [username, setUsername] = useState<string | null>(null);
+    const [accountOpen, setAccountOpen] = useState(false);
+    const accountRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        fetch("/api/auth/me")
+            .then((r) => r.json())
+            .then((data) => setUsername(data.username || null))
+            .catch(() => setUsername(null));
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+                setAccountOpen(false);
+            }
+        };
+        if (accountOpen) document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [accountOpen]);
+
+    const handleLogout = useCallback(async () => {
+        await fetch("/api/auth/logout", { method: "POST" });
+        setUsername(null);
+        setAccountOpen(false);
+        router.push("/login");
+    }, [router]);
 
     return (
         <>
@@ -150,9 +178,42 @@ function MobileBottomNavInner({
                         <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className={`flex flex-col items-center gap-1 ${isMobileSearchOpen ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
                             <Search className="w-5 h-5" />
                         </button>
-                        <button onClick={() => setShowSettings(true)} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
-                            <SettingsIcon className="w-5 h-5" />
-                        </button>
+                        <div className="relative" ref={accountRef}>
+                            <button onClick={() => setAccountOpen((v) => !v)}
+                                className={`flex flex-col items-center gap-1 ${accountOpen ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
+                                <User className="w-5 h-5" />
+                            </button>
+                            {accountOpen && (
+                                <div className="absolute bottom-full mb-3 right-0 min-w-[140px] bg-[#090b14]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl py-2 shadow-2xl z-50">
+                                    {username ? (
+                                        <>
+                                            <div className="px-4 py-1.5 text-xs text-white/80 capitalize font-medium">{username}</div>
+                                            <div className="h-px bg-white/[0.06] mx-3 my-1" />
+                                            <button onClick={() => { setAccountOpen(false); setShowSettings(true); }}
+                                                className="w-full text-left px-4 py-1.5 text-xs text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer">
+                                                Settings
+                                            </button>
+                                            <button onClick={handleLogout}
+                                                className="w-full text-left px-4 py-1.5 text-xs text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer">
+                                                Sign Out
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button onClick={() => { setAccountOpen(false); setShowSettings(true); }}
+                                                className="w-full text-left px-4 py-1.5 text-xs text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer">
+                                                Settings
+                                            </button>
+                                            <Link href="/login"
+                                                onClick={() => setAccountOpen(false)}
+                                                className="block w-full text-left px-4 py-1.5 text-xs text-white/60 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer">
+                                                Sign In
+                                            </Link>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </nav>
                 </div>
             )}

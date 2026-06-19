@@ -32,9 +32,10 @@ interface HomeClientProps {
     trendingTv: any[];
     defaultSource: string;
     enabledSources: string[];
+    username?: string;
 }
 
-export default function HomeClient({ watchlist: wl, continueWatching: cw, history, ratings: rt, trendingMovies, trendingTv, defaultSource, enabledSources }: HomeClientProps) {
+export default function HomeClient({ watchlist: wl, continueWatching: cw, history, ratings: rt, trendingMovies, trendingTv, defaultSource, enabledSources, username }: HomeClientProps) {
     const {
         searchQuery, setSearchQuery,
         searchResults, isSearching,
@@ -355,7 +356,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
     return (
         <div className="relative h-screen flex flex-col overflow-hidden bg-black select-none text-slate-100">
             <div className="w-full flex-shrink-0 max-w-[96vw] mx-auto px-4 md:px-12 flex flex-col z-20 pt-4 md:pt-3">
-                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/">
+                <Navbar onSettingsClick={() => setShowSettings(true)} currentPath="/" username={username}>
                     <SearchInput
                         searchQuery={searchQuery}
                         setSearchQuery={setSearchQuery}
@@ -466,6 +467,7 @@ export default function HomeClient({ watchlist: wl, continueWatching: cw, histor
                 onSourcesChange={onSourcesChange}
                 initialEnabled={effectiveEnabledSources}
                 initialDefaultSource={currentDefaultSource}
+                username={username}
             />
 
         </div>

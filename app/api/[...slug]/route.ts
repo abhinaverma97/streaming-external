@@ -128,7 +128,13 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
 
         if (s0 === "ai-settings") {
             const userId = await getUserId(req);
-            if (method === "GET") return json(await getAiSettings(userId));
+            if (method === "GET") {
+                const settings = await getAiSettings(userId);
+                if (settings.apiKey && settings.apiKey.length > 8) {
+                    settings.apiKey = settings.apiKey.slice(0, 4) + "..." + settings.apiKey.slice(-4);
+                }
+                return json(settings);
+            }
             if (method === "POST") {
                 const body = await req.json();
                 await saveAiSettings(userId, { apiKey: body.apiKey, model: body.model });
