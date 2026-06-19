@@ -29,6 +29,8 @@ interface RecommendClientProps {
 
 export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSource, enabledSources }: RecommendClientProps) {
     const [filter, setFilter] = useState<"all" | "movie" | "tv">("all");
+    const [mfyFilter, setMfyFilter] = useState<"movies" | "tv">("movies");
+    const [ntyFilter, setNtyFilter] = useState<"movies" | "tv">("movies");
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSettings, setShowSettings] = useState(false);
@@ -262,6 +264,61 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         setActiveStream({ ...activeStream, embedUrl: newUrl });
     };
 
+    const renderCard = (item: any) => {
+        const key = `${item._type || "x"}-${item.id || item.title}`;
+        const inWatchlist = isInWatchlist(item);
+        const backdropPath = item.backdrop_path || item.poster_path;
+        const title = item.title || item.name || "Untitled";
+        const year = (item.release_date || item.first_air_date || "").split("-")[0];
+
+        return (
+            <div key={key} className="group flex flex-col cursor-pointer">
+                <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300"
+                    onClick={() => playRecommendation(item)}>
+                    {backdropPath ? (
+                        <FadeImage src={getBackdropUrl(backdropPath)} alt={title} fill
+                            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 15vw"
+                            className="object-cover brightness-90 group-hover:brightness-100" />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
+                            <Film className="w-6 h-6 text-slate-600" />
+                        </div>
+                    )}
+
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-black shadow-lg">
+                            <Play className="w-4 h-4 fill-black pl-0.5" />
+                        </div>
+                    </div>
+
+                    <button onClick={(e) => { e.stopPropagation(); handleToggleWatchlist(item); }}
+                        className="hidden md:flex absolute top-2.5 right-2.5 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100">
+                        {inWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                    </button>
+                </div>
+
+                <div className="mt-4 px-1 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                        <h3 className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors duration-300">
+                            {title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1.5 text-[9px] text-slate-500 uppercase tracking-[0.2em] font-medium">
+                            <span>{year || "N/A"}</span>
+                            <span className="w-1 h-1 rounded-full bg-slate-700" />
+                            <span>{item.media_type === "tv" ? "Series" : "Movie"}</span>
+                        </div>
+                    </div>
+                    <div className="md:hidden flex items-center gap-1.5 shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); handleToggleWatchlist(item); }}
+                            className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/80 active:scale-95 transition-transform">
+                            {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const closePlayer = () => {
         flushGlobalProgress();
         setActiveStream(null);
@@ -278,9 +335,28 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
 
     const generatedAt = recommendations?.generatedAt;
     const formattedDate = generatedAt ? new Date(generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
+    const madeForYouItems = useMemo(() => {
+        const items = recommendations?.madeForYou?.[mfyFilter] || [];
+        const type = mfyFilter === "tv" ? "tv" : "movie";
+        return items.filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: type }));
+    }, [recommendations, mfyFilter, ratings]);
+
+    const newToYouItems = useMemo(() => {
+        const items = recommendations?.newToYou?.[ntyFilter] || [];
+        const type = ntyFilter === "tv" ? "tv" : "movie";
+        return items.filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: type }));
+    }, [recommendations, ntyFilter, ratings]);
+
+    const allMovies = (recommendations?.madeForYou?.movies?.length || 0)
+        + (recommendations?.newToYou?.movies?.length || 0)
+        + (recommendations?.recommendedMovies?.length || 0);
+    const allTvShows = (recommendations?.madeForYou?.tv?.length || 0)
+        + (recommendations?.newToYou?.tv?.length || 0)
+        + (recommendations?.recommendedTvShows?.length || 0);
+    const totalCount = allMovies + allTvShows;
+    const hasAnyItems = totalCount > 0;
     const filteredMovieCount = filteredItems.filter((i: any) => i._type === "movie").length;
     const filteredTvCount = filteredItems.filter((i: any) => i._type === "tv").length;
-    const totalCount = filteredItems.length;
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
@@ -356,7 +432,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                             </button>
                         )}
                     </div>
-                ) : !recommendations || totalCount === 0 ? (
+                ) : !hasAnyItems ? (
                     <div className="text-center py-32 flex flex-col items-center gap-4">
                         <div className="w-16 h-16 rounded-full bg-white/[0.02] border border-white/[0.05] flex items-center justify-center">
                             <Film className="w-6 h-6 text-white/20" />
@@ -367,68 +443,69 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                             <RefreshCw className="w-3.5 h-3.5" /> Generate Now
                         </button>
                     </div>
-                ) : filteredItems.length === 0 ? (
-                    <div className="text-center py-32">
-                        <div className="text-[11px] text-white/40 uppercase tracking-widest font-light">No {filter === "movie" ? "movies" : "series"} in recommendations.</div>
-                    </div>
                 ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10">
-                        {filteredItems.map((item: any) => {
-                            // Combine media type + id so movie/TV with the same TMDB id don't collide.
-                            const key = `${item._type || "x"}-${item.id || item.title}`;
-                            const inWatchlist = isInWatchlist(item);
-                            const backdropPath = item.backdrop_path || item.poster_path;
-                            const title = item.title || item.name || "Untitled";
-                            const year = (item.release_date || item.first_air_date || "").split("-")[0];
-
-                            return (
-                                <div key={key} className="group flex flex-col cursor-pointer">
-                                    <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300"
-                                        onClick={() => playRecommendation(item)}>
-                                        {backdropPath ? (
-                                            <FadeImage src={getBackdropUrl(backdropPath)} alt={title} fill
-                                                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 15vw"
-                                                className="object-cover brightness-90 group-hover:brightness-100" />
-                                        ) : (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-slate-950">
-                                                <Film className="w-6 h-6 text-slate-600" />
+                    <>
+                        {(madeForYouItems.length > 0 || newToYouItems.length > 0) && (
+                            <div className="mb-10 space-y-10">
+                                {madeForYouItems.length > 0 && (
+                                    <div>
+                                        <div className="flex items-end justify-between mb-3">
+                                            <div>
+                                                <h2 className="text-base md:text-lg font-semibold text-slate-100">Made for You</h2>
+                                                <p className="text-[10px] text-slate-500 mt-0.5 tracking-wide">Picks tailored to your taste</p>
                                             </div>
-                                        )}
-
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-black shadow-lg">
-                                                <Play className="w-4 h-4 fill-black pl-0.5" />
+                                            <div className="flex items-center backdrop-blur-xl bg-white/[0.04] rounded-full p-0.5 border border-white/[0.06]">
+                                                <button onClick={() => setMfyFilter("movies")}
+                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${mfyFilter === "movies" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>Movies</button>
+                                                <button onClick={() => setMfyFilter("tv")}
+                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${mfyFilter === "tv" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>TV</button>
                                             </div>
                                         </div>
-
-                                        <button onClick={(e) => { e.stopPropagation(); handleToggleWatchlist(item); }}
-                                            className="hidden md:flex absolute top-2.5 right-2.5 z-30 w-7 h-7 rounded-full bg-black/60 hover:bg-white/20 items-center justify-center text-white/80 hover:text-white transition-all opacity-0 group-hover:opacity-100">
-                                            {inWatchlist ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                                        </button>
-                                    </div>
-
-                                    <div className="mt-4 px-1 flex items-start justify-between gap-2">
-                                        <div className="min-w-0">
-                                            <h3 className="text-sm font-medium text-slate-200 truncate group-hover:text-white transition-colors duration-300">
-                                                {title}
-                                            </h3>
-                                            <div className="flex items-center gap-2 mt-1.5 text-[9px] text-slate-500 uppercase tracking-[0.2em] font-medium">
-                                                <span>{year || "N/A"}</span>
-                                                <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                                <span>{item.media_type === "tv" ? "Series" : "Movie"}</span>
-                                            </div>
-                                        </div>
-                                        <div className="md:hidden flex items-center gap-1.5 shrink-0">
-                                            <button onClick={(e) => { e.stopPropagation(); handleToggleWatchlist(item); }}
-                                                className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/80 active:scale-95 transition-transform">
-                                                {inWatchlist ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                            </button>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 md:gap-x-5">
+                                            {madeForYouItems.map(renderCard)}
                                         </div>
                                     </div>
+                                )}
+
+                                {newToYouItems.length > 0 && (
+                                    <div>
+                                        <div className="flex items-end justify-between mb-3">
+                                            <div>
+                                                <h2 className="text-base md:text-lg font-semibold text-slate-100">New to You</h2>
+                                                <p className="text-[10px] text-slate-500 mt-0.5 tracking-wide">Step outside your comfort zone</p>
+                                            </div>
+                                            <div className="flex items-center backdrop-blur-xl bg-white/[0.04] rounded-full p-0.5 border border-white/[0.06]">
+                                                <button onClick={() => setNtyFilter("movies")}
+                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${ntyFilter === "movies" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>Movies</button>
+                                                <button onClick={() => setNtyFilter("tv")}
+                                                    className={`px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase transition-all cursor-pointer ${ntyFilter === "tv" ? "bg-white/15 text-white" : "text-white/30 hover:text-white/60"}`}>TV</button>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 md:gap-x-5">
+                                            {newToYouItems.map(renderCard)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="mb-6 border-t border-white/[0.04]" />
+
+                        {filteredItems.length === 0 ? (
+                            <div className="text-center py-16">
+                                <div className="text-[11px] text-white/40 uppercase tracking-widest font-light">
+                                    No {filter === "movie" ? "movies" : "series"} in main recommendations.
                                 </div>
-                            );
-                        })}
-                    </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <h2 className="text-base md:text-lg font-semibold text-slate-100 mb-4">More Recommendations</h2>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10">
+                                    {filteredItems.map(renderCard)}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

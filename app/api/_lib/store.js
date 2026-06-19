@@ -70,6 +70,8 @@ if (!globalThis.__app_store) {
     recommendations: {
       recommendedMovies: [],
       recommendedTvShows: [],
+      madeForYou: { movies: [], tv: [] },
+      newToYou: { movies: [], tv: [] },
       isGenerating: false,
       error: null,
       generatedAt: null,
@@ -275,6 +277,8 @@ export async function getRecommendations() {
   return {
     recommendedMovies: r.recommendedMovies || [],
     recommendedTvShows: r.recommendedTvShows || [],
+    madeForYou: r.madeForYou || { movies: [], tv: [] },
+    newToYou: r.newToYou || { movies: [], tv: [] },
     isGenerating: !!r.isGenerating,
     error: r.error,
     generatedAt: r.generatedAt,
@@ -303,6 +307,8 @@ export async function saveRecommendations(recs) {
   const s = globalThis.__app_store;
   s.recommendations.recommendedMovies = recs.recommendedMovies || [];
   s.recommendations.recommendedTvShows = recs.recommendedTvShows || [];
+  s.recommendations.madeForYou = recs.madeForYou || { movies: [], tv: [] };
+  s.recommendations.newToYou = recs.newToYou || { movies: [], tv: [] };
   s.recommendations.isGenerating = false;
   s.recommendations.generatedAt = Date.now();
   persist();

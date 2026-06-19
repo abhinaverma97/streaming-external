@@ -137,7 +137,14 @@ ${formattedWatchlist || "None"}
 CRITICAL RULES:
 1. NEVER recommend anything listed in BLOCKED TITLES below. If uncertain whether the user has seen a title, skip it.
 2. Analyze the taste profile and rated content for patterns in genres, directors, themes, eras, and tone.
-3. Recommend at least 18 movies and 18 TV shows. Prioritize quality over filler — skip if you can't find confident picks.
+3. Generate the following categories with NO duplicates across any of them:
+
+   A. "madeForYou" — exactly 4 movies and 4 TV shows that closely match the user's established taste. Safe bets.
+   B. "newToYou" — exactly 4 movies and 4 TV shows outside the user's comfort zone (different genres, eras, directors) they'd still enjoy.
+   C. "recommendedMovies" — at least 18 more movies (exclusive from A and B).
+   D. "recommendedTvShows" — at least 18 more TV shows (exclusive from A and B).
+
+   A title must NEVER appear in more than one category.
 
 BLOCKED TITLES (already watched or rated — do NOT recommend):
 ${blockedTitles || "None"}
@@ -145,12 +152,16 @@ ${blockedTitles || "None"}
 Return ONLY raw JSON. No markdown, no codeblocks, no introduction:
 
 {
-  "recommendedMovies": [
-    { "title": "...", "year": 2024, "reason": "..." }
-  ],
-  "recommendedTvShows": [
-    { "title": "...", "year": 2023, "reason": "..." }
-  ]
+  "madeForYou": {
+    "movies": [{ "title": "...", "year": 2024, "reason": "..." }],
+    "tv": [{ "title": "...", "year": 2023, "reason": "..." }]
+  },
+  "newToYou": {
+    "movies": [{ "title": "...", "year": 2024, "reason": "..." }],
+    "tv": [{ "title": "...", "year": 2023, "reason": "..." }]
+  },
+  "recommendedMovies": [{ "title": "...", "year": 2024, "reason": "..." }],
+  "recommendedTvShows": [{ "title": "...", "year": 2023, "reason": "..." }]
 }`;
 }
 

@@ -108,11 +108,17 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
 
     const movieCount = (parsed.recommendedMovies || []).length;
     const tvCount = (parsed.recommendedTvShows || []).length;
-    console.log(`[Recommend] Parsed ${movieCount} movies, ${tvCount} TV shows`);
+    const mfyMovieCount = (parsed.madeForYou?.movies || []).length;
+    const mfyTvCount = (parsed.madeForYou?.tv || []).length;
+    const ntyMovieCount = (parsed.newToYou?.movies || []).length;
+    const ntyTvCount = (parsed.newToYou?.tv || []).length;
+    console.log(`[Recommend] Parsed ${movieCount} movies, ${tvCount} TV shows, ${mfyMovieCount}/${mfyTvCount} madeForYou, ${ntyMovieCount}/${ntyTvCount} newToYou`);
 
     return {
       recommendedMovies: parsed.recommendedMovies || [],
       recommendedTvShows: parsed.recommendedTvShows || [],
+      madeForYou: parsed.madeForYou || { movies: [], tv: [] },
+      newToYou: parsed.newToYou || { movies: [], tv: [] },
     };
   } finally {
     activeController = null;
@@ -166,16 +172,28 @@ async function enrichBatch(items, searchFn, mediaType) {
 
 export async function enrichWithTmdb(recommendations) {
   const t0 = Date.now();
-  console.log(`[Recommend] Enriching ${recommendations.recommendedMovies.length} movies and ${recommendations.recommendedTvShows.length} TV shows with TMDB data (concurrency ${CONCURRENCY})`);
+  const total = (recommendations.recommendedMovies?.length || 0) + (recommendations.recommendedTvShows?.length || 0)
+    + (recommendations.madeForYou?.movies?.length || 0) + (recommendations.madeForYou?.tv?.length || 0)
+    + (recommendations.newToYou?.movies?.length || 0) + (recommendations.newToYou?.tv?.length || 0);
+  console.log(`[Recommend] Enriching ${total} items with TMDB data (concurrency ${CONCURRENCY})`);
 
-  const [enrichedMovies, enrichedTvShows] = await Promise.all([
+  const [enrichedMovies, enrichedTvShows, mfyMovies, mfyTv, ntyMovies, ntyTv] = await Promise.all([
     enrichBatch(recommendations.recommendedMovies || [], searchMovies, "movie"),
     enrichBatch(recommendations.recommendedTvShows || [], searchTv, "tv"),
+    enrichBatch(recommendations.madeForYou?.movies || [], searchMovies, "movie"),
+    enrichBatch(recommendations.madeForYou?.tv || [], searchTv, "tv"),
+    enrichBatch(recommendations.newToYou?.movies || [], searchMovies, "movie"),
+    enrichBatch(recommendations.newToYou?.tv || [], searchTv, "tv"),
   ]);
 
-  console.log(`[Recommend] Enrichment complete in ${Date.now() - t0}ms. Final: ${enrichedMovies.length} movies, ${enrichedTvShows.length} TV shows`);
+  console.log(`[Recommend] Enrichment complete in ${Date.now() - t0}ms`);
 
-  return { recommendedMovies: enrichedMovies, recommendedTvShows: enrichedTvShows };
+  return {
+    recommendedMovies: enrichedMovies,
+    recommendedTvShows: enrichedTvShows,
+    madeForYou: { movies: mfyMovies, tv: mfyTv },
+    newToYou: { movies: ntyMovies, tv: ntyTv },
+  };
 }
 
 export async function runFullGenerationPipeline() {
