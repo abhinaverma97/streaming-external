@@ -1,8 +1,8 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Film, Loader2, Play, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Film, Loader2, Play, Sparkles, Trash2 } from "lucide-react";
 import GlassSurface from "./GlassSurface";
 import { CustomSelect } from "./CustomSelect";
 import { StarRating } from "./StarRating";
@@ -32,6 +32,7 @@ interface PlayerSidebarProps {
     onLoadMore: () => void;
     selectedSimilarIdx: number;
     onSelectSimilar: (idx: number) => void;
+    onDelete?: (tmdbId: string) => void;
 }
 
 function SimilarCard({ item, isSelected = false }: { item: any; isSelected?: boolean }) {
@@ -135,10 +136,18 @@ function PlayerSidebarInner({
     onLoadMore,
     selectedSimilarIdx,
     onSelectSimilar,
+    onDelete,
 }: PlayerSidebarProps) {
     const currentRating = ratings[activeStreamDetails?.id]?.rating || 0;
     const [thoughts, setThoughts] = useState("");
     const [isEditingThoughts, setIsEditingThoughts] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+    useEffect(() => {
+        if (!confirmingDelete) return;
+        const t = setTimeout(() => setConfirmingDelete(false), 3000);
+        return () => clearTimeout(t);
+    }, [confirmingDelete]);
 
     const handleThoughtsBlur = () => {
         setIsEditingThoughts(false);
@@ -151,6 +160,16 @@ function PlayerSidebarInner({
 
     const handleSeasonChangeInPlayer = (seasonNum: number) => {
         onChangeEpisode(seasonNum, 1);
+    };
+
+    const handleDeleteClick = () => {
+        if (!onDelete || !activeStreamDetails?.id) return;
+        if (!confirmingDelete) {
+            setConfirmingDelete(true);
+            return;
+        }
+        onDelete(activeStreamDetails.id);
+        setConfirmingDelete(false);
     };
 
     const goToPrevEpisode = () => {
@@ -273,6 +292,22 @@ function PlayerSidebarInner({
                                     Next <ChevronRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
+                        </div>
+                    )}
+
+                    {onDelete && (
+                        <div className="border-t border-white/[0.05] pt-4">
+                            <button
+                                onClick={handleDeleteClick}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-all active:scale-95 cursor-pointer ${
+                                    confirmingDelete
+                                        ? "text-white bg-rose-500/80"
+                                        : "text-rose-400/80 hover:text-rose-300 hover:bg-rose-500/10"
+                                }`}
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                {confirmingDelete ? "Confirm delete?" : "Delete from log"}
+                            </button>
                         </div>
                     )}
                 </>

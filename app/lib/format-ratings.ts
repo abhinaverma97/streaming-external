@@ -8,6 +8,13 @@ function getDirector(details: any): string {
   return "Unknown";
 }
 
+function getGenres(details: any): string {
+  if (details.genres && Array.isArray(details.genres)) {
+    return details.genres.map((g: any) => g.name).join(", ");
+  }
+  return "Unknown";
+}
+
 function formatRatedItems(ratings: Record<string, any>): string {
   const entries = Object.entries(ratings).filter(([, v]) => v?.movieDetails);
   return entries
@@ -19,9 +26,9 @@ function formatRatedItems(ratings: Record<string, any>): string {
       const userRating = item.rating ?? "?";
       const tmdbRating = d.vote_average ?? "N/A";
       const director = getDirector(d);
-      const synopsis = d.overview || "N/A";
+      const genres = getGenres(d);
       const thoughts = item.thoughts ? `\n   User Thoughts: ${item.thoughts}` : "";
-      return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5${thoughts}\n   TMDB Rating: ${tmdbRating}/10\n   Director: ${director}\n   Synopsis: ${synopsis}`;
+      return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5${thoughts}\n   TMDB: ${tmdbRating}/10\n   Director: ${director}\n   Genres: ${genres}`;
     })
     .join("\n\n");
 }
@@ -33,12 +40,93 @@ function formatWatchlistItems(watchlist: any[]): string {
     .join("\n");
 }
 
-function buildPrompt(formatted: string, formattedWatchlist: string): string {
-  return `You are a movie and TV show recommendation engine.
+function computeTasteProfile(ratings: Record<string, any>): string {
+  const entries = Object.entries(ratings).filter(([, v]) => v?.movieDetails);
+  if (entries.length === 0) return "No ratings yet.";
 
-Analyze this user's complete set of rated content as a whole. Identify patterns in
-genres, themes, directors, tone, and era preferences. Then recommend movies and TV
-shows the user would likely enjoy.
+  const movies = entries.filter(([, v]) => v.movieDetails.media_type !== "tv");
+  const tv = entries.filter(([, v]) => v.movieDetails.media_type === "tv");
+
+  const genreMap: Record<string, { count: number; totalRating: number }> = {};
+  const directorMap: Record<string, number> = {};
+  const decadeMap: Record<string, number> = {};
+  const ratingDist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  let totalRating = 0;
+
+  for (const [, v] of entries) {
+    const d = v.movieDetails;
+    const r = v.rating ?? 0;
+    totalRating += r;
+    if (r >= 1 && r <= 5) ratingDist[r as keyof typeof ratingDist]++;
+
+    if (d.genres) {
+      for (const g of d.genres) {
+        if (!genreMap[g.name]) genreMap[g.name] = { count: 0, totalRating: 0 };
+        genreMap[g.name].count++;
+        genreMap[g.name].totalRating += r;
+      }
+    }
+
+    const dir = getDirector(d);
+    if (dir !== "Unknown") directorMap[dir] = (directorMap[dir] || 0) + 1;
+
+    const yearStr = (d.release_date || d.first_air_date || "").slice(0, 4);
+    if (yearStr) {
+      const y = parseInt(yearStr);
+      if (!isNaN(y)) {
+        const decade = Math.floor(y / 10) * 10;
+        decadeMap[`${decade}s`] = (decadeMap[`${decade}s`] || 0) + 1;
+      }
+    }
+  }
+
+  const avg = (totalRating / entries.length).toFixed(1);
+  const sortedGenres = Object.entries(genreMap)
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([name, d]) => `${name}: ${d.count} (avg ${(d.totalRating / d.count).toFixed(1)}/5)`);
+
+  const sortedDirectors = Object.entries(directorMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, c]) => `${name} (${c})`);
+
+  const sortedDecades = Object.entries(decadeMap)
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+    .map(([d, c]) => `${d}: ${c}`);
+
+  return [
+    `Total rated: ${entries.length} (${movies.length} movies, ${tv.length} TV)`,
+    `Average rating: ${avg}/5`,
+    `Rating distribution: 5\u2605=${ratingDist[5]} 4\u2605=${ratingDist[4]} 3\u2605=${ratingDist[3]} 2\u2605=${ratingDist[2]} 1\u2605=${ratingDist[1]}`,
+    ``,
+    `Genres (by volume):`,
+    ...sortedGenres.map(l => `  ${l}`),
+    ``,
+    `Decades:`,
+    ...sortedDecades.map(l => `  ${l}`),
+    ``,
+    `Top directors:`,
+    ...sortedDirectors.map(l => `  ${l}`),
+  ].join("\n");
+}
+
+function computeBlockedTitles(ratings: Record<string, any>): string {
+  const entries = Object.entries(ratings).filter(([, v]) => v?.movieDetails);
+  return entries
+    .map(([, v]) => {
+      const d = v.movieDetails;
+      const title = d.title || d.name || "Unknown";
+      const year = (d.release_date || d.first_air_date || "").slice(0, 4) || "Unknown";
+      return `- "${title}" (${year})`;
+    })
+    .join("\n");
+}
+
+function buildPrompt(tasteProfile: string, formatted: string, formattedWatchlist: string, blockedTitles: string): string {
+  return `You are a movie and TV show recommendation engine. Your task is to recommend titles the user has NEVER watched or rated before. This is critical — every recommendation must be absent from the BLOCKED TITLES section below.
+
+USER'S TASTE PROFILE:
+${tasteProfile}
 
 USER'S RATED CONTENT:
 ${formatted || "None"}
@@ -46,27 +134,30 @@ ${formatted || "None"}
 USER'S WATCHLIST:
 ${formattedWatchlist || "None"}
 
-Based on ALL items above, return a JSON object with:
+CRITICAL RULES:
+1. NEVER recommend anything listed in BLOCKED TITLES below. If uncertain whether the user has seen a title, skip it.
+2. Analyze the taste profile and rated content for patterns in genres, directors, themes, eras, and tone.
+3. Recommend at least 18 movies and 18 TV shows. Prioritize quality over filler — skip if you can't find confident picks.
+
+BLOCKED TITLES (already watched or rated — do NOT recommend):
+${blockedTitles || "None"}
+
+Return ONLY raw JSON. No markdown, no codeblocks, no introduction:
 
 {
   "recommendedMovies": [
-    { "title": "Inception", "year": 2010, "reason": "You enjoy Christopher Nolan's complex storytelling" }
+    { "title": "...", "year": 2024, "reason": "..." }
   ],
   "recommendedTvShows": [
-    { "title": "Better Call Saul", "year": 2015, "reason": "You enjoy Vince Gilligan's character-driven crime dramas" }
+    { "title": "...", "year": 2023, "reason": "..." }
   ]
-}
-
-IMPORTANT:
-- The "year" field must be the release year of the recommended title (used to look it up on TMDB)
-- Recommend AT LEAST 18 movies and 18 TV shows.
-- DO NOT recommend anything already in the user's rated content list OR their watchlist above.
-- Provide a brief 1-sentence reason for each recommendation based on their ratings.
-- ONLY output the raw JSON object. No markdown, no introduction, no codeblocks.`;
+}`;
 }
 
 export function buildRecommendationPrompt(ratings: Record<string, any>, watchlist: any[]): string {
+  const tasteProfile = computeTasteProfile(ratings);
   const formatted = formatRatedItems(ratings);
   const formattedWatchlist = formatWatchlistItems(watchlist);
-  return buildPrompt(formatted, formattedWatchlist);
+  const blockedTitles = computeBlockedTitles(ratings);
+  return buildPrompt(tasteProfile, formatted, formattedWatchlist, blockedTitles);
 }

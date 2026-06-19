@@ -1,8 +1,8 @@
 "use client";
 
-import { memo, useState, useRef } from "react";
+import { memo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Film, Loader2, Plus, Check, Play, Star, Layers, Info, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Film, Loader2, Plus, Check, Play, Star, Layers, Info, Sparkles, Trash2 } from "lucide-react";
 import { StarRating } from "./StarRating";
 import { CustomSelect } from "./CustomSelect";
 import { SOURCES } from "../lib/sources-config";
@@ -52,6 +52,7 @@ interface MobilePlayerSheetProps {
     isSelectedSimilarInWatchlist: boolean;
     onToggleWatchlistForSimilar: () => void;
     onPlaySimilar: () => void;
+    onDelete?: (tmdbId: string) => void;
 }
 
 function MobilePlayerSheetInner({
@@ -83,10 +84,12 @@ function MobilePlayerSheetInner({
     isSelectedSimilarInWatchlist,
     onToggleWatchlistForSimilar,
     onPlaySimilar,
+    onDelete,
 }: MobilePlayerSheetProps) {
     const [thoughts, setThoughts] = useState(
         () => ratings[activeStreamDetails?.id]?.thoughts || ""
     );
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     const similarScrollRef = useRef<HTMLDivElement>(null);
     const scrollSimilar = (direction: 'left' | 'right') => {
@@ -100,6 +103,22 @@ function MobilePlayerSheetInner({
     const isTv = !!selectedShowDetails;
     const currentRating = ratings[activeStreamDetails?.id]?.rating || 0;
     const enabledSources = SOURCES.filter((s) => effectiveEnabledSources.includes(s.id));
+
+    useEffect(() => {
+        if (!confirmingDelete) return;
+        const t = setTimeout(() => setConfirmingDelete(false), 3000);
+        return () => clearTimeout(t);
+    }, [confirmingDelete]);
+
+    const handleDeleteClick = () => {
+        if (!onDelete || !activeStreamDetails?.id) return;
+        if (!confirmingDelete) {
+            setConfirmingDelete(true);
+            return;
+        }
+        onDelete(activeStreamDetails.id);
+        setConfirmingDelete(false);
+    };
 
     const handleThoughtsBlur = () => {
         if (activeStreamDetails && currentRating > 0) {
@@ -286,14 +305,14 @@ function MobilePlayerSheetInner({
                             <div className="h-px bg-white/[0.05]" />
                             <div className="flex flex-col gap-1.5">
                                 <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Season</span>
-                                <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                                <div className="flex gap-1 overflow-x-auto no-scrollbar pb-0.5">
                                     {validSeasons.map((s: any) => {
                                         const isActive = s.season_number === selectedSeason;
                                         return (
                                             <button
                                                 key={s.season_number}
                                                 onClick={() => onChangeEpisode(s.season_number, 1)}
-                                                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all active:scale-95 cursor-pointer ${
+                                                className={`flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-medium border transition-all active:scale-95 cursor-pointer ${
                                                     isActive
                                                         ? "bg-white text-black border-white"
                                                         : "bg-transparent text-white/50 border-white/[0.08]"
@@ -311,14 +330,14 @@ function MobilePlayerSheetInner({
                                     <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Episode</span>
                                     <span className="text-[10px] text-white/25 font-mono">{selectedEpisode} / {episodesList.length || 1}</span>
                                 </div>
-                                <div className="grid grid-cols-6 gap-1.5">
+                                <div className="grid grid-cols-6 gap-1">
                                     {episodesList.map((ep) => {
                                         const isActive = ep === selectedEpisode;
                                         return (
                                             <button
                                                 key={ep}
                                                 onClick={() => onChangeEpisode(selectedSeason, ep)}
-                                                className={`aspect-square rounded-lg text-xs font-medium border transition-all active:scale-95 cursor-pointer ${
+                                                className={`aspect-square rounded-lg text-[10px] font-medium border transition-all active:scale-95 cursor-pointer ${
                                                     isActive
                                                         ? "bg-white text-black border-white"
                                                         : "bg-white/[0.03] text-white/50 border-white/[0.05]"
@@ -348,6 +367,23 @@ function MobilePlayerSheetInner({
                                 </button>
                             </div>
                         </>
+                    )}
+
+                    {onDelete && (
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Log</span>
+                            <button
+                                onClick={handleDeleteClick}
+                                className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all active:scale-[0.98] cursor-pointer ${
+                                    confirmingDelete
+                                        ? "bg-rose-500/80 text-white"
+                                        : "bg-rose-500/10 text-rose-400/90 hover:bg-rose-500/15 border border-rose-500/20"
+                                }`}
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                {confirmingDelete ? "Confirm delete?" : "Delete from log"}
+                            </button>
+                        </div>
                     )}
                 </div>
             )}

@@ -4,7 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Search, Home as HomeIcon, List, Settings as SettingsIcon, Film, Star, Sparkles } from "lucide-react";
+import { Search, Home as HomeIcon, Book, Settings as SettingsIcon, Film, Star, Sparkles } from "lucide-react";
 import { getPosterUrl } from "../lib/tmdb-utils";
 
 interface MobileBottomNavProps {
@@ -142,7 +142,7 @@ function MobileBottomNavInner({
                             <HomeIcon className="w-5 h-5" />
                         </Link>
                         <Link href="/log" className={`flex flex-col items-center gap-1 ${currentPath === "/log" ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
-                            <List className="w-5 h-5" />
+                            <Book className="w-5 h-5" />
                         </Link>
                         <Link href="/recommend" className={`flex flex-col items-center gap-1 ${currentPath === "/recommend" ? "text-slate-200" : "text-slate-400 hover:text-slate-200"}`}>
                             <Sparkles className="w-5 h-5" />

@@ -33,6 +33,8 @@ interface PlayerModalProps {
     onChangeEpisode: (season: number, episode: number) => void;
     onToggleWatchlist: (item: any) => void;
     onPlaySimilar: (movie: any) => void;
+    /** If provided, shows a delete-from-log button in the sidebar/sheet */
+    onDelete?: (tmdbId: string) => void;
     /**
      * The tab the modal should open on for every new active stream.
      * - "controls" (default) — used by the home page; player visible immediately.
@@ -58,6 +60,7 @@ export function PlayerModal({
     onChangeEpisode,
     onToggleWatchlist,
     onPlaySimilar,
+    onDelete,
     initialTab = "controls",
 }: PlayerModalProps) {
     const [activeTab, setActiveTab] = useState<"controls" | "details" | "similar">(initialTab);
@@ -77,6 +80,23 @@ export function PlayerModal({
             lastStreamIdRef.current = null;
         }
     }, [activeStream?.tmdbId, initialTab]);
+
+    // Lock body scroll when modal opens to prevent background scrolling
+    useEffect(() => {
+        if (!activeStream) return;
+        const scrollY = window.scrollY;
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = "100%";
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.position = "";
+            document.body.style.top = "";
+            document.body.style.width = "";
+            document.body.style.overflow = "";
+            window.scrollTo(0, scrollY);
+        };
+    }, [activeStream]);
 
     const [similarItems, setSimilarItems] = useState<any[]>([]);
     const [similarLoading, setSimilarLoading] = useState(false);
@@ -248,9 +268,6 @@ export function PlayerModal({
         };
 
         onPlaySimilar(movie);
-        // Land on the same tab the parent prefers for new titles
-        // (home -> controls / start watching; recommend -> details).
-        setActiveTab(initialTab);
     }, [similarItems, selectedSimilarIdx, selectedSimilarDetails, onPlaySimilar, initialTab]);
 
     const handleToggleWatchlistForSimilar = useCallback(() => {
@@ -328,6 +345,7 @@ export function PlayerModal({
         handleToggleWatchlistForSimilar,
         handlePlaySimilar,
         onClose,
+        selectedSimilarIdx,
     };
 
     return (
@@ -374,6 +392,7 @@ export function PlayerModal({
                         onLoadMore={() => setSimilarDisplayCount((p) => Math.min(p + 10, similarItems.length))}
                         selectedSimilarIdx={selectedSimilarIdx}
                         onSelectSimilar={setSelectedSimilarIdx}
+                        onDelete={onDelete}
                     />
                 </div>
             </div>
@@ -411,6 +430,7 @@ export function PlayerModal({
                 onToggleWatchlistForSimilar={handleToggleWatchlistForSimilar}
                 onPlaySimilar={handlePlaySimilar}
                 onClose={onClose}
+                onDelete={onDelete}
             />
         </>
     );
@@ -422,7 +442,7 @@ export function PlayerModal({
 // ─────────────────────────────────────────────────────────────────────
 interface PlayerAreaProps {
     activeTab: "controls" | "details" | "similar";
-    activeStream: { embedUrl: string; details: any; title: string } | null;
+    activeStream: { tmdbId?: string; embedUrl: string; details: any; title: string } | null;
     playerError: string | null;
     detailsLoading: boolean;
     detailsEmbedUrl: string | null;
@@ -445,6 +465,7 @@ interface PlayerAreaProps {
     onClose: () => void;
     showSimilarOverlay?: boolean;
     isMobile?: boolean;
+    selectedSimilarIdx: number;
 }
 
 function PlayerArea(props: PlayerAreaProps) {
@@ -456,6 +477,7 @@ function PlayerArea(props: PlayerAreaProps) {
         trailerIframeRef, trailerMuted, handleToggleMute,
         handleToggleWatchlistForSimilar, handlePlaySimilar,
         onClose, showSimilarOverlay = false, isMobile,
+        selectedSimilarIdx,
     } = props;
 
     if (activeTab === "controls") {
@@ -497,7 +519,7 @@ function PlayerArea(props: PlayerAreaProps) {
                     </div>
                 ) : detailsEmbedUrl ? (
                     <TrailerFrame
-                        key={detailsEmbedUrl}
+                        key={`details-${activeStream?.tmdbId}-${detailsEmbedUrl}`}
                         innerRef={trailerIframeRef}
                         src={detailsEmbedUrl}
                         muted={trailerMuted}
@@ -541,7 +563,7 @@ function PlayerArea(props: PlayerAreaProps) {
                 </div>
             ) : similarTrailerUrl ? (
                 <TrailerFrame
-                    key={similarTrailerUrl}
+                    key={`similar-${activeStream?.tmdbId}-${selectedSimilarIdx}-${similarTrailerUrl}`}
                     innerRef={trailerIframeRef}
                     src={similarTrailerUrl}
                     muted={trailerMuted}
@@ -584,7 +606,8 @@ function PlayerArea(props: PlayerAreaProps) {
                         </button>
                         <button
                             onClick={handlePlaySimilar}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer"
+                            disabled={similarDetailLoading}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[10px] font-medium uppercase tracking-wider border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] text-white/80 hover:text-white transition-all active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <Play className="w-3.5 h-3.5" /> Play
                         </button>
@@ -669,6 +692,7 @@ function MobileModal({
     onToggleWatchlistForSimilar,
     onPlaySimilar,
     onClose,
+    onDelete,
 }: {
     activeStream: any;
     playerAreaProps: PlayerAreaProps;
@@ -701,6 +725,7 @@ function MobileModal({
     onToggleWatchlistForSimilar: () => void;
     onPlaySimilar: () => void;
     onClose: () => void;
+    onDelete?: (tmdbId: string) => void;
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const sheetRef = useRef<HTMLDivElement>(null);
@@ -824,6 +849,7 @@ function MobileModal({
                         isSelectedSimilarInWatchlist={isSelectedInWatchlist}
                         onToggleWatchlistForSimilar={onToggleWatchlistForSimilar}
                         onPlaySimilar={onPlaySimilar}
+                        onDelete={onDelete}
                     />
                 </div>
             </div>

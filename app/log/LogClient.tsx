@@ -9,23 +9,40 @@ import { Navbar } from "../components/Navbar";
 import SettingsOverlay from "../components/SettingsOverlay";
 import { SearchInput } from "../components/SearchInput";
 import { MobileBottomNav } from "../components/MobileBottomNav";
-import { LogItemModal } from "../components/LogItemModal";
+import { PlayerModal } from "../components/PlayerModal";
 import { getBackdropUrl, getPosterUrl } from "../lib/tmdb-utils";
 import { useUserLists } from "../hooks/useUserLists";
 import { useSearch } from "../hooks/useSearch";
+import { useSourcePrefs } from "../hooks/useSourcePrefs";
+import { buildEmbedUrl } from "../lib/sources-config";
+import { getDetails } from "../lib/details-cache";
+import { flushGlobalProgress } from "../hooks/usePlayerProgress";
 
 interface LogClientProps {
     ratings: Record<string, any>;
+    defaultSource: string;
+    enabledSources: string[];
 }
 
-export default function LogClient({ ratings: initialRatings }: LogClientProps) {
+export default function LogClient({ ratings: initialRatings, defaultSource, enabledSources }: LogClientProps) {
     const [sortBy, setSortBy] = useState<"rating" | "time" | "release">("time");
     const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
     const [mediaFilter, setMediaFilter] = useState<"all" | "movie" | "tv">("all");
     const [showSettings, setShowSettings] = useState(false);
-    const [selectedLogItem, setSelectedLogItem] = useState<any>(null);
+    const [activeStream, setActiveStream] = useState<{
+        tmdbId: string; title: string; details: any; embedUrl: string;
+    } | null>(null);
+    const [playerError, setPlayerError] = useState<string | null>(null);
+    const [selectedShowDetails, setSelectedShowDetails] = useState<any | null>(null);
+    const [selectedSeason, setSelectedSeason] = useState(1);
+    const [selectedEpisode, setSelectedEpisode] = useState(1);
+    const [episodesList, setEpisodesList] = useState<number[]>([]);
+    const [playerSource, setPlayerSource] = useState<string | null>(null);
 
     const router = useRouter();
+
+    const { effectiveEnabledSources, effectiveSource } = useSourcePrefs(defaultSource, enabledSources);
+    const currentActiveSource = playerSource || effectiveSource;
 
     const {
         searchQuery, setSearchQuery,
@@ -35,11 +52,63 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
         handleSearch
     } = useSearch();
 
-    const { ratings: ratingsMap, handleRate, handleDeleteRating } = useUserLists({ ratings: initialRatings });
+    const { ratings: ratingsMap, handleRate, handleDeleteRating, refreshContinueWatching } = useUserLists({ ratings: initialRatings });
 
     const ratings = useMemo(() => {
         return Object.values(ratingsMap).filter((item: any) => item && item.movieDetails);
     }, [ratingsMap]);
+
+    const playLogItem = async (item: any) => {
+        const details = item.movieDetails;
+        if (!details?.id) return;
+        const isTv = details.media_type === "tv";
+        const tmdbId = isTv ? `tv-${details.id}-${selectedSeason}-${selectedEpisode}` : String(details.id);
+        const title = details.title || details.name || "Untitled";
+        const resolvedTitle = isTv ? `${title} S${String(selectedSeason).padStart(2, "0")}E${String(selectedEpisode).padStart(2, "0")}` : title;
+        if (isTv) {
+            try {
+                const tmdbData = await getDetails(details.id, "tv");
+                if (tmdbData) {
+                    setSelectedShowDetails(tmdbData);
+                    const seasonObj = tmdbData.seasons?.find((s: any) => s.season_number === 1);
+                    const epCount = seasonObj?.episode_count || 1;
+                    setSelectedSeason(1); setSelectedEpisode(1);
+                    setEpisodesList(Array.from({ length: epCount }, (_, i) => i + 1));
+                } else {
+                    setSelectedShowDetails(null); setEpisodesList([]);
+                }
+            } catch { setSelectedShowDetails(null); setEpisodesList([]); }
+        } else {
+            setSelectedShowDetails(null); setEpisodesList([]); setSelectedSeason(1); setSelectedEpisode(1);
+        }
+        setPlayerError(null);
+        const embedUrl = buildEmbedUrl(currentActiveSource, details.id, isTv ? "tv" : "movie", isTv ? 1 : undefined, isTv ? 1 : undefined, 0);
+        setPlayerSource(currentActiveSource);
+        setActiveStream({ tmdbId, title: resolvedTitle, details, embedUrl });
+    };
+
+    const handleSourceChange = (newSource: string) => {
+        setPlayerSource(newSource);
+        if (!activeStream) return;
+        const details = activeStream.details;
+        const isTv = details?.media_type === "tv";
+        const newUrl = buildEmbedUrl(newSource, details?.id, isTv ? "tv" : "movie", isTv ? selectedSeason : undefined, isTv ? selectedEpisode : undefined);
+        setActiveStream({ ...activeStream, embedUrl: newUrl });
+    };
+
+    const closePlayer = () => {
+        flushGlobalProgress();
+        setActiveStream(null);
+        setPlayerError(null);
+        setPlayerSource(null);
+        refreshContinueWatching();
+    };
+
+    const changeEpisode = (season: number, episode: number) => {
+        if (!activeStream) return;
+        setSelectedSeason(season); setSelectedEpisode(episode);
+        setActiveStream({ ...activeStream, embedUrl: buildEmbedUrl(playerSource || effectiveSource, activeStream.details.id, "tv", season, episode, 0) });
+    };
 
     const handleDesktopSearch = (e: any) => {
         e.preventDefault();
@@ -129,7 +198,7 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
                 ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 md:gap-x-5 md:gap-y-10">
                         {sortedRatings.map((item: any) => (
-                            <div key={`${item.movieDetails.media_type || "movie"}-${item.movieDetails.id}`} className="group flex flex-col cursor-pointer" onClick={() => setSelectedLogItem(item)}>
+                            <div key={`${item.movieDetails.media_type || "movie"}-${item.movieDetails.id}`} className="group flex flex-col cursor-pointer" onClick={() => playLogItem(item)}>
                                 <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/40 shadow-md group-hover:border-white/40 transition-all duration-300">
                                     {item.movieDetails.backdrop_path || item.movieDetails.poster_path ? (
                                         <FadeImage
@@ -165,17 +234,29 @@ export default function LogClient({ ratings: initialRatings }: LogClientProps) {
                 )}
             </div>
 
-            {selectedLogItem && (
-                <LogItemModal
-                    item={selectedLogItem}
-                    onClose={() => setSelectedLogItem(null)}
-                    onRate={handleRate}
-                    onDelete={handleDeleteRating}
-                />
-            )}
+            <PlayerModal
+                activeStream={activeStream}
+                playerError={playerError}
+                effectiveSource={playerSource || effectiveSource}
+                effectiveEnabledSources={effectiveEnabledSources}
+                selectedShowDetails={selectedShowDetails}
+                selectedSeason={selectedSeason}
+                selectedEpisode={selectedEpisode}
+                episodesList={episodesList}
+                ratings={ratingsMap}
+                watchlist={[]}
+                onClose={closePlayer}
+                onSourceChange={handleSourceChange}
+                onRate={handleRate}
+                onChangeEpisode={changeEpisode}
+                onToggleWatchlist={() => {}}
+                onPlaySimilar={() => {}}
+                onDelete={handleDeleteRating}
+                initialTab="controls"
+            />
 
             <MobileBottomNav
-                activeStream={null}
+                activeStream={activeStream}
                 isMobileSearchOpen={isMobileSearchOpen}
                 setIsMobileSearchOpen={setIsMobileSearchOpen}
                 searchQuery={searchQuery}

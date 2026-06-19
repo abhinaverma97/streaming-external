@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { FadeImage } from "../components/FadeImage";
 import { Film, Plus, Check, Play, RotateCw, RefreshCw, X } from "lucide-react";
@@ -61,6 +61,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     const lastProgressRef = useRef(0);
     const activeStreamRef = useRef(activeStream);
     useEffect(() => { activeStreamRef.current = activeStream; }, [activeStream]);
+    const pendingPlayRef = useRef<AbortController | null>(null);
 
     const {
         effectiveEnabledSources, effectiveSource,
@@ -188,10 +189,23 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         return [...movies, ...tvShows];
     })();
 
-    const filteredItems = items.filter((item: any) => {
-        if (filter === "all") return true;
-        return item._type === filter;
-    });
+    const deduplicatedItems = useMemo(() => {
+        const seen = new Set<string>();
+        return items.filter((item: any) => {
+            const key = `${item._type}-${item.id}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+    }, [items]);
+
+    const filteredItems = useMemo(() => {
+        return deduplicatedItems.filter((item: any) => {
+            if (filter !== "all" && item._type !== filter) return false;
+            if (ratings[item.id]) return false;
+            return true;
+        });
+    }, [deduplicatedItems, filter, ratings]);
 
     const isInWatchlist = (item: any) => {
         if (!item.id) return false;
@@ -200,6 +214,11 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     };
 
     const playRecommendation = async (item: any) => {
+        // Cancel any in-flight play attempt to prevent race conditions
+        if (pendingPlayRef.current) pendingPlayRef.current.abort();
+        const controller = new AbortController();
+        pendingPlayRef.current = controller;
+
         if (!item.id) {
             setError("Media not found in database.");
             return;
@@ -212,6 +231,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         if (isTv) {
             try {
                 const tmdbData = await getDetails(item.id, "tv");
+                if (controller.signal.aborted) return;
                 if (tmdbData) {
                     setSelectedShowDetails(tmdbData);
                     const seasonObj = tmdbData.seasons?.find((s: any) => s.season_number === 1);
@@ -225,6 +245,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         } else {
             setSelectedShowDetails(null); setEpisodesList([]); setSelectedSeason(1); setSelectedEpisode(1);
         }
+        if (controller.signal.aborted) return;
         setPlayerError(null);
         const embedUrl = buildEmbedUrl(effectiveSource, item.id, isTv ? "tv" : "movie", isTv ? 1 : undefined, isTv ? 1 : undefined, 0);
         setPlayerSource(effectiveSource);
@@ -257,9 +278,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
 
     const generatedAt = recommendations?.generatedAt;
     const formattedDate = generatedAt ? new Date(generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
-    const movieCount = (recommendations?.recommendedMovies || []).length;
-    const tvCount = (recommendations?.recommendedTvShows || []).length;
-    const totalCount = movieCount + tvCount;
+    const filteredMovieCount = filteredItems.filter((i: any) => i._type === "movie").length;
+    const filteredTvCount = filteredItems.filter((i: any) => i._type === "tv").length;
+    const totalCount = filteredItems.length;
 
     return (
         <main className="min-h-screen bg-black text-slate-100 font-sans selection:bg-white/20 pb-20 relative overflow-hidden">
@@ -278,9 +299,9 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
                 <div className="flex items-center justify-center gap-4 md:gap-6 mt-8 md:mt-16 mb-4 text-[10px] font-medium tracking-[0.2em] text-slate-500 uppercase">
                     <span>{totalCount} <span className="text-slate-600">recommended</span></span>
                     <span className="w-1 h-1 rounded-full bg-slate-800" />
-                    <span>{movieCount} <span className="text-slate-600">movies</span></span>
+                    <span>{filteredMovieCount} <span className="text-slate-600">movies</span></span>
                     <span className="w-1 h-1 rounded-full bg-slate-800" />
-                    <span>{tvCount} <span className="text-slate-600">series</span></span>
+                    <span>{filteredTvCount} <span className="text-slate-600">series</span></span>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 mb-8 md:mb-12 text-[10px] font-semibold tracking-[0.28em] uppercase text-slate-300">
