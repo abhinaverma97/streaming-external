@@ -29,7 +29,7 @@ function seedFromFile() {
             const insert = db.prepare('INSERT OR IGNORE INTO ratings (user_id, tmdb_id, rating, details_json, thoughts, rated_at) VALUES (?, ?, ?, ?, ?, ?)');
             const tx = db.transaction((items) => {
                 for (const [key, value] of items) {
-                    insert.run(userId, String(value.tmdbId || key), value.rating || 1, JSON.stringify(value.movieDetails || {}), value.thoughts || '', value.ratedAt || Date.now());
+                    insert.run(userId, String(value.tmdbId || key), value.rating || 1, JSON.stringify(value.movieDetails || {}), value.thoughts || '', value.ratedAt || Math.floor(Date.now() / 1000));
                 }
             });
             tx(seed.ratings);
@@ -39,7 +39,7 @@ function seedFromFile() {
             const insert = db.prepare('INSERT OR IGNORE INTO watchlist (user_id, tmdb_id, media_type, details_json, added_at) VALUES (?, ?, ?, ?, ?)');
             const tx = db.transaction((items) => {
                 for (const [key, value] of items) {
-                    insert.run(userId, String(value.tmdbId || key), value.mediaType || 'movie', JSON.stringify(value.movieDetails || {}), value.addedAt || Date.now());
+                    insert.run(userId, String(value.tmdbId || key), value.mediaType || 'movie', JSON.stringify(value.movieDetails || {}), value.addedAt || Math.floor(Date.now() / 1000));
                 }
             });
             tx(seed.watchlist);
@@ -151,4 +151,34 @@ export function migrateIfNeeded() {
     }
 
     seedFromFile();
+}
+
+const MS_THRESHOLD = 1000000000000;
+
+export function migrateTimestampsIfNeeded() {
+    const flag = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_migration_v2'").get();
+    if (flag) return;
+
+    const runMigration = db.transaction(() => {
+        db.exec("CREATE TABLE IF NOT EXISTS _migration_v2 (done INTEGER UNIQUE)");
+        const claim = db.prepare("INSERT OR IGNORE INTO _migration_v2 (done) VALUES (1)").run();
+        if (claim.changes === 0) return;
+
+        const tables = [
+            { table: 'ratings', column: 'rated_at' },
+            { table: 'watchlist', column: 'added_at' },
+            { table: 'progress', column: 'updated_at' },
+            { table: 'history', column: 'watched_at' },
+        ];
+
+        let fixed = 0;
+        for (const { table, column } of tables) {
+            const result = db.prepare(`UPDATE ${table} SET ${column} = ${column} / 1000 WHERE ${column} > ?`).run(MS_THRESHOLD);
+            fixed += result.changes;
+        }
+
+        console.log(`[Migrate] V2 timestamp migration complete — fixed ${fixed} rows`);
+    });
+
+    runMigration();
 }

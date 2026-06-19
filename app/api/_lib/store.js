@@ -1,9 +1,12 @@
 import db from './db.js';
 import { defaultAiModel } from './config.js';
-import { migrateIfNeeded } from './migrate.js';
+import { migrateIfNeeded, migrateTimestampsIfNeeded } from './migrate.js';
 
-// Run migration on first import
+const MS_THRESHOLD = 1000000000000;
+
+// Run migrations on first import
 migrateIfNeeded();
+migrateTimestampsIfNeeded();
 
 // ── Watchlist ──────────────────────────────────────────────────────────
 
@@ -13,7 +16,7 @@ export async function getWatchlist(userId) {
         tmdbId: r.tmdb_id,
         mediaType: r.media_type,
         movieDetails: JSON.parse(r.details_json),
-        addedAt: r.added_at,
+        addedAt: r.added_at > MS_THRESHOLD ? Math.floor(r.added_at / 1000) : r.added_at,
     }));
 }
 
@@ -38,7 +41,7 @@ export async function getProgress(userId) {
         movieDetails: JSON.parse(r.details_json),
         mediaType: r.media_type,
         source: r.source,
-        updatedAt: r.updated_at,
+        updatedAt: r.updated_at > MS_THRESHOLD ? Math.floor(r.updated_at / 1000) : r.updated_at,
     }));
 
     const showGroups = new Map();
@@ -81,7 +84,7 @@ export async function getHistory(userId) {
     return rows.map(r => ({
         tmdbId: r.tmdb_id,
         movieDetails: JSON.parse(r.details_json),
-        watchedAt: r.watched_at,
+        watchedAt: r.watched_at > MS_THRESHOLD ? Math.floor(r.watched_at / 1000) : r.watched_at,
     }));
 }
 
@@ -107,7 +110,7 @@ export async function getRatings(userId) {
         ratings[r.tmdb_id] = {
             rating: r.rating,
             movieDetails: JSON.parse(r.details_json),
-            ratedAt: r.rated_at,
+            ratedAt: r.rated_at > MS_THRESHOLD ? Math.floor(r.rated_at / 1000) : r.rated_at,
             thoughts: r.thoughts || '',
         };
     }
