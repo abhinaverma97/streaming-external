@@ -330,14 +330,14 @@ function MobilePlayerSheetInner({
                                     <span className="text-[9px] uppercase tracking-[0.25em] text-white/30">Episode</span>
                                     <span className="text-[10px] text-white/25 font-mono">{selectedEpisode} / {episodesList.length || 1}</span>
                                 </div>
-                                <div className="grid grid-cols-6 gap-1">
+                                <div className="grid grid-cols-7 gap-0.5">
                                     {episodesList.map((ep) => {
                                         const isActive = ep === selectedEpisode;
                                         return (
                                             <button
                                                 key={ep}
                                                 onClick={() => onChangeEpisode(selectedSeason, ep)}
-                                                className={`aspect-square rounded-lg text-[10px] font-medium border transition-all active:scale-95 cursor-pointer ${
+                                                className={`w-7 h-7 rounded-md text-[9px] font-medium border transition-all active:scale-95 cursor-pointer ${
                                                     isActive
                                                         ? "bg-white text-black border-white"
                                                         : "bg-white/[0.03] text-white/50 border-white/[0.05]"
