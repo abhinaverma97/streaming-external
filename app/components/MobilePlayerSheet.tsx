@@ -337,7 +337,7 @@ function MobilePlayerSheetInner({
                                             <button
                                                 key={ep}
                                                 onClick={() => onChangeEpisode(selectedSeason, ep)}
-                                                className={`aspect-square rounded-lg text-[11px] font-medium border transition-all duration-150 active:scale-90 cursor-pointer ${
+                                                className={`aspect-square rounded-lg text-[11px] font-medium border transition-all duration-150 cursor-pointer ${
                                                     isActive
                                                         ? "bg-white text-black border-white shadow-sm"
                                                         : "bg-white/[0.04] text-white/60 border-white/[0.06] hover:bg-white/[0.08] hover:text-white/80"
