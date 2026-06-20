@@ -216,9 +216,10 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         return deduplicatedItems.filter((item: any) => {
             if (filter !== "all" && item._type !== filter) return false;
             if (ratings[item.id]) return false;
+            if (isInWatchlist(item)) return false;
             return true;
         });
-    }, [deduplicatedItems, filter, ratings]);
+    }, [deduplicatedItems, filter, ratings, watchlist]);
 
     const isInWatchlist = (item: any) => {
         if (!item.id) return false;

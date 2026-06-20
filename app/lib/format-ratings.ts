@@ -110,16 +110,24 @@ function computeTasteProfile(ratings: Record<string, any>): string {
   ].join("\n");
 }
 
-function computeBlockedTitles(ratings: Record<string, any>): string {
-  const entries = Object.entries(ratings).filter(([, v]) => v?.movieDetails);
-  return entries
+function computeBlockedTitles(ratings: Record<string, any>, watchlist: any[] = []): string {
+  const rated = Object.entries(ratings)
+    .filter(([, v]) => v?.movieDetails)
     .map(([, v]) => {
       const d = v.movieDetails;
       const title = d.title || d.name || "Unknown";
       const year = (d.release_date || d.first_air_date || "").slice(0, 4) || "Unknown";
       return `- "${title}" (${year})`;
-    })
-    .join("\n");
+    });
+  const watchlisted = watchlist
+    .filter(w => w?.movieDetails)
+    .map(w => {
+      const d = w.movieDetails;
+      const title = d.title || d.name || "Unknown";
+      const year = (d.release_date || d.first_air_date || "").slice(0, 4) || "Unknown";
+      return `- "${title}" (${year}) [watchlist]`;
+    });
+  return [...rated, ...watchlisted].join("\n");
 }
 
 function buildPrompt(tasteProfile: string, formatted: string, formattedWatchlist: string, blockedTitles: string): string {
@@ -169,6 +177,6 @@ export function buildRecommendationPrompt(ratings: Record<string, any>, watchlis
   const tasteProfile = computeTasteProfile(ratings);
   const formatted = formatRatedItems(ratings);
   const formattedWatchlist = formatWatchlistItems(watchlist);
-  const blockedTitles = computeBlockedTitles(ratings);
+  const blockedTitles = computeBlockedTitles(ratings, watchlist);
   return buildPrompt(tasteProfile, formatted, formattedWatchlist, blockedTitles);
 }
