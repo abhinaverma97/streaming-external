@@ -36,22 +36,30 @@ async function runDaemon() {
         const dbModule = await import("./app/api/_lib/db.js");
         const db = dbModule.default;
         const { getRecommendations } = await import("./app/api/_lib/store.js");
+        const { runFullGenerationPipeline } = await import("./app/api/_lib/recommend.js");
 
         const users = db.prepare(`
             SELECT user_id FROM settings WHERE ai_api_key IS NOT NULL AND ai_api_key != ''
         `).all();
 
-        for (const { user_id } of users) {
-            const cached = await getRecommendations(user_id);
-            const isStale = !cached || !cached.generatedAt || (Date.now() - cached.generatedAt * 1000 > 2 * 60 * 60 * 1000);
+        const results = await Promise.allSettled(
+            users.map(async ({ user_id }: { user_id: number }) => {
+                const cached = await getRecommendations(user_id);
+                const isStale = !cached || !cached.generatedAt || (Date.now() - cached.generatedAt * 1000 > 2 * 60 * 60 * 1000);
 
-            if (isStale && !cached?.isGenerating) {
-                if (cached?.error) {
-                    console.log(`[Daemon] User ${user_id} error cleared, retrying:`, cached.error);
+                if (isStale && !cached?.isGenerating) {
+                    if (cached?.error) {
+                        console.log(`[Daemon] User ${user_id} error cleared, retrying:`, cached.error);
+                    }
+                    console.log(`[Daemon] Triggering generation for user ${user_id}`);
+                    await runFullGenerationPipeline(user_id);
                 }
-                console.log(`[Daemon] Triggering generation for user ${user_id}`);
-                const { runFullGenerationPipeline } = await import("./app/api/_lib/recommend.js");
-                await runFullGenerationPipeline(user_id);
+            })
+        );
+
+        for (const r of results) {
+            if (r.status === 'rejected') {
+                console.error("[Daemon] User generation failed:", r.reason);
             }
         }
     } catch (e) {

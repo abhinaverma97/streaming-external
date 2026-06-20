@@ -1,26 +1,21 @@
 import { searchMovies, searchTv } from "./tmdb.js";
 import { buildRecommendationPrompt } from "../../lib/format-ratings";
 
-let activeController = null;
-let activeUserId = null;
+const activeControllers = new Map();
 
-export function cancelGeneration() {
-  if (activeController) {
-    activeController.abort(new Error("User cancelled generation"));
-    activeController = null;
-    activeUserId = null;
+export function cancelGeneration(userId) {
+  const controller = activeControllers.get(userId);
+  if (controller) {
+    controller.abort(new Error("User cancelled generation"));
+    activeControllers.delete(userId);
     return true;
   }
   return false;
 }
 
-export function getActiveUserId() {
-  return activeUserId;
-}
-
-export async function generateRecommendations(ratings, watchlist, aiSettings) {
-  if (activeController) {
-    console.log("[Recommend] Generation already in progress, skipping.");
+export async function generateRecommendations(ratings, watchlist, aiSettings, userId) {
+  if (activeControllers.has(userId)) {
+    console.log(`[Recommend] Generation already in progress for user ${userId}, skipping.`);
     return null;
   }
 
@@ -36,12 +31,12 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
   console.log(`[Recommend] Prompt length: ${prompt.length} chars`);
 
   const controller = new AbortController();
-  activeController = controller;
+  activeControllers.set(userId, controller);
 
   let timeout;
   try {
     timeout = setTimeout(() => {
-      if (activeController !== controller) return;
+      if (activeControllers.get(userId) !== controller) return;
       console.log(`[Recommend] OpenRouter fetch timed out after 1 hour`);
       controller.abort(new Error("Timeout"));
     }, 3600000);
@@ -127,9 +122,8 @@ export async function generateRecommendations(ratings, watchlist, aiSettings) {
       newToYou: parsed.newToYou || { movies: [], tv: [] },
     };
   } finally {
-    activeController = null;
-    if (!activeUserId) clearTimeout(timeout);
-    else clearTimeout(timeout);
+    activeControllers.delete(userId);
+    clearTimeout(timeout);
   }
 }
 
@@ -207,13 +201,12 @@ export async function runFullGenerationPipeline(userId) {
   const { setGenerationStatus, setGenerationError, getRatings, getWatchlist, getAiSettings, saveRecommendations } = await import("./store.js");
 
   await setGenerationStatus(userId, true);
-  activeUserId = userId;
   try {
     const ratings = await getRatings(userId);
     const watchlist = await getWatchlist(userId);
     const aiSettings = await getAiSettings(userId);
 
-    const raw = await generateRecommendations(ratings, watchlist, aiSettings);
+    const raw = await generateRecommendations(ratings, watchlist, aiSettings, userId);
     if (!raw) return;
     const enriched = await enrichWithTmdb(raw);
     await saveRecommendations(userId, enriched);
@@ -224,8 +217,5 @@ export async function runFullGenerationPipeline(userId) {
     } else {
       await setGenerationError(userId, err.message || "Failed to generate recommendations.");
     }
-    throw err;
-  } finally {
-    activeUserId = null;
   }
 }

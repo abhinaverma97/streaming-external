@@ -345,7 +345,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
     };
 
     const generatedAt = recommendations?.generatedAt;
-    const formattedDate = generatedAt ? new Date(generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
+    const formattedDate = generatedAt ? new Date(generatedAt * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : null;
     const madeForYouItems = useMemo(() => {
         if (filter === "all") {
             const movies = (recommendations?.madeForYou?.movies || []).filter((item: any) => !ratings[item.id]).map((item: any) => ({ ...item, _type: "movie" as const }));
