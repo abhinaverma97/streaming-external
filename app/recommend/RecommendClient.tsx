@@ -212,6 +212,12 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         });
     }, [items]);
 
+    const isInWatchlist = (item: any) => {
+        if (!item.id) return false;
+        const wlId = getWatchlistId(item);
+        return (watchlist as any[]).some((w) => w.tmdbId === wlId);
+    };
+
     const filteredItems = useMemo(() => {
         return deduplicatedItems.filter((item: any) => {
             if (filter !== "all" && item._type !== filter) return false;
@@ -220,12 +226,6 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
             return true;
         });
     }, [deduplicatedItems, filter, ratings, watchlist]);
-
-    const isInWatchlist = (item: any) => {
-        if (!item.id) return false;
-        const wlId = getWatchlistId(item);
-        return (watchlist as any[]).some((w) => w.tmdbId === wlId);
-    };
 
     const playRecommendation = async (item: any) => {
         // Cancel any in-flight play attempt to prevent race conditions
