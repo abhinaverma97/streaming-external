@@ -183,8 +183,6 @@ export function migrateTimestampsIfNeeded() {
     runMigration();
 }
 
-const RATING_5_THRESHOLD = 5;
-
 export function migrateRatingsTo10Scale() {
     const flag = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_migration_v3'").get();
     if (flag) return;
@@ -194,13 +192,8 @@ export function migrateRatingsTo10Scale() {
         const claim = db.prepare("INSERT OR IGNORE INTO _migration_v3 (done) VALUES (1)").run();
         if (claim.changes === 0) return;
 
-        const toUpdate = db.prepare('SELECT COUNT(*) as count FROM ratings WHERE rating <= ?').get(RATING_5_THRESHOLD);
-        if (toUpdate.count > 0) {
-            db.prepare('UPDATE ratings SET rating = rating * 2 WHERE rating <= ?').run(RATING_5_THRESHOLD);
-            console.log(`[Migrate] V3 rating scale migration complete — multiplied ${toUpdate.count} ratings by 2`);
-        }
-
-        // Recreate table with new CHECK constraint
+        // Data is already in 1-10 scale from the first deployment.
+        // Only the schema needs fixing — recreate with the correct CHECK.
         db.exec(`
             CREATE TABLE IF NOT EXISTS ratings_new (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
