@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, memo } from "react";
 import Image from "next/image";
 import { Play, Plus, Check, Star, Volume2, VolumeX } from "lucide-react";
 import FadeContent from "./FadeContent";
-import { StarRating } from "./StarRating";
 import { Movie, CwPlayContext } from "../lib/types";
 import { getBackdropUrl } from "../lib/tmdb-utils";
 
@@ -177,13 +176,6 @@ function HeroSectionInner({
                                     <><Plus className="w-3.5 h-3.5" /> Watchlist</>
                                 )}
                             </button>
-
-                            <div className="ml-2">
-                                <StarRating
-                                    value={ratings[selectedMovie.id]?.rating || 0}
-                                    onChange={(val) => onRate(selectedMovie, val)}
-                                />
-                            </div>
                         </div>
                     </FadeContent>
                 )}

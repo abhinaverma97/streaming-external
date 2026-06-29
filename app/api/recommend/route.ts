@@ -51,6 +51,6 @@ function startBackgroundGeneration(userId: number) {
 
 function isStale(recs: any): boolean {
     if (!recs.generatedAt) return true;
-    const twoHours = 2 * 60 * 60 * 1000;
-    return Date.now() - recs.generatedAt * 1000 > twoHours;
+    const oneDay = 24 * 60 * 60 * 1000;
+    return Date.now() - recs.generatedAt * 1000 > oneDay;
 }

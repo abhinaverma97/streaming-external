@@ -182,3 +182,42 @@ export function migrateTimestampsIfNeeded() {
 
     runMigration();
 }
+
+const RATING_5_THRESHOLD = 5;
+
+export function migrateRatingsTo10Scale() {
+    const flag = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_migration_v3'").get();
+    if (flag) return;
+
+    const runMigration = db.transaction(() => {
+        db.exec("CREATE TABLE IF NOT EXISTS _migration_v3 (done INTEGER UNIQUE)");
+        const claim = db.prepare("INSERT OR IGNORE INTO _migration_v3 (done) VALUES (1)").run();
+        if (claim.changes === 0) return;
+
+        const toUpdate = db.prepare('SELECT COUNT(*) as count FROM ratings WHERE rating <= ?').get(RATING_5_THRESHOLD);
+        if (toUpdate.count > 0) {
+            db.prepare('UPDATE ratings SET rating = rating * 2 WHERE rating <= ?').run(RATING_5_THRESHOLD);
+            console.log(`[Migrate] V3 rating scale migration complete — multiplied ${toUpdate.count} ratings by 2`);
+        }
+
+        // Recreate table with new CHECK constraint
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS ratings_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                tmdb_id TEXT NOT NULL,
+                rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 10),
+                details_json TEXT NOT NULL DEFAULT '{}',
+                thoughts TEXT NOT NULL DEFAULT '',
+                rated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+                UNIQUE(user_id, tmdb_id)
+            );
+        `);
+        db.exec('INSERT OR IGNORE INTO ratings_new SELECT * FROM ratings');
+        db.exec('DROP TABLE ratings');
+        db.exec('ALTER TABLE ratings_new RENAME TO ratings');
+        console.log('[Migrate] V3 rating scale migration complete — table recreated with 1-10 CHECK constraint');
+    });
+
+    runMigration();
+}

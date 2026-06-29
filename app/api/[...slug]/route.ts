@@ -100,7 +100,7 @@ async function handle(req: NextRequest, segments: string[]): Promise<NextRespons
             if (method === "GET") return json(await getRatings(userId));
             if (method === "POST" && s1) {
                 const body = await req.json();
-                if (typeof body.rating !== "number" || isNaN(body.rating) || body.rating < 1 || body.rating > 5)
+                if (typeof body.rating !== "number" || isNaN(body.rating) || body.rating < 1 || body.rating > 10)
                     return error("Invalid rating", 400);
                 await saveRating(userId, s1, body.rating, body.movieDetails, body.thoughts);
                 return json({ ok: true });

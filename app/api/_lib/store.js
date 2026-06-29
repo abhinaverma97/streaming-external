@@ -1,12 +1,13 @@
 import db from './db.js';
 import { defaultAiModel } from './config.js';
-import { migrateIfNeeded, migrateTimestampsIfNeeded } from './migrate.js';
+import { migrateIfNeeded, migrateTimestampsIfNeeded, migrateRatingsTo10Scale } from './migrate.js';
 
 const MS_THRESHOLD = 1000000000000;
 
 // Run migrations on first import
 migrateIfNeeded();
 migrateTimestampsIfNeeded();
+migrateRatingsTo10Scale();
 
 // ── Watchlist ──────────────────────────────────────────────────────────
 
@@ -118,8 +119,10 @@ export async function getRatings(userId) {
 }
 
 export async function saveRating(userId, tmdbId, rating, movieDetails, thoughts) {
+    const existing = db.prepare('SELECT rated_at FROM ratings WHERE user_id = ? AND tmdb_id = ?').get(userId, String(tmdbId));
+    const ratedAt = existing ? existing.rated_at : Math.floor(Date.now() / 1000);
     db.prepare('INSERT OR REPLACE INTO ratings (user_id, tmdb_id, rating, details_json, thoughts, rated_at) VALUES (?, ?, ?, ?, ?, ?)')
-        .run(userId, String(tmdbId), rating, JSON.stringify(movieDetails || {}), thoughts || '', Math.floor(Date.now() / 1000));
+        .run(userId, String(tmdbId), rating, JSON.stringify(movieDetails || {}), thoughts || '', ratedAt);
 }
 
 export async function deleteRating(userId, tmdbId) {

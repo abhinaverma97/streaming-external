@@ -13,7 +13,7 @@ function StarRatingInner({ value, onChange }: StarRatingProps) {
 
     return (
         <div className="flex items-center gap-1 w-fit transition-all duration-300">
-            {[1, 2, 3, 4, 5].map((star) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
                 <button
                     key={star}
                     type="button"

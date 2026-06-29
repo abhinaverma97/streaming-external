@@ -28,7 +28,7 @@ function formatRatedItems(ratings: Record<string, any>): string {
       const director = getDirector(d);
       const genres = getGenres(d);
       const thoughts = item.thoughts ? `\n   User Thoughts: ${item.thoughts}` : "";
-      return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/5${thoughts}\n   TMDB: ${tmdbRating}/10\n   Director: ${director}\n   Genres: ${genres}`;
+      return `${i + 1}. "${title}" (${year}) - ${mediaType}\n   User Rating: ${userRating}/10${thoughts}\n   TMDB: ${tmdbRating}/10\n   Director: ${director}\n   Genres: ${genres}`;
     })
     .join("\n\n");
 }
@@ -50,14 +50,14 @@ function computeTasteProfile(ratings: Record<string, any>): string {
   const genreMap: Record<string, { count: number; totalRating: number }> = {};
   const directorMap: Record<string, number> = {};
   const decadeMap: Record<string, number> = {};
-  const ratingDist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  const ratingDist = { 10: 0, 9: 0, 8: 0, 7: 0, 6: 0, 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   let totalRating = 0;
 
   for (const [, v] of entries) {
     const d = v.movieDetails;
     const r = v.rating ?? 0;
     totalRating += r;
-    if (r >= 1 && r <= 5) ratingDist[r as keyof typeof ratingDist]++;
+    if (r >= 1 && r <= 10) ratingDist[r as keyof typeof ratingDist]++;
 
     if (d.genres) {
       for (const g of d.genres) {
@@ -83,7 +83,7 @@ function computeTasteProfile(ratings: Record<string, any>): string {
   const avg = (totalRating / entries.length).toFixed(1);
   const sortedGenres = Object.entries(genreMap)
     .sort((a, b) => b[1].count - a[1].count)
-    .map(([name, d]) => `${name}: ${d.count} (avg ${(d.totalRating / d.count).toFixed(1)}/5)`);
+    .map(([name, d]) => `${name}: ${d.count} (avg ${(d.totalRating / d.count).toFixed(1)}/10)`);
 
   const sortedDirectors = Object.entries(directorMap)
     .sort((a, b) => b[1] - a[1])
@@ -96,8 +96,8 @@ function computeTasteProfile(ratings: Record<string, any>): string {
 
   return [
     `Total rated: ${entries.length} (${movies.length} movies, ${tv.length} TV)`,
-    `Average rating: ${avg}/5`,
-    `Rating distribution: 5\u2605=${ratingDist[5]} 4\u2605=${ratingDist[4]} 3\u2605=${ratingDist[3]} 2\u2605=${ratingDist[2]} 1\u2605=${ratingDist[1]}`,
+    `Average rating: ${avg}/10`,
+    `Rating distribution: 10\u2605=${ratingDist[10]} 9\u2605=${ratingDist[9]} 8\u2605=${ratingDist[8]} 7\u2605=${ratingDist[7]} 6\u2605=${ratingDist[6]} 5\u2605=${ratingDist[5]} 4\u2605=${ratingDist[4]} 3\u2605=${ratingDist[3]} 2\u2605=${ratingDist[2]} 1\u2605=${ratingDist[1]}`,
     ``,
     `Genres (by volume):`,
     ...sortedGenres.map(l => `  ${l}`),

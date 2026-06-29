@@ -40,7 +40,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tmdb_id TEXT NOT NULL,
-    rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+    rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 10),
     details_json TEXT NOT NULL DEFAULT '{}',
     thoughts TEXT NOT NULL DEFAULT '',
     rated_at INTEGER NOT NULL DEFAULT (unixepoch()),
