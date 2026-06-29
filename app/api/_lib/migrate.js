@@ -184,13 +184,13 @@ export function migrateTimestampsIfNeeded() {
 }
 
 export function migrateRatingsTo10Scale() {
-    const flag = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_migration_v3'").get();
-    if (flag) return;
+    const schemaRow = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='ratings'").get();
+    const needsFix = !schemaRow || !schemaRow.sql.includes('rating >= 1 AND rating <= 10');
+    if (!needsFix) return;
 
     const runMigration = db.transaction(() => {
         db.exec("CREATE TABLE IF NOT EXISTS _migration_v3 (done INTEGER UNIQUE)");
-        const claim = db.prepare("INSERT OR IGNORE INTO _migration_v3 (done) VALUES (1)").run();
-        if (claim.changes === 0) return;
+        db.prepare("INSERT OR IGNORE INTO _migration_v3 (done) VALUES (1)").run();
 
         // Data is already in 1-10 scale from the first deployment.
         // Only the schema needs fixing — recreate with the correct CHECK.
