@@ -139,7 +139,9 @@ function PlayerSidebarInner({
     onDelete,
 }: PlayerSidebarProps) {
     const currentRating = ratings[activeStreamDetails?.id]?.rating || 0;
-    const [thoughts, setThoughts] = useState("");
+    const [thoughts, setThoughts] = useState(
+        () => ratings[activeStreamDetails?.id]?.thoughts || ""
+    );
     const [isEditingThoughts, setIsEditingThoughts] = useState(false);
     const [confirmingDelete, setConfirmingDelete] = useState(false);
 

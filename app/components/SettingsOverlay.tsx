@@ -280,7 +280,7 @@ export default function SettingsOverlay({ isOpen, onClose, onSourcesChange, init
                 </div>
               </h3>
               <div className="text-[9px] text-slate-500 tracking-[0.15em] uppercase">
-                Auto-generates every 2 hours (~12 requests/day)
+                Auto-generates every 2 days
               </div>
             </div>
 

@@ -156,7 +156,7 @@ export default function RecommendClient({ watchlist: wl, ratings: rt, defaultSou
         if (!recommendations?.generatedAt || recommendations?.isGenerating) return;
         const checkStale = setInterval(() => {
             const age = Date.now() - recommendations.generatedAt * 1000;
-            if (age > 2 * 60 * 60 * 1000) {
+            if (age > 2 * 24 * 60 * 60 * 1000) {
                 fetchRecs();
             }
         }, 5 * 60 * 1000);

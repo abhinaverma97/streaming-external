@@ -45,7 +45,7 @@ async function runDaemon() {
         const results = await Promise.allSettled(
             users.map(async ({ user_id }: { user_id: number }) => {
                 const cached = await getRecommendations(user_id);
-                const isStale = !cached || !cached.generatedAt || (Date.now() - cached.generatedAt * 1000 > 2 * 60 * 60 * 1000);
+                const isStale = !cached || !cached.generatedAt || (Date.now() - cached.generatedAt * 1000 > 2 * 24 * 60 * 60 * 1000);
 
                 if (isStale && !cached?.isGenerating) {
                     if (cached?.error) {
